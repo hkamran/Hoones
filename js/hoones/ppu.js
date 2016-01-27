@@ -148,14 +148,20 @@ var ppu = {
 	
 	pattern : {
 		data : [[],[]],
-		
+
+		set : function(val) {
+			console.log(val[0x0, 0x1000]);
+			this.data[0] = val[0x0, 0x1000];
+			this.data[1] = val[0x1000, 0x2000];
+		},
+
 		readByte : function(addr) {
 			if (addr >= 0x2000) {
 				console.log("Error " + addr.toString(16));
 				asdadasdsad.asdasdsa;
 				return 0x0;
 			}
-			
+
 			var segment = Math.floor(addr / 0x1000);
 			var offset = addr % 0x1000;
 			
@@ -184,12 +190,24 @@ var ppu = {
 	nametables : {
 		table : 	[[],[],[],[]],
 		attribute : [[],[],[],[]],
+		mirror : [0, 0, 0, 0],
 		
 		reset : function() {
 			for (var i = 0; i < 4; i++) {
-				table[i] = [];
-				attribute[i] = [];
+				this.table[i] = [];
+				this.attribute[i] = [];
 			}
+		},
+
+		setMirrorType : function(val) {
+			this.mirror = val;
+		},
+
+		getAddress: function(addr) {
+			addr = (addr - 0x2000) % 0x1000;
+			var table = Math.floor(addr / 0x0400);
+			var offset = addr % 0x0400;
+			return 0x2000 + this.mirror[table]*0x0400 + offset;
 		},
 		
 		readByte : function(addr) {
@@ -198,8 +216,9 @@ var ppu = {
 				console.log("error " + addr.toString(16));
 				asdasdasd.asdasdasdasd;
 			}
-			
-			var addr = ((addr - 0x2000) % 0x1000); //Mimic mirrors from 0x3000 to 0x3f00
+
+			addr = this.getAddress(addr);
+			addr = ((addr - 0x2000) % 0x1000); //Mimic mirrors from 0x3000 to 0x3f00
 			
 			var index = Math.floor(addr / 0x400); //Segment
 			var offset = addr % 0x400; //offset inside the segment

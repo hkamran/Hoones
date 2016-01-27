@@ -132,6 +132,8 @@ var cpu = {
 			n: 0,       //negative flag			
 			
 			set : function(val) {
+				val &= 0xFF;
+
 				this.c = (val >> 0) & 1;
 				this.z = (val >> 1) & 1;
 				this.i = (val >> 2) & 1;
@@ -204,6 +206,22 @@ var cpu = {
 
 				this.index--;
 				this.index &= 0xFF;
+				return result;
+			},
+
+			pushWord: function(val) {
+				var low = val & 0x00FF;
+				var high = val >> 0xFF;
+
+				this.pushByte(high);
+				this.pushByte(low);
+			},
+
+			popWord: function(addr) {
+				var low = this.popByte(addr);
+				var high = this.popByte(addr) << 0xFF;
+
+				var result = high | low;
 				return result;
 			},
 
@@ -305,6 +323,14 @@ var cpu = {
 		prgrom : {
 			bank : [[], []],
 
+			setLowerBank : function(val) {
+				this.bank[0] = val;
+			},
+
+			setUpperBank : function(val) {
+				this.bank[1] = val;
+			},
+
 			readByte : function(addr) {
 				if (addr < 0x8000 || addr >= 0x10000) {
 					asdasdasda
@@ -313,12 +339,14 @@ var cpu = {
 				addr -= 0x8000;
 				var offset = addr % 0x4000;
 
+				var bank;
 				if (addr < 0x4000) {
-					return this.bank[0][offset];
+					bank = this.bank[0];
 				} else {
-
-					return this.bank[1][offset];
+					bank = this.bank[1];
 				}
+
+				return bank.charCodeAt(offset);
 			},
 
 			writeByte : function(addr, val) {
@@ -413,7 +441,8 @@ var cpu = {
 		readWord : function(addr) {
 			var low = this.readByte(addr);
 			var high = this.readByte(addr +  1);
-			return high << 0xFF | low;
+
+			return (high << 8 | low) & 0xFFFF;
 		},
 
 		writeWord : function(addr, val) {
@@ -439,7 +468,7 @@ var cpu = {
 		},
 		
 		get : function() {
-			return val;
+			return this.val;
 		},
 		
 		tick : function() {
@@ -450,11 +479,11 @@ var cpu = {
 					this.triggerIRQ();			
 				}
 			}
-			val = this.types.none;
+			this.val = this.types.none;
 		},
 		
 		triggerNMI : function() {
-			this.mmu.pushWord(cpu.registers.pc.get());
+			this.mmu.stack.pushWord(cpu.registers.pc.get());
 			this.instructions.ops.php({});
 			this.registers.pc.set(this.mmu.readWord(0xFFFA));
 			this.registers.p.i = 1;
@@ -462,7 +491,7 @@ var cpu = {
 		},
 		
 		triggerIRQ : function() {
-			this.mmu.pushWord(cpu.registers.pc.get());
+			this.mmu.stack.pushWord(cpu.registers.pc.get());
 			this.instructions.ops.php({});
 			this.registers.pc.set(this.mmu.readWord(0xFFFE));
 			this.registers.p.i = 1;
@@ -473,7 +502,7 @@ var cpu = {
 	
 	tick : function() {
 
-		var opcode = nes.mmu.readByte(this.registers.pc.get());
+		var opcode = this.mmu.readByte(this.registers.pc.get());
 		var op = this.instructions.get(opcode);
 		var cycles = this.cycles;
 
@@ -579,6 +608,8 @@ var cpu = {
 			pc : this.registers.pc.get(),
 			op : op,
 		};
+		console.log(opcode);
+		console.log(op);
 		op.func(info);
 		
 		//Update cpu information
@@ -590,6 +621,8 @@ var cpu = {
 
 	reset : function() {
 		this.instructions.init();
+		this.registers.pc.set(this.mmu.readWord(0xFFFC));
+		this.registers.p.set(0x24);
 	},
 
 	//operations
@@ -620,6 +653,23 @@ var cpu = {
 				}
 				return false;
 			}
+		},
+
+		/**
+		 * Helpers
+		 */
+
+		addBranchCycles : function(info) {
+			//info holds the old pc address
+
+			cpu.cycles++;
+			if (this.isPageDifferent(info.pc, info.address)) {
+				cpu.cycles++;
+			}
+		},
+
+		isPageDifferent : function(a, b) {
+			return (a & 0xFF00) != (b & 0xFF00);
 		},
 		
 		ops : {
@@ -675,7 +725,7 @@ var cpu = {
 			bcc : function(info) {
 				if (cpu.registers.p.c == 0) {
 					cpu.registers.pc.set(info.address);
-					this.addBranchCycles(info);
+					cpu.instructions.addBranchCycles(info);
 				}
 			},
 
@@ -683,7 +733,7 @@ var cpu = {
 			bcs : function(info) {
 				if (cpu.registers.p.c == 1) {
 					cpu.registers.pc.set(info.address);
-					this.addBranchCycles(info);
+					cpu.instructions.addBranchCycles(info);
 				}
 			},
 
@@ -691,7 +741,7 @@ var cpu = {
 			beq: function(info) {
 				if (cpu.registers.p.z != 0) {
 					cpu.registers.pc.set(info.address);
-					this.addBranchCycles(info);
+					cpu.instructions.addBranchCycles(info);
 				}
 			},
 
@@ -711,7 +761,7 @@ var cpu = {
 			bmi : function(info) {
 				if (cpu.registers.p.n == 1) {
 					cpu.registers.pc.set(info.address);
-					this.addBranchCycles(info);
+					cpu.instructions.addBranchCycles(info);
 				}
 			},
 
@@ -719,7 +769,7 @@ var cpu = {
 			bne : function(info) {
 				if (cpu.registers.p.z == 0) {
 					cpu.registers.pc.set(info.address);
-					this.addBranchCycles(info);
+					cpu.instructions.addBranchCycles(info);
 				}
 			},
 
@@ -727,12 +777,12 @@ var cpu = {
 			bpl : function(info) {
 				if (cpu.registers.p.n == 0) {
 					cpu.registers.pc.set(info.address);
-					this.addBranchCycles(info);
+					cpu.instructions.addBranchCycles(info);
 				}
 			},
 
 			brk : function(info) {
-				cpu.mmu.pushWord(cpu.registers.pc);
+				cpu.mmu.stack.pushWord(cpu.registers.pc);
 				cpu.ops.php(info);
 				cpu.ops.sei(info);
 				cpu.registers.pc.set(cpu.mmu.readWord(0xFFFE));
@@ -741,14 +791,14 @@ var cpu = {
 			bvc: function(info) {
 				if (cpu.registers.p.v == 0) {
 					cpu.registers.pc.set(info.address);
-					this.addBranchCycles(info);
+					cpu.instructions.addBranchCycles(info);
 				}
 			},
 
 			bvs: function(info) {
 				if (cpu.registers.p.v == 1) {
 					cpu.registers.pc.set(info.address);
-					this.addBranchCycles(info);
+					cpu.instructions.addBranchCycles(info);
 				}
 			},
 
@@ -874,7 +924,7 @@ var cpu = {
 
 			//Jump to subroutine
 			jsr: function(info) {
-				cpu.mmu.pushWord(cpu.registers.pc - 1);
+				cpu.mmu.stack.pushWord(cpu.registers.pc - 1);
 				cpu.registers.pc.set(info.address);
 			},
 
@@ -1210,314 +1260,300 @@ var cpu = {
 
 			},
 
-			/**
-			 * Helpers
-			 */
 
-			addBranchCycles : function(info) {
-				//info holds the old pc address
-
-				cpu.cycles++;
-				if (this.isPageDifferent(info.pc, info.address)) {
-					cpu.cycles++;
-				}
-			},
-
-			isPageDifferent : function(a, b) {
-				return (a & 0xFF00) != (b & 0xFF00);
-			},
 			
 		},
 		
 		init : function() {
+
 			this.map = [
-				{name: 'BRK', cycles : 7, cross : 0, size: 1, mode: this.modes.imp, func: this.brk},
-				{name: 'ORA', cycles : 6, cross : 0, size: 2, mode: this.modes.ini, func: this.ora},
-				{name: 'KIL', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.kil},
-				{name: 'SLO', cycles : 8, cross : 0, size: 0, mode: this.modes.err, func: this.slo},
-				{name: 'NOP', cycles : 3, cross : 0, size: 2, mode: this.modes.err, func: this.nop},
-				{name: 'ORA', cycles : 3, cross : 0, size: 2, mode: this.modes.zer, func: this.ora},
-				{name: 'ASL', cycles : 5, cross : 0, size: 2, mode: this.modes.zer, func: this.asl},
-				{name: 'SLO', cycles : 5, cross : 0, size: 0, mode: this.modes.err, func: this.slo},
+				{name: 'BRK', cycles : 7, cross : 0, size: 1, mode: this.modes.imp, func: this.ops.brk},
+				{name: 'ORA', cycles : 6, cross : 0, size: 2, mode: this.modes.ini, func: this.ops.ora},
+				{name: 'KIL', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.ops.kil},
+				{name: 'SLO', cycles : 8, cross : 0, size: 0, mode: this.modes.err, func: this.ops.slo},
+				{name: 'NOP', cycles : 3, cross : 0, size: 2, mode: this.modes.err, func: this.ops.nop},
+				{name: 'ORA', cycles : 3, cross : 0, size: 2, mode: this.modes.zer, func: this.ops.ora},
+				{name: 'ASL', cycles : 5, cross : 0, size: 2, mode: this.modes.zer, func: this.ops.asl},
+				{name: 'SLO', cycles : 5, cross : 0, size: 0, mode: this.modes.err, func: this.ops.slo},
 
-				{name: 'PHP', cycles : 3, cross : 0, size: 1, mode: this.modes.imp, func: this.php},
-				{name: 'ORA', cycles : 2, cross : 0, size: 2, mode: this.modes.imm, func: this.ora},
-				{name: 'ASL', cycles : 2, cross : 0, size: 1, mode: this.modes.rel, func: this.asl},
-				{name: 'ANC', cycles : 2, cross : 0, size: 0, mode: this.modes.acc, func: this.anc},
-				{name: 'NOP', cycles : 4, cross : 0, size: 3, mode: this.modes.err, func: this.nop},
-				{name: 'ORA', cycles : 4, cross : 0, size: 3, mode: this.modes.abs, func: this.ora},
-				{name: 'ASL', cycles : 6, cross : 0, size: 3, mode: this.modes.abs, func: this.asl},
-				{name: 'SLO', cycles : 6, cross : 0, size: 0, mode: this.modes.err, func: this.slo},
+				{name: 'PHP', cycles : 3, cross : 0, size: 1, mode: this.modes.imp, func: this.ops.php},
+				{name: 'ORA', cycles : 2, cross : 0, size: 2, mode: this.modes.imm, func: this.ops.ora},
+				{name: 'ASL', cycles : 2, cross : 0, size: 1, mode: this.modes.rel, func: this.ops.asl},
+				{name: 'ANC', cycles : 2, cross : 0, size: 0, mode: this.modes.acc, func: this.ops.anc},
+				{name: 'NOP', cycles : 4, cross : 0, size: 3, mode: this.modes.err, func: this.ops.nop},
+				{name: 'ORA', cycles : 4, cross : 0, size: 3, mode: this.modes.abs, func: this.ops.ora},
+				{name: 'ASL', cycles : 6, cross : 0, size: 3, mode: this.modes.abs, func: this.ops.asl},
+				{name: 'SLO', cycles : 6, cross : 0, size: 0, mode: this.modes.err, func: this.ops.slo},
 
-				{name: 'BPL', cycles : 2, cross : 1, size: 2, mode: this.modes.rel, func: this.bpl},
-				{name: 'ORA', cycles : 5, cross : 1, size: 2, mode: this.modes.inr, func: this.ora},
-				{name: 'KIL', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.kil},
-				{name: 'SLO', cycles : 8, cross : 0, size: 0, mode: this.modes.err, func: this.slo},
-				{name: 'NOP', cycles : 4, cross : 0, size: 2, mode: this.modes.err, func: this.nop},
-				{name: 'ORA', cycles : 4, cross : 0, size: 2, mode: this.modes.zex, func: this.ora},
-				{name: 'ASL', cycles : 6, cross : 0, size: 2, mode: this.modes.err, func: this.asl},
-				{name: 'SLO', cycles : 6, cross : 0, size: 0, mode: this.modes.err, func: this.slo},
+				{name: 'BPL', cycles : 2, cross : 1, size: 2, mode: this.modes.rel, func: this.ops.bpl},
+				{name: 'ORA', cycles : 5, cross : 1, size: 2, mode: this.modes.inr, func: this.ops.ora},
+				{name: 'KIL', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.ops.kil},
+				{name: 'SLO', cycles : 8, cross : 0, size: 0, mode: this.modes.err, func: this.ops.slo},
+				{name: 'NOP', cycles : 4, cross : 0, size: 2, mode: this.modes.err, func: this.ops.nop},
+				{name: 'ORA', cycles : 4, cross : 0, size: 2, mode: this.modes.zex, func: this.ops.ora},
+				{name: 'ASL', cycles : 6, cross : 0, size: 2, mode: this.modes.err, func: this.ops.asl},
+				{name: 'SLO', cycles : 6, cross : 0, size: 0, mode: this.modes.err, func: this.ops.slo},
 
-				{name: 'CLC', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.clc},
-				{name: 'ORA', cycles : 4, cross : 1, size: 3, mode: this.modes.inr, func: this.ora},
-				{name: 'NOP', cycles : 2, cross : 0, size: 1, mode: this.modes.err, func: this.nop},
-				{name: 'SLO', cycles : 7, cross : 0, size: 0, mode: this.modes.err, func: this.slo},
-				{name: 'NOP', cycles : 4, cross : 1, size: 3, mode: this.modes.err, func: this.nop},
-				{name: 'ORA', cycles : 4, cross : 1, size: 3, mode: this.modes.abx, func: this.ora},
-				{name: 'ASL', cycles : 7, cross : 0, size: 3, mode: this.modes.abx, func: this.asl},
-				{name: 'SLO', cycles : 7, cross : 0, size: 0, mode: this.modes.err, func: this.slo},
+				{name: 'CLC', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.ops.clc},
+				{name: 'ORA', cycles : 4, cross : 1, size: 3, mode: this.modes.inr, func: this.ops.ora},
+				{name: 'NOP', cycles : 2, cross : 0, size: 1, mode: this.modes.err, func: this.ops.nop},
+				{name: 'SLO', cycles : 7, cross : 0, size: 0, mode: this.modes.err, func: this.ops.slo},
+				{name: 'NOP', cycles : 4, cross : 1, size: 3, mode: this.modes.err, func: this.ops.nop},
+				{name: 'ORA', cycles : 4, cross : 1, size: 3, mode: this.modes.abx, func: this.ops.ora},
+				{name: 'ASL', cycles : 7, cross : 0, size: 3, mode: this.modes.abx, func: this.ops.asl},
+				{name: 'SLO', cycles : 7, cross : 0, size: 0, mode: this.modes.err, func: this.ops.slo},
 
-				{name: 'JSR', cycles : 6, cross : 0, size: 3, mode: this.modes.abs, func: this.jsr},
-				{name: 'AND', cycles : 6, cross : 0, size: 2, mode: this.modes.ini, func: this.and},
-				{name: 'KIL', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.kil},
-				{name: 'RLA', cycles : 8, cross : 0, size: 0, mode: this.modes.err, func: this.rla},
-				{name: 'BIT', cycles : 3, cross : 0, size: 2, mode: this.modes.zer, func: this.bit},
-				{name: 'AND', cycles : 3, cross : 0, size: 2, mode: this.modes.zer, func: this.and},
-				{name: 'ROL', cycles : 5, cross : 0, size: 2, mode: this.modes.zer, func: this.rol},
-				{name: 'RLA', cycles : 5, cross : 0, size: 0, mode: this.modes.err, func: this.rla},
+				{name: 'JSR', cycles : 6, cross : 0, size: 3, mode: this.modes.abs, func: this.ops.jsr},
+				{name: 'AND', cycles : 6, cross : 0, size: 2, mode: this.modes.ini, func: this.ops.and},
+				{name: 'KIL', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.ops.kil},
+				{name: 'RLA', cycles : 8, cross : 0, size: 0, mode: this.modes.err, func: this.ops.rla},
+				{name: 'BIT', cycles : 3, cross : 0, size: 2, mode: this.modes.zer, func: this.ops.bit},
+				{name: 'AND', cycles : 3, cross : 0, size: 2, mode: this.modes.zer, func: this.ops.and},
+				{name: 'ROL', cycles : 5, cross : 0, size: 2, mode: this.modes.zer, func: this.ops.rol},
+				{name: 'RLA', cycles : 5, cross : 0, size: 0, mode: this.modes.err, func: this.ops.rla},
 
-				{name: 'PLP', cycles : 4, cross : 0, size: 1, mode: this.modes.imm, func: this.plp},
-				{name: 'AND', cycles : 2, cross : 0, size: 2, mode: this.modes.imm, func: this.and},
-				{name: 'ROL', cycles : 2, cross : 0, size: 1, mode: this.modes.acc, func: this.rol},
-				{name: 'ANC', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.anc},
-				{name: 'BIT', cycles : 4, cross : 0, size: 3, mode: this.modes.abs, func: this.bit},
-				{name: 'AND', cycles : 4, cross : 0, size: 3, mode: this.modes.abs, func: this.and},
-				{name: 'ROL', cycles : 6, cross : 0, size: 3, mode: this.modes.abs, func: this.rol},
-				{name: 'RLA', cycles : 6, cross : 0, size: 0, mode: this.modes.err, func: this.rla},
+				{name: 'PLP', cycles : 4, cross : 0, size: 1, mode: this.modes.imm, func: this.ops.plp},
+				{name: 'AND', cycles : 2, cross : 0, size: 2, mode: this.modes.imm, func: this.ops.and},
+				{name: 'ROL', cycles : 2, cross : 0, size: 1, mode: this.modes.acc, func: this.ops.rol},
+				{name: 'ANC', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.ops.anc},
+				{name: 'BIT', cycles : 4, cross : 0, size: 3, mode: this.modes.abs, func: this.ops.bit},
+				{name: 'AND', cycles : 4, cross : 0, size: 3, mode: this.modes.abs, func: this.ops.and},
+				{name: 'ROL', cycles : 6, cross : 0, size: 3, mode: this.modes.abs, func: this.ops.rol},
+				{name: 'RLA', cycles : 6, cross : 0, size: 0, mode: this.modes.err, func: this.ops.rla},
 
-				{name: 'BMI', cycles : 2, cross : 1, size: 2, mode: this.modes.rel, func: this.bmi},
-				{name: 'AND', cycles : 5, cross : 1, size: 2, mode: this.modes.inr, func: this.and},
-				{name: 'KIL', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.kil}, //32
-				{name: 'RLA', cycles : 8, cross : 0, size: 0, mode: this.modes.err, func: this.rla},
-				{name: 'NOP', cycles : 4, cross : 0, size: 2, mode: this.modes.err, func: this.nop},
-				{name: 'AND', cycles : 4, cross : 0, size: 2, mode: this.modes.zex, func: this.and}, //53
-				{name: 'ROL', cycles : 6, cross : 0, size: 2, mode: this.modes.zex, func: this.rol},
-				{name: 'RLA', cycles : 6, cross : 0, size: 0, mode: this.modes.err, func: this.rla},
+				{name: 'BMI', cycles : 2, cross : 1, size: 2, mode: this.modes.rel, func: this.ops.bmi},
+				{name: 'AND', cycles : 5, cross : 1, size: 2, mode: this.modes.inr, func: this.ops.and},
+				{name: 'KIL', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.ops.kil}, //32
+				{name: 'RLA', cycles : 8, cross : 0, size: 0, mode: this.modes.err, func: this.ops.rla},
+				{name: 'NOP', cycles : 4, cross : 0, size: 2, mode: this.modes.err, func: this.ops.nop},
+				{name: 'AND', cycles : 4, cross : 0, size: 2, mode: this.modes.zex, func: this.ops.and}, //53
+				{name: 'ROL', cycles : 6, cross : 0, size: 2, mode: this.modes.zex, func: this.ops.rol},
+				{name: 'RLA', cycles : 6, cross : 0, size: 0, mode: this.modes.err, func: this.ops.rla},
 
-				{name: 'SEC', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.sec}, //38
-				{name: 'AND', cycles : 4, cross : 1, size: 3, mode: this.modes.aby, func: this.adc},
-				{name: 'NOP', cycles : 2, cross : 0, size: 1, mode: this.modes.err, func: this.nop},
-				{name: 'RLA', cycles : 7, cross : 0, size: 0, mode: this.modes.err, func: this.rla},
-				{name: 'NOP', cycles : 4, cross : 1, size: 3, mode: this.modes.err, func: this.nop},
-				{name: 'AND', cycles : 4, cross : 1, size: 3, mode: this.modes.abx, func: this.and}, //3d
-				{name: 'ROL', cycles : 7, cross : 0, size: 3, mode: this.modes.err, func: this.rol},
-				{name: 'RLA', cycles : 7, cross : 0, size: 0, mode: this.modes.err, func: this.rla},
+				{name: 'SEC', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.ops.sec}, //38
+				{name: 'AND', cycles : 4, cross : 1, size: 3, mode: this.modes.aby, func: this.ops.adc},
+				{name: 'NOP', cycles : 2, cross : 0, size: 1, mode: this.modes.err, func: this.ops.nop},
+				{name: 'RLA', cycles : 7, cross : 0, size: 0, mode: this.modes.err, func: this.ops.rla},
+				{name: 'NOP', cycles : 4, cross : 1, size: 3, mode: this.modes.err, func: this.ops.nop},
+				{name: 'AND', cycles : 4, cross : 1, size: 3, mode: this.modes.abx, func: this.ops.and}, //3d
+				{name: 'ROL', cycles : 7, cross : 0, size: 3, mode: this.modes.err, func: this.ops.rol},
+				{name: 'RLA', cycles : 7, cross : 0, size: 0, mode: this.modes.err, func: this.ops.rla},
 
-				{name: 'RTI', cycles : 6, cross : 0, size: 1, mode: this.modes.imp, func: this.rti}, //40
-				{name: 'EOR', cycles : 6, cross : 0, size: 2, mode: this.modes.ini, func: this.eor},
-				{name: 'KIL', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.kil},
-				{name: 'SRE', cycles : 8, cross : 0, size: 0, mode: this.modes.err, func: this.sre},
-				{name: 'NOP', cycles : 3, cross : 0, size: 2, mode: this.modes.err, func: this.nop},
-				{name: 'EOR', cycles : 3, cross : 0, size: 2, mode: this.modes.zer, func: this.eor}, //45
-				{name: 'LSR', cycles : 5, cross : 0, size: 2, mode: this.modes.zer, func: this.lsr},
-				{name: 'SRE', cycles : 5, cross : 0, size: 0, mode: this.modes.err, func: this.sre},
+				{name: 'RTI', cycles : 6, cross : 0, size: 1, mode: this.modes.imp, func: this.ops.rti}, //40
+				{name: 'EOR', cycles : 6, cross : 0, size: 2, mode: this.modes.ini, func: this.ops.eor},
+				{name: 'KIL', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.ops.kil},
+				{name: 'SRE', cycles : 8, cross : 0, size: 0, mode: this.modes.err, func: this.ops.sre},
+				{name: 'NOP', cycles : 3, cross : 0, size: 2, mode: this.modes.err, func: this.ops.nop},
+				{name: 'EOR', cycles : 3, cross : 0, size: 2, mode: this.modes.zer, func: this.ops.eor}, //45
+				{name: 'LSR', cycles : 5, cross : 0, size: 2, mode: this.modes.zer, func: this.ops.lsr},
+				{name: 'SRE', cycles : 5, cross : 0, size: 0, mode: this.modes.err, func: this.ops.sre},
 
-				{name: 'PHA', cycles : 3, cross : 0, size: 1, mode: this.modes.imp, func: this.pha}, //48
-				{name: 'EOR', cycles : 2, cross : 0, size: 2, mode: this.modes.imm, func: this.eor},
-				{name: 'LSR', cycles : 2, cross : 0, size: 1, mode: this.modes.acc, func: this.lsr},
-				{name: 'ALR', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.alr},
-				{name: 'JMP', cycles : 3, cross : 0, size: 3, mode: this.modes.abs, func: this.jmp},
-				{name: 'EOR', cycles : 4, cross : 0, size: 3, mode: this.modes.abs, func: this.eor},
-				{name: 'LSR', cycles : 6, cross : 0, size: 3, mode: this.modes.abs, func: this.lsr},
-				{name: 'SRE', cycles : 6, cross : 0, size: 0, mode: this.modes.err, func: this.sre},
+				{name: 'PHA', cycles : 3, cross : 0, size: 1, mode: this.modes.imp, func: this.ops.pha}, //48
+				{name: 'EOR', cycles : 2, cross : 0, size: 2, mode: this.modes.imm, func: this.ops.eor},
+				{name: 'LSR', cycles : 2, cross : 0, size: 1, mode: this.modes.acc, func: this.ops.lsr},
+				{name: 'ALR', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.ops.alr},
+				{name: 'JMP', cycles : 3, cross : 0, size: 3, mode: this.modes.abs, func: this.ops.jmp},
+				{name: 'EOR', cycles : 4, cross : 0, size: 3, mode: this.modes.abs, func: this.ops.eor},
+				{name: 'LSR', cycles : 6, cross : 0, size: 3, mode: this.modes.abs, func: this.ops.lsr},
+				{name: 'SRE', cycles : 6, cross : 0, size: 0, mode: this.modes.err, func: this.ops.sre},
 
-				{name: 'BVC', cycles : 2, cross : 1, size: 2, mode: this.modes.rel, func: this.bvc}, //0x50
-				{name: 'EOR', cycles : 5, cross : 1, size: 2, mode: this.modes.inr, func: this.eor},
-				{name: 'KIL', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.kil},
-				{name: 'SRE', cycles : 8, cross : 0, size: 0, mode: this.modes.err, func: this.sre},
-				{name: 'NOP', cycles : 4, cross : 0, size: 2, mode: this.modes.err, func: this.nop},
-				{name: 'EOR', cycles : 4, cross : 0, size: 2, mode: this.modes.zex, func: this.eor},
-				{name: 'LSR', cycles : 6, cross : 0, size: 2, mode: this.modes.zex, func: this.lsr},
-				{name: 'SRE', cycles : 6, cross : 0, size: 0, mode: this.modes.err, func: this.sre},
+				{name: 'BVC', cycles : 2, cross : 1, size: 2, mode: this.modes.rel, func: this.ops.bvc}, //0x50
+				{name: 'EOR', cycles : 5, cross : 1, size: 2, mode: this.modes.inr, func: this.ops.eor},
+				{name: 'KIL', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.ops.kil},
+				{name: 'SRE', cycles : 8, cross : 0, size: 0, mode: this.modes.err, func: this.ops.sre},
+				{name: 'NOP', cycles : 4, cross : 0, size: 2, mode: this.modes.err, func: this.ops.nop},
+				{name: 'EOR', cycles : 4, cross : 0, size: 2, mode: this.modes.zex, func: this.ops.eor},
+				{name: 'LSR', cycles : 6, cross : 0, size: 2, mode: this.modes.zex, func: this.ops.lsr},
+				{name: 'SRE', cycles : 6, cross : 0, size: 0, mode: this.modes.err, func: this.ops.sre},
 
-				{name: 'CLI', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.cli}, //0x58
-				{name: 'EOR', cycles : 4, cross : 1, size: 3, mode: this.modes.aby, func: this.eor},
-				{name: 'NOP', cycles : 2, cross : 0, size: 1, mode: this.modes.err, func: this.nop},
-				{name: 'SRE', cycles : 7, cross : 0, size: 0, mode: this.modes.err, func: this.sre},
-				{name: 'NOP', cycles : 4, cross : 1, size: 3, mode: this.modes.err, func: this.nop},
-				{name: 'EOR', cycles : 4, cross : 1, size: 3, mode: this.modes.abx, func: this.eor}, //5d
-				{name: 'LSR', cycles : 7, cross : 0, size: 3, mode: this.modes.abx, func: this.lsr},
-				{name: 'SRE', cycles : 7, cross : 0, size: 0, mode: this.modes.err, func: this.sre},
+				{name: 'CLI', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.ops.cli}, //0x58
+				{name: 'EOR', cycles : 4, cross : 1, size: 3, mode: this.modes.aby, func: this.ops.eor},
+				{name: 'NOP', cycles : 2, cross : 0, size: 1, mode: this.modes.err, func: this.ops.nop},
+				{name: 'SRE', cycles : 7, cross : 0, size: 0, mode: this.modes.err, func: this.ops.sre},
+				{name: 'NOP', cycles : 4, cross : 1, size: 3, mode: this.modes.err, func: this.ops.nop},
+				{name: 'EOR', cycles : 4, cross : 1, size: 3, mode: this.modes.abx, func: this.ops.eor}, //5d
+				{name: 'LSR', cycles : 7, cross : 0, size: 3, mode: this.modes.abx, func: this.ops.lsr},
+				{name: 'SRE', cycles : 7, cross : 0, size: 0, mode: this.modes.err, func: this.ops.sre},
 
-				{name: 'RTS', cycles : 6, cross : 0, size: 1, mode: this.modes.imp, func: this.rts}, //60
-				{name: 'ADC', cycles : 6, cross : 0, size: 2, mode: this.modes.ini, func: this.adc},
-				{name: 'KIL', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.kil},
-				{name: 'RRA', cycles : 8, cross : 0, size: 0, mode: this.modes.err, func: this.rra},
-				{name: 'NOP', cycles : 3, cross : 0, size: 2, mode: this.modes.err, func: this.nop},
-				{name: 'ADC', cycles : 3, cross : 0, size: 2, mode: this.modes.zer, func: this.adc},
-				{name: 'ROR', cycles : 5, cross : 0, size: 2, mode: this.modes.zer, func: this.ror},
-				{name: 'RRA', cycles : 5, cross : 0, size: 0, mode: this.modes.err, func: this.rra},
+				{name: 'RTS', cycles : 6, cross : 0, size: 1, mode: this.modes.imp, func: this.ops.rts}, //60
+				{name: 'ADC', cycles : 6, cross : 0, size: 2, mode: this.modes.ini, func: this.ops.adc},
+				{name: 'KIL', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.ops.kil},
+				{name: 'RRA', cycles : 8, cross : 0, size: 0, mode: this.modes.err, func: this.ops.rra},
+				{name: 'NOP', cycles : 3, cross : 0, size: 2, mode: this.modes.err, func: this.ops.nop},
+				{name: 'ADC', cycles : 3, cross : 0, size: 2, mode: this.modes.zer, func: this.ops.adc},
+				{name: 'ROR', cycles : 5, cross : 0, size: 2, mode: this.modes.zer, func: this.ops.ror},
+				{name: 'RRA', cycles : 5, cross : 0, size: 0, mode: this.modes.err, func: this.ops.rra},
 
-				{name: 'PLA', cycles : 4, cross : 0, size: 1, mode: this.modes.imp, func: this.pla},
-				{name: 'ADC', cycles : 2, cross : 0, size: 2, mode: this.modes.imm, func: this.adc},
-				{name: 'ROR', cycles : 2, cross : 0, size: 1, mode: this.modes.acc, func: this.ror},
-				{name: 'ARR', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.arr}, //6b
-				{name: 'JMP', cycles : 5, cross : 0, size: 3, mode: this.modes.ind, func: this.jmp},
-				{name: 'ADC', cycles : 4, cross : 0, size: 3, mode: this.modes.abs, func: this.adc},
-				{name: 'ROR', cycles : 6, cross : 0, size: 3, mode: this.modes.abs, func: this.ror},
-				{name: 'RRA', cycles : 6, cross : 0, size: 0, mode: this.modes.err, func: this.rra},
+				{name: 'PLA', cycles : 4, cross : 0, size: 1, mode: this.modes.imp, func: this.ops.pla},
+				{name: 'ADC', cycles : 2, cross : 0, size: 2, mode: this.modes.imm, func: this.ops.adc},
+				{name: 'ROR', cycles : 2, cross : 0, size: 1, mode: this.modes.acc, func: this.ops.ror},
+				{name: 'ARR', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.ops.arr}, //6b
+				{name: 'JMP', cycles : 5, cross : 0, size: 3, mode: this.modes.ind, func: this.ops.jmp},
+				{name: 'ADC', cycles : 4, cross : 0, size: 3, mode: this.modes.abs, func: this.ops.adc},
+				{name: 'ROR', cycles : 6, cross : 0, size: 3, mode: this.modes.abs, func: this.ops.ror},
+				{name: 'RRA', cycles : 6, cross : 0, size: 0, mode: this.modes.err, func: this.ops.rra},
 
-				{name: 'BVS', cycles : 2, cross : 1, size: 2, mode: this.modes.rel, func: this.bvs}, //70
-				{name: 'ADC', cycles : 5, cross : 1, size: 2, mode: this.modes.inr, func: this.adc},
-				{name: 'KIL', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.kil},
-				{name: 'RRA', cycles : 8, cross : 0, size: 0, mode: this.modes.err, func: this.rra},
-				{name: 'NOP', cycles : 4, cross : 0, size: 2, mode: this.modes.err, func: this.nop},
-				{name: 'ADC', cycles : 4, cross : 0, size: 2, mode: this.modes.zex, func: this.adc},
-				{name: 'ROR', cycles : 6, cross : 0, size: 2, mode: this.modes.zex, func: this.ror},
-				{name: 'RRA', cycles : 6, cross : 0, size: 0, mode: this.modes.err, func: this.rra},
+				{name: 'BVS', cycles : 2, cross : 1, size: 2, mode: this.modes.rel, func: this.ops.bvs}, //70
+				{name: 'ADC', cycles : 5, cross : 1, size: 2, mode: this.modes.inr, func: this.ops.adc},
+				{name: 'KIL', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.ops.kil},
+				{name: 'RRA', cycles : 8, cross : 0, size: 0, mode: this.modes.err, func: this.ops.rra},
+				{name: 'NOP', cycles : 4, cross : 0, size: 2, mode: this.modes.err, func: this.ops.nop},
+				{name: 'ADC', cycles : 4, cross : 0, size: 2, mode: this.modes.zex, func: this.ops.adc},
+				{name: 'ROR', cycles : 6, cross : 0, size: 2, mode: this.modes.zex, func: this.ops.ror},
+				{name: 'RRA', cycles : 6, cross : 0, size: 0, mode: this.modes.err, func: this.ops.rra},
 
-				{name: 'SEI', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.sei}, //78
-				{name: 'ADC', cycles : 4, cross : 1, size: 3, mode: this.modes.aby, func: this.adc},
-				{name: 'NOP', cycles : 2, cross : 0, size: 1, mode: this.modes.err, func: this.nop},
-				{name: 'RRA', cycles : 7, cross : 0, size: 0, mode: this.modes.err, func: this.rra},
-				{name: 'NOP', cycles : 4, cross : 1, size: 3, mode: this.modes.err, func: this.nop},
-				{name: 'ADC', cycles : 4, cross : 1, size: 3, mode: this.modes.abx, func: this.adc},
-				{name: 'ROR', cycles : 7, cross : 0, size: 3, mode: this.modes.abx, func: this.ror},
-				{name: 'RRA', cycles : 7, cross : 0, size: 0, mode: this.modes.err, func: this.rra},
+				{name: 'SEI', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.ops.sei}, //78
+				{name: 'ADC', cycles : 4, cross : 1, size: 3, mode: this.modes.aby, func: this.ops.adc},
+				{name: 'NOP', cycles : 2, cross : 0, size: 1, mode: this.modes.err, func: this.ops.nop},
+				{name: 'RRA', cycles : 7, cross : 0, size: 0, mode: this.modes.err, func: this.ops.rra},
+				{name: 'NOP', cycles : 4, cross : 1, size: 3, mode: this.modes.err, func: this.ops.nop},
+				{name: 'ADC', cycles : 4, cross : 1, size: 3, mode: this.modes.abx, func: this.ops.adc},
+				{name: 'ROR', cycles : 7, cross : 0, size: 3, mode: this.modes.abx, func: this.ops.ror},
+				{name: 'RRA', cycles : 7, cross : 0, size: 0, mode: this.modes.err, func: this.ops.rra},
 
-				{name: 'NOP', cycles : 2, cross : 0, size: 2, mode: this.modes.err, func: this.nop},
-				{name: 'STA', cycles : 6, cross : 0, size: 2, mode: this.modes.ini, func: this.sta}, //81
-				{name: 'NOP', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.nop},
-				{name: 'SAX', cycles : 6, cross : 0, size: 0, mode: this.modes.err, func: this.sax},
-				{name: 'STY', cycles : 3, cross : 0, size: 2, mode: this.modes.zer, func: this.sty},
-				{name: 'STA', cycles : 3, cross : 0, size: 2, mode: this.modes.zer, func: this.sta},
-				{name: 'STX', cycles : 3, cross : 0, size: 2, mode: this.modes.zer, func: this.stx},
-				{name: 'SAX', cycles : 3, cross : 0, size: 0, mode: this.modes.err, func: this.sax},
+				{name: 'NOP', cycles : 2, cross : 0, size: 2, mode: this.modes.err, func: this.ops.nop},
+				{name: 'STA', cycles : 6, cross : 0, size: 2, mode: this.modes.ini, func: this.ops.sta}, //81
+				{name: 'NOP', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.ops.nop},
+				{name: 'SAX', cycles : 6, cross : 0, size: 0, mode: this.modes.err, func: this.ops.sax},
+				{name: 'STY', cycles : 3, cross : 0, size: 2, mode: this.modes.zer, func: this.ops.sty},
+				{name: 'STA', cycles : 3, cross : 0, size: 2, mode: this.modes.zer, func: this.ops.sta},
+				{name: 'STX', cycles : 3, cross : 0, size: 2, mode: this.modes.zer, func: this.ops.stx},
+				{name: 'SAX', cycles : 3, cross : 0, size: 0, mode: this.modes.err, func: this.ops.sax},
 
-				{name: 'DEY', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.dey}, //88
-				{name: 'NOP', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.nop},
-				{name: 'TXA', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.txa},
-				{name: 'XAA', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.xaa},
-				{name: 'STY', cycles : 4, cross : 0, size: 3, mode: this.modes.abs, func: this.sty},
-				{name: 'STA', cycles : 4, cross : 0, size: 3, mode: this.modes.abs, func: this.sta},
-				{name: 'STX', cycles : 4, cross : 0, size: 3, mode: this.modes.abs, func: this.stx},
-				{name: 'SAX', cycles : 4, cross : 0, size: 0, mode: 0, func: this.sax},
+				{name: 'DEY', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.ops.dey}, //88
+				{name: 'NOP', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.ops.nop},
+				{name: 'TXA', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.ops.txa},
+				{name: 'XAA', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.ops.xaa},
+				{name: 'STY', cycles : 4, cross : 0, size: 3, mode: this.modes.abs, func: this.ops.sty},
+				{name: 'STA', cycles : 4, cross : 0, size: 3, mode: this.modes.abs, func: this.ops.sta},
+				{name: 'STX', cycles : 4, cross : 0, size: 3, mode: this.modes.abs, func: this.ops.stx},
+				{name: 'SAX', cycles : 4, cross : 0, size: 0, mode: 0, func: this.ops.sax},
 
-				{name: 'BCC', cycles : 2, cross : 1, size: 2, mode: this.modes.rel, func: this.bcc}, //90
-				{name: 'STA', cycles : 6, cross : 0, size: 2, mode: this.modes.inr, func: this.sta},
-				{name: 'KIL', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.kil},
-				{name: 'AHX', cycles : 6, cross : 0, size: 0, mode: this.modes.err, func: this.ahx},
-				{name: 'STY', cycles : 4, cross : 0, size: 2, mode: this.modes.zex, func: this.sty},
-				{name: 'STA', cycles : 4, cross : 0, size: 2, mode: this.modes.zex, func: this.sta},
-				{name: 'STX', cycles : 4, cross : 0, size: 2, mode: this.modes.zey, func: this.stx},
-				{name: 'SAX', cycles : 4, cross : 0, size: 0, mode: this.modes.err, func: this.sax},
+				{name: 'BCC', cycles : 2, cross : 1, size: 2, mode: this.modes.rel, func: this.ops.bcc}, //90
+				{name: 'STA', cycles : 6, cross : 0, size: 2, mode: this.modes.inr, func: this.ops.sta},
+				{name: 'KIL', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.ops.kil},
+				{name: 'AHX', cycles : 6, cross : 0, size: 0, mode: this.modes.err, func: this.ops.ahx},
+				{name: 'STY', cycles : 4, cross : 0, size: 2, mode: this.modes.zex, func: this.ops.sty},
+				{name: 'STA', cycles : 4, cross : 0, size: 2, mode: this.modes.zex, func: this.ops.sta},
+				{name: 'STX', cycles : 4, cross : 0, size: 2, mode: this.modes.zey, func: this.ops.stx},
+				{name: 'SAX', cycles : 4, cross : 0, size: 0, mode: this.modes.err, func: this.ops.sax},
 
-				{name: 'TYA', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.tya},
-				{name: 'STA', cycles : 5, cross : 0, size: 3, mode: this.modes.aby, func: this.sta},
-				{name: 'TXS', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.txs}, //9a
-				{name: 'TAS', cycles : 5, cross : 0, size: 0, mode: this.modes.err, func: this.tas},
-				{name: 'SHY', cycles : 5, cross : 0, size: 0, mode: this.modes.err, func: this.shy},
-				{name: 'STA', cycles : 5, cross : 0, size: 3, mode: this.modes.abx, func: this.sta},
-				{name: 'SHX', cycles : 5, cross : 0, size: 0, mode: this.modes.err, func: this.shx},
-				{name: 'AHX', cycles : 5, cross : 0, size: 0, mode: this.modes.err, func: this.ahx},
+				{name: 'TYA', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.ops.tya},
+				{name: 'STA', cycles : 5, cross : 0, size: 3, mode: this.modes.aby, func: this.ops.sta},
+				{name: 'TXS', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.ops.txs}, //9a
+				{name: 'TAS', cycles : 5, cross : 0, size: 0, mode: this.modes.err, func: this.ops.tas},
+				{name: 'SHY', cycles : 5, cross : 0, size: 0, mode: this.modes.err, func: this.ops.shy},
+				{name: 'STA', cycles : 5, cross : 0, size: 3, mode: this.modes.abx, func: this.ops.sta},
+				{name: 'SHX', cycles : 5, cross : 0, size: 0, mode: this.modes.err, func: this.ops.shx},
+				{name: 'AHX', cycles : 5, cross : 0, size: 0, mode: this.modes.err, func: this.ops.ahx},
 
-				{name: 'LDY', cycles : 2, cross : 0, size: 2, mode: this.modes.imm, func: this.ldy},  //A0
-				{name: 'LDA', cycles : 6, cross : 0, size: 2, mode: this.modes.ini, func: this.lda},
-				{name: 'LDX', cycles : 2, cross : 0, size: 2, mode: this.modes.imm, func: this.ldx},
-				{name: 'LAX', cycles : 6, cross : 0, size: 0, mode: this.modes.err, func: this.lax},
-				{name: 'LDY', cycles : 3, cross : 0, size: 2, mode: this.modes.zer, func: this.ldy},
-				{name: 'LDA', cycles : 3, cross : 0, size: 2, mode: this.modes.zer, func: this.lda},
-				{name: 'LDX', cycles : 3, cross : 0, size: 2, mode: this.modes.zer, func: this.ldx},
-				{name: 'LAX', cycles : 3, cross : 0, size: 0, mode: this.modes.err, func: this.lax},
+				{name: 'LDY', cycles : 2, cross : 0, size: 2, mode: this.modes.imm, func: this.ops.ldy},  //A0
+				{name: 'LDA', cycles : 6, cross : 0, size: 2, mode: this.modes.ini, func: this.ops.lda},
+				{name: 'LDX', cycles : 2, cross : 0, size: 2, mode: this.modes.imm, func: this.ops.ldx},
+				{name: 'LAX', cycles : 6, cross : 0, size: 0, mode: this.modes.err, func: this.ops.lax},
+				{name: 'LDY', cycles : 3, cross : 0, size: 2, mode: this.modes.zer, func: this.ops.ldy},
+				{name: 'LDA', cycles : 3, cross : 0, size: 2, mode: this.modes.zer, func: this.ops.lda},
+				{name: 'LDX', cycles : 3, cross : 0, size: 2, mode: this.modes.zer, func: this.ops.ldx},
+				{name: 'LAX', cycles : 3, cross : 0, size: 0, mode: this.modes.err, func: this.ops.lax},
 
-				{name: 'TAY', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.tay}, //a8
-				{name: 'LDA', cycles : 2, cross : 0, size: 2, mode: this.modes.imm, func: this.lda},
-				{name: 'TAX', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.tax},
-				{name: 'LAX', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.lax},
-				{name: 'LDY', cycles : 4, cross : 0, size: 3, mode: this.modes.abs, func: this.ldy},
-				{name: 'LDA', cycles : 4, cross : 0, size: 3, mode: this.modes.abs, func: this.lda},
-				{name: 'LDX', cycles : 4, cross : 0, size: 3, mode: this.modes.abs, func: this.ldx},
-				{name: 'LAX', cycles : 4, cross : 0, size: 0, mode: this.modes.err, func: this.lax},
+				{name: 'TAY', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.ops.tay}, //a8
+				{name: 'LDA', cycles : 2, cross : 0, size: 2, mode: this.modes.imm, func: this.ops.lda},
+				{name: 'TAX', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.ops.tax},
+				{name: 'LAX', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.ops.lax},
+				{name: 'LDY', cycles : 4, cross : 0, size: 3, mode: this.modes.abs, func: this.ops.ldy},
+				{name: 'LDA', cycles : 4, cross : 0, size: 3, mode: this.modes.abs, func: this.ops.lda},
+				{name: 'LDX', cycles : 4, cross : 0, size: 3, mode: this.modes.abs, func: this.ops.ldx},
+				{name: 'LAX', cycles : 4, cross : 0, size: 0, mode: this.modes.err, func: this.ops.lax},
 
-				{name: 'BCS', cycles : 2, cross : 1, size: 2, mode: this.modes.rel, func: this.bcs}, //b0
-				{name: 'LDA', cycles : 5, cross : 1, size: 2, mode: this.modes.inr, func: this.lda},
-				{name: 'KIL', cycles : 2, cross : 0, size: 2, mode: this.modes.err, func: this.kil},
-				{name: 'LAX', cycles : 5, cross : 1, size: 0, mode: this.modes.err, func: this.lax},
-				{name: 'LDY', cycles : 4, cross : 0, size: 2, mode: this.modes.zex, func: this.ldy},
-				{name: 'LDA', cycles : 4, cross : 0, size: 2, mode: this.modes.zex, func: this.lda},
-				{name: 'LDX', cycles : 4, cross : 0, size: 2, mode: this.modes.zey, func: this.ldx},
-				{name: 'LAX', cycles : 4, cross : 0, size: 0, mode: this.modes.err, func: this.lax},
+				{name: 'BCS', cycles : 2, cross : 1, size: 2, mode: this.modes.rel, func: this.ops.bcs}, //b0
+				{name: 'LDA', cycles : 5, cross : 1, size: 2, mode: this.modes.inr, func: this.ops.lda},
+				{name: 'KIL', cycles : 2, cross : 0, size: 2, mode: this.modes.err, func: this.ops.kil},
+				{name: 'LAX', cycles : 5, cross : 1, size: 0, mode: this.modes.err, func: this.ops.lax},
+				{name: 'LDY', cycles : 4, cross : 0, size: 2, mode: this.modes.zex, func: this.ops.ldy},
+				{name: 'LDA', cycles : 4, cross : 0, size: 2, mode: this.modes.zex, func: this.ops.lda},
+				{name: 'LDX', cycles : 4, cross : 0, size: 2, mode: this.modes.zey, func: this.ops.ldx},
+				{name: 'LAX', cycles : 4, cross : 0, size: 0, mode: this.modes.err, func: this.ops.lax},
 
-				{name: 'CLV', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.clv}, //b8
-				{name: 'LDA', cycles : 4, cross : 1, size: 3, mode: this.modes.aby, func: this.lda},
-				{name: 'TSX', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.tsx},
-				{name: 'LAS', cycles : 4, cross : 1, size: 0, mode: this.modes.err, func: this.las},
-				{name: 'LDY', cycles : 4, cross : 1, size: 3, mode: this.modes.abx, func: this.ldy},
-				{name: 'LDA', cycles : 4, cross : 1, size: 3, mode: this.modes.abx, func: this.lda},
-				{name: 'LDX', cycles : 4, cross : 1, size: 3, mode: this.modes.aby, func: this.ldx},
-				{name: 'LAX', cycles : 4, cross : 1, size: 0, mode: this.modes.err, func: this.lax},
+				{name: 'CLV', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.ops.clv}, //b8
+				{name: 'LDA', cycles : 4, cross : 1, size: 3, mode: this.modes.aby, func: this.ops.lda},
+				{name: 'TSX', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.ops.tsx},
+				{name: 'LAS', cycles : 4, cross : 1, size: 0, mode: this.modes.err, func: this.ops.las},
+				{name: 'LDY', cycles : 4, cross : 1, size: 3, mode: this.modes.abx, func: this.ops.ldy},
+				{name: 'LDA', cycles : 4, cross : 1, size: 3, mode: this.modes.abx, func: this.ops.lda},
+				{name: 'LDX', cycles : 4, cross : 1, size: 3, mode: this.modes.aby, func: this.ops.ldx},
+				{name: 'LAX', cycles : 4, cross : 1, size: 0, mode: this.modes.err, func: this.ops.lax},
 
-				{name: 'CPY', cycles : 2, cross : 0, size: 2, mode: this.modes.imm, func: this.cpy}, //c0
-				{name: 'CMP', cycles : 6, cross : 0, size: 2, mode: this.modes.ini, func: this.cmp},
-				{name: 'NOP', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.nop},
-				{name: 'DCP', cycles : 8, cross : 0, size: 0, mode: this.modes.err, func: this.dcp},
-				{name: 'CPY', cycles : 3, cross : 0, size: 2, mode: this.modes.zer, func: this.cpy},
-				{name: 'CMP', cycles : 3, cross : 0, size: 2, mode: this.modes.zer, func: this.cmp},
-				{name: 'DEC', cycles : 5, cross : 0, size: 2, mode: this.modes.zer, func: this.dec},
-				{name: 'DCP', cycles : 5, cross : 0, size: 0, mode: this.modes.err, func: this.dcp},
+				{name: 'CPY', cycles : 2, cross : 0, size: 2, mode: this.modes.imm, func: this.ops.cpy}, //c0
+				{name: 'CMP', cycles : 6, cross : 0, size: 2, mode: this.modes.ini, func: this.ops.cmp},
+				{name: 'NOP', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.ops.nop},
+				{name: 'DCP', cycles : 8, cross : 0, size: 0, mode: this.modes.err, func: this.ops.dcp},
+				{name: 'CPY', cycles : 3, cross : 0, size: 2, mode: this.modes.zer, func: this.ops.cpy},
+				{name: 'CMP', cycles : 3, cross : 0, size: 2, mode: this.modes.zer, func: this.ops.cmp},
+				{name: 'DEC', cycles : 5, cross : 0, size: 2, mode: this.modes.zer, func: this.ops.dec},
+				{name: 'DCP', cycles : 5, cross : 0, size: 0, mode: this.modes.err, func: this.ops.dcp},
 
-				{name: 'INY', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.iny}, //c8
-				{name: 'CMP', cycles : 2, cross : 0, size: 2, mode: this.modes.imm, func: this.cmp},
-				{name: 'DEX', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.dex},
-				{name: 'AXS', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.axs},
-				{name: 'CPY', cycles : 4, cross : 0, size: 3, mode: this.modes.abs, func: this.cpy},
-				{name: 'CMP', cycles : 4, cross : 0, size: 3, mode: this.modes.abs, func: this.cmp},
-				{name: 'DEC', cycles : 6, cross : 0, size: 3, mode: this.modes.abs, func: this.dec},
-				{name: 'DCP', cycles : 6, cross : 0, size: 0, mode: this.modes.err, func: this.dcp},
+				{name: 'INY', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.ops.iny}, //c8
+				{name: 'CMP', cycles : 2, cross : 0, size: 2, mode: this.modes.imm, func: this.ops.cmp},
+				{name: 'DEX', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.ops.dex},
+				{name: 'AXS', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.ops.axs},
+				{name: 'CPY', cycles : 4, cross : 0, size: 3, mode: this.modes.abs, func: this.ops.cpy},
+				{name: 'CMP', cycles : 4, cross : 0, size: 3, mode: this.modes.abs, func: this.ops.cmp},
+				{name: 'DEC', cycles : 6, cross : 0, size: 3, mode: this.modes.abs, func: this.ops.dec},
+				{name: 'DCP', cycles : 6, cross : 0, size: 0, mode: this.modes.err, func: this.ops.dcp},
 
-				{name: 'BNE', cycles : 2, cross : 1, size: 2, mode: this.modes.rel, func: this.bne}, //d0
-				{name: 'CMP', cycles : 5, cross : 1, size: 2, mode: this.modes.inr, func: this.cmp},
-				{name: 'KIL', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.kil},
-				{name: 'DCP', cycles : 8, cross : 0, size: 0, mode: this.modes.err, func: this.dcp},
-				{name: 'NOP', cycles : 4, cross : 0, size: 2, mode: this.modes.err, func: this.nop},
-				{name: 'CMP', cycles : 4, cross : 0, size: 2, mode: this.modes.zex, func: this.cmp},
-				{name: 'DEC', cycles : 6, cross : 0, size: 2, mode: this.modes.zex, func: this.dec},
-				{name: 'DCP', cycles : 6, cross : 0, size: 0, mode: this.modes.err, func: this.dcp},
+				{name: 'BNE', cycles : 2, cross : 1, size: 2, mode: this.modes.rel, func: this.ops.bne}, //d0
+				{name: 'CMP', cycles : 5, cross : 1, size: 2, mode: this.modes.inr, func: this.ops.cmp},
+				{name: 'KIL', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.ops.kil},
+				{name: 'DCP', cycles : 8, cross : 0, size: 0, mode: this.modes.err, func: this.ops.dcp},
+				{name: 'NOP', cycles : 4, cross : 0, size: 2, mode: this.modes.err, func: this.ops.nop},
+				{name: 'CMP', cycles : 4, cross : 0, size: 2, mode: this.modes.zex, func: this.ops.cmp},
+				{name: 'DEC', cycles : 6, cross : 0, size: 2, mode: this.modes.zex, func: this.ops.dec},
+				{name: 'DCP', cycles : 6, cross : 0, size: 0, mode: this.modes.err, func: this.ops.dcp},
 
-				{name: 'CLD', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.cld}, //d8
-				{name: 'CMP', cycles : 4, cross : 1, size: 3, mode: this.modes.aby, func: this.cmp},
-				{name: 'NOP', cycles : 2, cross : 0, size: 1, mode: this.modes.err, func: this.nop},
-				{name: 'DCP', cycles : 7, cross : 0, size: 0, mode: this.modes.err, func: this.dcp},
-				{name: 'NOP', cycles : 4, cross : 0, size: 3, mode: this.modes.err, func: this.nop},
-				{name: 'CMP', cycles : 4, cross : 1, size: 3, mode: this.modes.abx, func: this.cmp},
-				{name: 'DEC', cycles : 7, cross : 1, size: 3, mode: this.modes.abx, func: this.dec},
-				{name: 'DCP', cycles : 7, cross : 0, size: 0, mode: this.modes.err, func: this.dcp},
+				{name: 'CLD', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.ops.cld}, //d8
+				{name: 'CMP', cycles : 4, cross : 1, size: 3, mode: this.modes.aby, func: this.ops.cmp},
+				{name: 'NOP', cycles : 2, cross : 0, size: 1, mode: this.modes.err, func: this.ops.nop},
+				{name: 'DCP', cycles : 7, cross : 0, size: 0, mode: this.modes.err, func: this.ops.dcp},
+				{name: 'NOP', cycles : 4, cross : 0, size: 3, mode: this.modes.err, func: this.ops.nop},
+				{name: 'CMP', cycles : 4, cross : 1, size: 3, mode: this.modes.abx, func: this.ops.cmp},
+				{name: 'DEC', cycles : 7, cross : 1, size: 3, mode: this.modes.abx, func: this.ops.dec},
+				{name: 'DCP', cycles : 7, cross : 0, size: 0, mode: this.modes.err, func: this.ops.dcp},
 
-				{name: 'CPX', cycles : 2, cross : 0, size: 2, mode: this.modes.imm, func: this.cpx}, //e0
-				{name: 'SBC', cycles : 6, cross : 0, size: 2, mode: this.modes.ini, func: this.sbc},
-				{name: 'NOP', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.nop},
-				{name: 'ISC', cycles : 8, cross : 0, size: 0, mode: this.modes.err, func: this.isc},
-				{name: 'CPX', cycles : 3, cross : 0, size: 2, mode: this.modes.zer, func: this.cpx},
-				{name: 'SBC', cycles : 3, cross : 0, size: 2, mode: this.modes.zer, func: this.sbc},
-				{name: 'INC', cycles : 5, cross : 0, size: 2, mode: this.modes.zer, func: this.inc},
-				{name: 'ISC', cycles : 5, cross : 0, size: 0, mode: this.modes.err, func: this.isc},
+				{name: 'CPX', cycles : 2, cross : 0, size: 2, mode: this.modes.imm, func: this.ops.cpx}, //e0
+				{name: 'SBC', cycles : 6, cross : 0, size: 2, mode: this.modes.ini, func: this.ops.sbc},
+				{name: 'NOP', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.ops.nop},
+				{name: 'ISC', cycles : 8, cross : 0, size: 0, mode: this.modes.err, func: this.ops.isc},
+				{name: 'CPX', cycles : 3, cross : 0, size: 2, mode: this.modes.zer, func: this.ops.cpx},
+				{name: 'SBC', cycles : 3, cross : 0, size: 2, mode: this.modes.zer, func: this.ops.sbc},
+				{name: 'INC', cycles : 5, cross : 0, size: 2, mode: this.modes.zer, func: this.ops.inc},
+				{name: 'ISC', cycles : 5, cross : 0, size: 0, mode: this.modes.err, func: this.ops.isc},
 
-				{name: 'INX', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.inx},
-				{name: 'SBC', cycles : 2, cross : 0, size: 2, mode: this.modes.imm, func: this.sbc},
-				{name: 'NOP', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.kil},
-				{name: 'SBC', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.isc},
-				{name: 'CPX', cycles : 4, cross : 0, size: 3, mode: this.modes.abs, func: this.nop},
-				{name: 'SBC', cycles : 4, cross : 0, size: 3, mode: this.modes.abs, func: this.sbc},
-				{name: 'INC', cycles : 6, cross : 0, size: 3, mode: this.modes.abs, func: this.inc},
-				{name: 'ISC', cycles : 6, cross : 0, size: 0, mode: this.modes.err, func: this.isc},
+				{name: 'INX', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.ops.inx},
+				{name: 'SBC', cycles : 2, cross : 0, size: 2, mode: this.modes.imm, func: this.ops.sbc},
+				{name: 'NOP', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.ops.kil},
+				{name: 'SBC', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.ops.isc},
+				{name: 'CPX', cycles : 4, cross : 0, size: 3, mode: this.modes.abs, func: this.ops.nop},
+				{name: 'SBC', cycles : 4, cross : 0, size: 3, mode: this.modes.abs, func: this.ops.sbc},
+				{name: 'INC', cycles : 6, cross : 0, size: 3, mode: this.modes.abs, func: this.ops.inc},
+				{name: 'ISC', cycles : 6, cross : 0, size: 0, mode: this.modes.err, func: this.ops.isc},
 
-				{name: 'BEQ', cycles : 2, cross : 1, size: 2, mode: this.modes.rel, func: this.beq}, //f0
-				{name: 'SBC', cycles : 5, cross : 1, size: 2, mode: this.modes.inr, func: this.sbc},
-				{name: 'KIL', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.kil},
-				{name: 'ISC', cycles : 8, cross : 0, size: 0, mode: this.modes.err, func: this.isc},
-				{name: 'NOP', cycles : 4, cross : 0, size: 2, mode: this.modes.err, func: this.nop},
-				{name: 'SBC', cycles : 4, cross : 0, size: 2, mode: this.modes.zex, func: this.sbc},
-				{name: 'INC', cycles : 6, cross : 0, size: 2, mode: this.modes.zex, func: this.inc},
-				{name: 'ISC', cycles : 6, cross : 0, size: 0, mode: this.modes.err, func: this.isc},
+				{name: 'BEQ', cycles : 2, cross : 1, size: 2, mode: this.modes.rel, func: this.ops.beq}, //f0
+				{name: 'SBC', cycles : 5, cross : 1, size: 2, mode: this.modes.inr, func: this.ops.sbc},
+				{name: 'KIL', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.ops.kil},
+				{name: 'ISC', cycles : 8, cross : 0, size: 0, mode: this.modes.err, func: this.ops.isc},
+				{name: 'NOP', cycles : 4, cross : 0, size: 2, mode: this.modes.err, func: this.ops.nop},
+				{name: 'SBC', cycles : 4, cross : 0, size: 2, mode: this.modes.zex, func: this.ops.sbc},
+				{name: 'INC', cycles : 6, cross : 0, size: 2, mode: this.modes.zex, func: this.ops.inc},
+				{name: 'ISC', cycles : 6, cross : 0, size: 0, mode: this.modes.err, func: this.ops.isc},
 
-				{name: 'SED', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.sed},
-				{name: 'SBC', cycles : 4, cross : 1, size: 3, mode: this.modes.aby, func: this.sbc},
-				{name: 'NOP', cycles : 2, cross : 0, size: 1, mode: this.modes.err, func: this.nop},
-				{name: 'ISC', cycles : 7, cross : 0, size: 0, mode: this.modes.err, func: this.isc},
-				{name: 'NOP', cycles : 4, cross : 1, size: 3, mode: this.modes.err, func: this.nop},
-				{name: 'SBC', cycles : 4, cross : 1, size: 3, mode: this.modes.abx, func: this.sbc},
-				{name: 'INC', cycles : 7, cross : 0, size: 3, mode: this.modes.abx, func: this.inc},
-				{name: 'ISC', cycles : 7, cross : 0, size: 0, mode: this.modes.err, func: this.isc},
+				{name: 'SED', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.ops.sed},
+				{name: 'SBC', cycles : 4, cross : 1, size: 3, mode: this.modes.aby, func: this.ops.sbc},
+				{name: 'NOP', cycles : 2, cross : 0, size: 1, mode: this.modes.err, func: this.ops.nop},
+				{name: 'ISC', cycles : 7, cross : 0, size: 0, mode: this.modes.err, func: this.ops.isc},
+				{name: 'NOP', cycles : 4, cross : 1, size: 3, mode: this.modes.err, func: this.ops.nop},
+				{name: 'SBC', cycles : 4, cross : 1, size: 3, mode: this.modes.abx, func: this.ops.sbc},
+				{name: 'INC', cycles : 7, cross : 0, size: 3, mode: this.modes.abx, func: this.ops.inc},
+				{name: 'ISC', cycles : 7, cross : 0, size: 0, mode: this.modes.err, func: this.ops.isc},
 			];
 		},
 		

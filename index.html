@@ -22,21 +22,21 @@
 
 		</style>
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-		<script type="text/javascript" src="cpu.js"></script>
 	</head>
 
 	<canvas id="screen" width="200" height="100" style="display: block;"></canvas>
 
 	<canvas id="nametables" width="200" height="100" style="display: block;"></canvas>
-	<script type="text/javascript" src="BinFileReader.js"></script>
-	
-	<script type="text/javascript" src="cpu.js"></script>
-	<script type="text/javascript" src="ppu.js"></script>	
-	
+	<script type="text/javascript" src="js/hoones/lib/BinFileReader.js"></script>
+	<script type="text/javascript" src="js/hoones/cartridge.js"></script>
+	<script type="text/javascript" src="js/hoones/cpu.js"></script>
+	<script type="text/javascript" src="js/hoones/ppu.js"></script>
+
+	<script type="text/javascript" src="js/hoones/nes.js"></script>
 	<script type="text/javascript">
-		nes.cartridge.load("./rom/palette_ram.nes");
+
+		nes.load("./roms/palette_ram.nes");
 		nes.reset();
-		
 		var nametable = {
 		
 			canvas : null,
@@ -89,7 +89,7 @@
 				}
 			},
 			
-			setPixel(x, y, hex) {
+			setPixel: function(x, y, hex) {
 				var color = hex;
 
 				this.canvas.fillStyle = color;
