@@ -269,11 +269,12 @@ var cpu = {
 		io : {
 
 			readByte : function(addr) {
-
+				console.log("READ");
+				return ppu.registers.readByte(addr);
 			},
 
 			writeByte : function(addr, val) {
-
+				ppu.registers.writeByte(addr, val);
 			},
 
 		},
@@ -369,7 +370,7 @@ var cpu = {
 			if (typeof addr != 'number') {
 				asdasdasdasddas;
 			}
-
+			console.log("READ " + addr.toString(16));
 			if (addr < 0x2000) {
 				//Mimic mirrors 0000-07FF
 				addr  = addr % 0x800;
@@ -384,6 +385,7 @@ var cpu = {
 					asdasdasdasdasd;
 				}
 			} else if (addr < 0x4000) {
+				console.log("READ2");
 				return ppu.registers.readByte(addr);
 			} else if (addr < 0x4020) {
 				//TODO look over this
@@ -507,7 +509,7 @@ var cpu = {
 		var cycles = this.cycles;
 
 		//Interrupt
-
+		this.interrupts.tick();
 
 		var addr = null;
 		var isPageDifferent = false;
@@ -608,8 +610,7 @@ var cpu = {
 			pc : this.registers.pc.get(),
 			op : op,
 		};
-		console.log(opcode);
-		console.log(op);
+
 		op.func(info);
 		
 		//Update cpu information
@@ -699,7 +700,7 @@ var cpu = {
 
 			asl : function(info) {
 				if (this.modes.equals(info.opcode.mode, this.modes.acc)) {
-					var temp = cpu.registers.a;
+					var temp = cpu.registers.a.get();
 
 					cpu.registers.p.c = (temp >> 7) & 1;
 					temp = (temp << 1) & 255;
