@@ -252,7 +252,7 @@ var cpu = {
 
 				addr -= 0x200;
 
-				if (addr > 0x599) {
+				if (addr > 0x5FF) {
 					asdasdasasd;
 				}
 
@@ -399,7 +399,6 @@ var cpu = {
 					asdasdasdasdasd;
 				}
 			} else if (addr < 0x4000) {
-				console.log("READ2");
 				return ppu.registers.readByte(addr);
 			} else if (addr < 0x4020) {
 				//TODO look over this
