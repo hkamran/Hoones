@@ -29,145 +29,178 @@
 		</style>
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
 	</head>
+	<body>
+	<div class="row">
+		<div class="small-12 large-12 columns">
+
+			<button onclick="tick();">Tick</button>
+		</div>
+	</div>
+
 	<div class="row">
 		<div class="small-6 large-6 columns">
 			<fieldset>
-				<label>Screen</label>
+				<legend>Screen</legend>
 				<canvas id="screen" width="200" height="100" style="display: block;"></canvas>
 			</fieldset>
 		</div>
-		<div style="small-6 large-6 columns">
+		<div class="small-6 large-6 columns">
 			<fieldset>
-				<label>Nametables</label>
-				<canvas id="nametables" width="200" height="100" style="display: block;"></canvas>
+				<legend>Nametables</legend>
+				<canvas id="nametables" width="200" height="200" style="display: block;"></canvas>
 			</fieldset>
 		</div>	
-		<div style="small-6 large-6 columns">
-			<fieldset>
-				<label>Palette</label>
-				<canvas id="nametables" width="200" height="100" style="display: block;"></canvas>
-			</fieldset>
-		</div>			
+
 	</div>
-	
-	<button onclick="regStatus();">Registers Status Update</button>
-	<button onclick="nes.tick();">Tick</button>
 
-	<fieldset class="border">
-		<legend>CPU</legend>
-		<div style="color: #bebebe; ">
-			<div style="margin-bottom: 10px">
-				<label>PC: </label><span id="pc"></span>
+	<div class="row">
+		<div class="small-6 large-6 columns">
+			<fieldset>
+				<legend>Operation</legend>
+				<div style="color: #bebebe; display: inline-block">
+				<ul style="list-style: none;">
+					<li><div>Opcode: </div><span id="opcode"></span></li>
+					<li><div>Op: </div><span id="opname"></span></li>
+					<li><div>Mode: </div><span id="mode"></span></li>
+					<li><div>Address: </div><span id="opaddr"></span></li>
+				</ul>
+					</div>
+			</fieldset>
+		</div>
+		<div class="small-6 large-6 columns">
+			<fieldset>
+				<legend>Console</legend>
+				<div style="color: #bebebe; display: inline-block">
+					<ul style="list-style: none;">
+						<li><div>CPU Cycles: </div><span id="cpucycles"></span></li>
+						<li><div>PPU Cycles: </div><span id="ppucycles"></span></li>
+						<li><div>Scanline: </div><span id="scanline"></span></li>
+						<li><div>Ticks: </div><span id="ticks"></span></li>
+					</ul>
+				</div>
+			</fieldset>
+		</div>
+	</div>
+
+	<div class="row">
+		<div class="small-6 large-6 columns">
+			<fieldset class="border">
+				<legend>CPU</legend>
+				<div style="color: #bebebe; ">
+					<div style="margin-bottom: 10px">
+						<label>PC: </label><span id="pc"></span>
+					</div>
+					<ul style="list-style: none;">
+						<li></li>
+						<li><div>Accumulator: </div><span id="acc"></span></li>
+						<li><div>X: </div><span id="x"></span></li>
+						<li><div>Y: </div><span id="y"></span></li>
+						<li><div>P: </div><span id="pflags"></span></li>
+					</ul>
+				</div>
+
+				<br/>
+				<div style="color: #bebebe; display: inline-block">
+					<ul style="list-style: none;">
+						<li><div>carry flag:</div><span id="carryFlag"></span></li>
+						<li><div>zero flag:</div><span id="zeroFlag"></span></li>
+						<li><div>interrupt flag:</div><span id="interruptFlag"></span></li>
+						<li><div>decimal </div><span id="decimalFlag"></span></li>
+						<li><div>break flag:</div><span id="breakFlag"></span></li>
+						<li><div>overflow flag:</div><span id="overflowFlag"></span></li>
+						<li><div>negative flag:</div><span id="negativeFlag"></span></li>
+					</ul>
+				</div>
+
+				<br/><br/>
+				<div style="color: #bebebe;">
+					<label>Stack: </label>
+					<span id="stack"></span>
+				</div>
+
+				<br/>
+				<div style="color: #bebebe;">
+					<ul style="list-style: none;">
+						<li><div>Opcode: </div><span id="opcode"></span></li>
+						<li><div>Address: </div><span id="opaddr"></span></li>
+					</ul>
+				</div>
+
+				<br/>
+				<div style="color: #bebebe;">
+					<ul style="list-style: none;">
+						<li><div>CPU Cycles: </div><span id="cpuCycles"></span></li>
+					</ul>
+				</div>
+			</fieldset>
+		</div>
+		<div class="small-6 large-6 columns">
+		<fieldset>
+			<legend>PPU</legend>
+
+			<div style="color: #bebebe; display: inline-block">
+				<ul style="list-style: none;">
+					<li>
+						<div>control:</div><span id="cnrtl1">(0x2000)</span><br/>
+						<ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
+							<li><div>nametable:</div><span id="nametable"></span></li>
+							<li><div>increment:</div><span id="increment"></span></li>
+							<li><div>sprite table:</div><span id="spritetable"></span></li>
+							<li><div>background table:</div><span id="backgroundtable"></span></li>
+							<li><div>sprite size:</div><span id="spritesize"></span></li>
+							<li><div>masterslave:</div><span id="masterslave"></span></li>
+							<li><div>nmi:</div><span id="nmi"></span></li>
+						</ul>
+					</li>
+					<li><div>mask: </div><span id="mask">(0x2001)</span>
+						<ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
+							<li><div>nametable:</div><span id="grayscale"></span></li>
+							<li><div>increment:</div><span id="showbgleft"></span></li>
+							<li><div>sprite table:</div><span id="showspleft"></span></li>
+							<li><div>background table:</div><span id="showbg"></span></li>
+							<li><div>sprite size:</div><span id="showsprites"></span></li>
+							<li><div>masterslave:</div><span id="increds"></span></li>
+							<li><div>nmi:</div><span id="incgreens"></span></li>
+							<li><div>nmi:</div><span id="incblues"></span></li>
+						</ul>
+					</li>
+					<li>
+						<div>status:</div>
+						<span id="status">(0x2002)</span>
+						<ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
+							<li><div>spriteoverflow:</div><span id="spriteoverflow"></span></li>
+							<li><div>spritehit:</div><span id="spritehit"></span></li>
+							<li><div>vblank:</div><span id="vblank"></span></li>
+							<li><div>nmiOccurred:</div><span id="nmiOccurred"></span></li>
+							<li><div>writable:</div><span id="writable"></span></li>
+						</ul>
+					</li>
+					<li>
+						<div>oamaddr:</div><span id="oamaddr">(0x2003)</span>
+						<ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
+							<li><div>addr:</div><span id="val0"></span></li>
+						</ul>
+					</li>
+					<li>
+						<div>scroll:</div><span id="scroll">(0x2005)</span>
+						<ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
+							<li><div>val:</div><span id="val"></span></li>
+						</ul>
+					</li>
+					<li>
+						<div>addr:</div><span id="Pointer">(0x2006)</span>
+						<ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
+							<li><div>vram:</div><span id="vram"></span></li>
+							<li><div>temp:</div><span id="temp"></span></li>
+						</ul>
+					</li>
+				</ul>
 			</div>
-			<ul style="list-style: none;">
-				<li></li>
-				<li><div>Accumulator: </div><span id="acc"></span></li>
-				<li><div>X: </div><span id="x"></span></li>
-				<li><div>Y: </div><span id="y"></span></li>
-				<li><div>P: </div><span id="pflags"></span></li>
-			</ul>
+
+		</fieldset>
 		</div>
+	</div>
 
-		<br/>
-		<div style="color: #bebebe; display: inline-block">
-			<ul style="list-style: none;">
-				<li><div>carry flag:</div><span id="carryFlag"></span></li>
-				<li><div>zero flag:</div><span id="zeroFlag"></span></li>
-				<li><div>interrupt flag:</div><span id="interruptFlag"></span></li>
-				<li><div>decimal </div><span id="decimalFlag"></span></li>
-				<li><div>break flag:</div><span id="breakFlag"></span></li>
-				<li><div>overflow flag:</div><span id="overflowFlag"></span></li>
-				<li><div>negative flag:</div><span id="negativeFlag"></span></li>
-			</ul>
-		</div>
-
-		<br/><br/>
-		<div style="color: #bebebe;">
-			<label>Stack: </label>
-			<span id="stack"></span>
-		</div>
-
-		<br/>
-		<div style="color: #bebebe;">
-			<ul style="list-style: none;">
-				<li><div>Opcode: </div><span id="opcode"></span></li>
-				<li><div>Address: </div><span id="opaddr"></span></li>
-			</ul>
-		</div>
-
-		<br/>
-		<div style="color: #bebebe;">
-			<ul style="list-style: none;">
-				<li><div>CPU Cycles: </div><span id="cpuCycles"></span></li>
-			</ul>
-		</div>
-	</fieldset>
-
-	<fieldset>
-		<legend>PPU</legend>
-
-		<div style="color: #bebebe; display: inline-block">
-			<ul style="list-style: none;">
-				<li>
-					<div>control:</div><span id="cnrtl1">(0x2000)</span><br/>
-					<ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
-						<li><div>nametable:</div><span id="nametable"></span></li>
-						<li><div>increment:</div><span id="increment"></span></li>
-						<li><div>sprite table:</div><span id="spritetable"></span></li>
-						<li><div>background table:</div><span id="backgroundtable"></span></li>
-						<li><div>sprite size:</div><span id="spritesize"></span></li>
-						<li><div>masterslave:</div><span id="masterslave"></span></li>
-						<li><div>nmi:</div><span id="nmi"></span></li>
-					</ul>
-				</li>
-				<li><div>mask: </div><span id="mask">(0x2001)</span>
-					<ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
-						<li><div>nametable:</div><span id="grayscale"></span></li>
-						<li><div>increment:</div><span id="showbgleft"></span></li>
-						<li><div>sprite table:</div><span id="showspleft"></span></li>
-						<li><div>background table:</div><span id="showbg"></span></li>
-						<li><div>sprite size:</div><span id="showsprites"></span></li>
-						<li><div>masterslave:</div><span id="increds"></span></li>
-						<li><div>nmi:</div><span id="incgreens"></span></li>
-						<li><div>nmi:</div><span id="incblues"></span></li>
-					</ul>
-				</li>
-				<li>
-					<div>status:</div>
-					<span id="status">(0x2002)</span>
-					<ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
-						<li><div>spriteoverflow:</div><span id="spriteoverflow"></span></li>
-						<li><div>spritehit:</div><span id="spritehit"></span></li>
-						<li><div>vblank:</div><span id="vblank"></span></li>
-						<li><div>nmiOccurred:</div><span id="nmiOccurred"></span></li>
-						<li><div>writable:</div><span id="writable"></span></li>
-					</ul>
-				</li>
-				<li>
-					<div>oamaddr:</div><span id="oamaddr">(0x2003)</span>
-					<ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
-						<li><div>addr:</div><span id="val0"></span></li>
-					</ul>
-				</li>
-				<li>
-					<div>scroll:</div><span id="scroll">(0x2005)</span>
-					<ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
-						<li><div>val:</div><span id="val1"></span></li>
-						<li><div>temp:</div><span id="temp1"></span></li>
-					</ul>
-				</li>
-				<li>
-					<div>addr:</div><span id="addr">(0x2006)</span>
-					<ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
-						<li><div>val:</div><span id="val2"></span></li>
-						<li><div>temp:</div><span id="temp2"></span></li>
-					</ul>
-				</li>
-			</ul>
-		</div>
-
-	</fieldset>	
-	
 	<script type="text/javascript" src="js/hoones/lib/BinFileReader.js"></script>
 	<script type="text/javascript" src="js/hoones/cartridge.js"></script>
 	<script type="text/javascript" src="js/hoones/cpu.js"></script>
@@ -183,6 +216,8 @@
 	<script type="text/javascript">
 
 		function regStatus() {
+			console.log("ASD");
+
 			document.getElementById("carryFlag").innerHTML = cpu.registers.p.c == 1;
 			document.getElementById("zeroFlag").innerHTML = cpu.registers.p.z == 1;
 			document.getElementById("interruptFlag").innerHTML = cpu.registers.p.i == 1;
@@ -196,52 +231,65 @@
 			document.getElementById("x").innerHTML = "0x" + cpu.registers.x.get().toString(16).toUpperCase();
 			document.getElementById("y").innerHTML = "0x" + cpu.registers.y.get().toString(16).toUpperCase();
 			document.getElementById("pflags").innerHTML = "0x" + cpu.registers.p.get().toString(16).toUpperCase();
-			document.getElementById("cpuCycles").innerHTML = cpu.total_cycles;
+			document.getElementById("cpuCycles").innerHTML = cpu.cycles;
 
-			document.getElementById("nametable").innerHTML = "0x" + ppu.registers.cntrl._nametable;
-			document.getElementById("increment").innerHTML = "0x" + ppu.registers.cntrl._increment;
-			document.getElementById("spritetable").innerHTML = "0x" + ppu.registers.cntrl._spritetable;
-			document.getElementById("backgroundtable").innerHTML = "0x" + ppu.registers.cntrl._backgroundtable;
-			document.getElementById("spritesize").innerHTML = "0x" + ppu.registers.cntrl._spritesize;
-			document.getElementById("masterslave").innerHTML = "0x" + ppu.registers.cntrl._masterslave;
-			document.getElementById("nmi").innerHTML = "0x" + ppu.registers.cntrl._nmi;
+			document.getElementById("nametable").innerHTML = "0x" + ppu.registers.cntrl.nametable;
+			document.getElementById("increment").innerHTML = "0x" + ppu.registers.cntrl.increment;
+			document.getElementById("spritetable").innerHTML = "0x" + ppu.registers.cntrl.spritetable;
+			document.getElementById("backgroundtable").innerHTML = "0x" + ppu.registers.cntrl.backgroundtable;
+			document.getElementById("spritesize").innerHTML = "0x" + ppu.registers.cntrl.spritesize;
+			document.getElementById("masterslave").innerHTML = "0x" + ppu.registers.cntrl.masterslave;
+			document.getElementById("nmi").innerHTML = "0x" + ppu.registers.cntrl.nmi;
 
-			document.getElementById("grayscale").innerHTML = "0x" + ppu.registers.mask._grayscale;
-			document.getElementById("showbgleft").innerHTML = "0x" + ppu.registers.mask._showbgleft;
-			document.getElementById("showspleft").innerHTML = "0x" + ppu.registers.mask._showspleft;
-			document.getElementById("showbg").innerHTML = "0x" + ppu.registers.mask._showbg;
-			document.getElementById("showsprites").innerHTML = "0x" + ppu.registers.mask._showsprites;
-			document.getElementById("increds").innerHTML = "0x" + ppu.registers.mask._increds;
-			document.getElementById("incgreens").innerHTML = "0x" + ppu.registers.mask._incgreens;
-			document.getElementById("incblues").innerHTML = "0x" + ppu.registers.mask._incblues;
+			document.getElementById("grayscale").innerHTML = "0x" + ppu.registers.mask.greyscale;
+			document.getElementById("showbgleft").innerHTML = "0x" + ppu.registers.mask.showbgleft;
+			document.getElementById("showspleft").innerHTML = "0x" + ppu.registers.mask.showspleft;
+			document.getElementById("showbg").innerHTML = "0x" + ppu.registers.mask.showbg;
+			document.getElementById("showsprites").innerHTML = "0x" + ppu.registers.mask.showsprites;
+			document.getElementById("increds").innerHTML = "0x" + ppu.registers.mask.increds;
+			document.getElementById("incgreens").innerHTML = "0x" + ppu.registers.mask.incgreens;
+			document.getElementById("incblues").innerHTML = "0x" + ppu.registers.mask.incblues;
 
-			document.getElementById("spriteoverflow").innerHTML = "0x" + ppu.registers.status._spriteoverflow;
-			document.getElementById("spritehit").innerHTML = "0x" + ppu.registers.status._spritehit;
-			document.getElementById("vblank").innerHTML = "0x" + ppu.registers.status._vblank;
-			document.getElementById("nmiOccurred").innerHTML = "0x" + ppu.nmiOccurred ? 1:0 ;
-			document.getElementById("writable").innerHTML = "0x" + ppu.registers.status._writable;
+			document.getElementById("spriteoverflow").innerHTML = "0x" + ppu.registers.status.spriteoverflow;
+			document.getElementById("spritehit").innerHTML = "0x" + ppu.registers.status.spritehit;
+			document.getElementById("vblank").innerHTML = "0x" + ppu.registers.status.vblank;
+			document.getElementById("nmiOccurred").innerHTML = "0x" + ppu.nmi.occurred ? 1:0 ;
+			document.getElementById("writable").innerHTML = "0x" + ppu.vars.w;
 
-			document.getElementById("val0").innerHTML = "0x" + ppu.registers.oamaddr._addr;
+			document.getElementById("val").innerHTML = "0x" + ppu.registers.scroll.data.toString(16).toUpperCase();
 
-			document.getElementById("val1").innerHTML = "0x" + ppu.registers.scroll._val;
-			document.getElementById("temp1").innerHTML = "0x" + ppu.registers.scroll._temp;
-
-
-			document.getElementById("val2").innerHTML = "0x" + ppu.registers.addr._val;
-			document.getElementById("temp2").innerHTML = "0x" + ppu.registers.addr._temp;
+			document.getElementById("vram").innerHTML = "0x" + ppu.vars.v.toString(16).toUpperCase();
+			document.getElementById("temp").innerHTML = "0x" + ppu.vars.t.toString(16).toUpperCase();
 
 			var st = "";
 			var comma = " ,";
-			for (var i = nes.mmu._stack.length - 1; i >= 0; i--) {
+			for (var i = cpu.mmu.stack.data.length - 1; i >= 0; i--) {
 
 				if (i == 0) {
 					comma = "";
 				}
-				st += nes.mmu._stack[i].toString(16) + comma;
+				st += cpu.mmu.stack.data[i].toString(16) + comma;
 			}
 
 			document.getElementById("stack").innerHTML = st;
 
+			var op = cpu.op;
+			if (op) {
+				document.getElementById("opcode").innerHTML = "0x" + cpu.op.opcode.toString(16).toUpperCase();
+				document.getElementById("opname").innerHTML = cpu.op.op.name;
+				document.getElementById("mode").innerHTML = cpu.op.op.mode.toUpperCase();
+				document.getElementById("opaddr").innerHTML = "0x" + cpu.op.address.toString(16).toUpperCase();
+			} else {
+				document.getElementById("opcode").innerHTML = "NULL";
+				document.getElementById("opname").innerHTML = "NULL";
+				document.getElementById("mode").innerHTML = "NULL";
+				document.getElementById("opaddr").innerHTML = "NULL";
+			}
+
+			document.getElementById("cpucycles").innerHTML = cpu.cycles;
+			document.getElementById("ppucycles").innerHTML = ppu.cycle;
+			document.getElementById("scanline").innerHTML = ppu.scanline;
+			document.getElementById("ticks").innerHTML = cpu.ticks;
 
 		};
 
@@ -252,15 +300,20 @@
 			}
 		};
 
+		function tick() {
+			nes.tick();
+			regStatus();
+		};
+
 		$(window).keypress(function (e) {
 			if (e.keyCode === 0 || e.keyCode === 32) {
 				e.preventDefault();
-				nes.tick();
+				tick();
 			}
 		});
 	</script>	
 	
-	</script>
+
 	<script type="text/javascript">
 		var nametable = {
 		

@@ -3,6 +3,7 @@ var cpu = {
 	cycles : 0,
 	ticks : 0,
 	stall : 0,
+	op : null,
 
 	registers : {
 		//Accumulator 	  (8 bits)
@@ -609,8 +610,10 @@ var cpu = {
 			address : addr,
 			pc : this.registers.pc.get(),
 			op : op,
+			opcode : opcode,
 		};
 
+		this.op = info;
 		op.func(info);
 		
 		//Update cpu information
