@@ -272,7 +272,7 @@ var ppu = {
 		this.screen.reset(); 
 		this.palette.reset();
 		
-		this.scanline = 230;
+		this.scanline = 239;
 		this.cycle = 340;
 		this.vars.f = 1;
 		this.registers.cntrl.write(0);
@@ -421,8 +421,8 @@ var ppu = {
 			
 			read: function(val) {
 				var result = 0x1F; //0001 1111
-				result |= this._spriteoverflow << 5;
-				result |= this._spritehit << 6;		
+				result |= this.spriteoverflow << 5;
+				result |= this.spritehit << 6;		
 				
 				if (ppu.nmi.occurred) {
 					console.log("DOING");

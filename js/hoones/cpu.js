@@ -520,6 +520,8 @@ var cpu = {
 		var opcode = this.mmu.readByte(this.registers.pc.get());
 		var op = this.instructions.get(opcode);
 		var cycles = this.cycles;
+		log(opcode);
+		log(op);
 
 		//Interrupt
 		this.interrupts.tick();
@@ -721,7 +723,7 @@ var cpu = {
 			},
 
 			asl : function(info) {
-				if (this.modes.equals(info.opcode.mode, this.modes.acc)) {
+				if (cpu.instructions.modes.equals(info.op.mode, cpu.instructions.modes.acc)) {
 					var temp = cpu.registers.a.get();
 
 					cpu.registers.p.c = (temp >> 7) & 1;
@@ -984,8 +986,8 @@ var cpu = {
 
 			//Shift Right one bit
 			lsr: function(info) {
-				var temp;
-				if (this.modes.equals(info.opcode.mode, this.modes.acc)) {
+				var temp;				
+				if (cpu.instructions.modes.equals(info.op.mode, cpu.instructions.modes.acc)) {
 					temp = cpu.registers.a.get() && 0xFF;
 					cpu.registers.p.c = temp & 1;
 					temp >>= 1;
@@ -1037,7 +1039,7 @@ var cpu = {
 			},
 
 			rol: function(info) {
-				if (this.modes.equals(info.opcode.mode, this.modes.acc)) {
+				if (cpu.instructions.modes.equals(info.op.mode, cpu.instructions.modes.acc)) {
 					var temp = cpu.registers.a.get();
 					var add = cpu.registers.p.c;
 
@@ -1064,7 +1066,7 @@ var cpu = {
 			},
 
 			ror: function(info) {
-				if (this.modes.equals(info.opcode.mode, this.modes.acc)) {
+				if (cpu.instructions.modes.equals(info.op.mode, cpu.instructions.modes.acc)) {
 					var temp = cpu.registers.a.get();
 					var c = cpu.registers.p.c;
 
@@ -1585,4 +1587,11 @@ var cpu = {
 		},
 	},
 	
+	
+};
+var debug = false;
+var log = function(msg) {
+	if (debug) {
+		console.log(msg);
+	}
 };
