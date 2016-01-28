@@ -1,7 +1,7 @@
 <html>
 	<head>
 		<title>test</title>
-
+		<link href="./css/foundation.css" rel="stylesheet">
 		<style>
 			body {
 				background-color: #000;
@@ -20,23 +20,248 @@
 				padding: 0px;
 			}
 
+			fieldset {
+				color: #fff;
+				padding: 10px;
+				margin: 10px;
+			}
+
 		</style>
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
 	</head>
+	<div class="row">
+		<div class="small-6 large-6 columns">
+			<fieldset>
+				<label>Screen</label>
+				<canvas id="screen" width="200" height="100" style="display: block;"></canvas>
+			</fieldset>
+		</div>
+		<div style="small-6 large-6 columns">
+			<fieldset>
+				<label>Nametables</label>
+				<canvas id="nametables" width="200" height="100" style="display: block;"></canvas>
+			</fieldset>
+		</div>	
+		<div style="small-6 large-6 columns">
+			<fieldset>
+				<label>Palette</label>
+				<canvas id="nametables" width="200" height="100" style="display: block;"></canvas>
+			</fieldset>
+		</div>			
+	</div>
+	
+	<button onclick="regStatus();">Registers Status Update</button>
+	<button onclick="nes.tick();">Tick</button>
 
-	<canvas id="screen" width="200" height="100" style="display: block;"></canvas>
+	<fieldset class="border">
+		<legend>CPU</legend>
+		<div style="color: #bebebe; ">
+			<div style="margin-bottom: 10px">
+				<label>PC: </label><span id="pc"></span>
+			</div>
+			<ul style="list-style: none;">
+				<li></li>
+				<li><div>Accumulator: </div><span id="acc"></span></li>
+				<li><div>X: </div><span id="x"></span></li>
+				<li><div>Y: </div><span id="y"></span></li>
+				<li><div>P: </div><span id="pflags"></span></li>
+			</ul>
+		</div>
 
-	<canvas id="nametables" width="200" height="100" style="display: block;"></canvas>
+		<br/>
+		<div style="color: #bebebe; display: inline-block">
+			<ul style="list-style: none;">
+				<li><div>carry flag:</div><span id="carryFlag"></span></li>
+				<li><div>zero flag:</div><span id="zeroFlag"></span></li>
+				<li><div>interrupt flag:</div><span id="interruptFlag"></span></li>
+				<li><div>decimal </div><span id="decimalFlag"></span></li>
+				<li><div>break flag:</div><span id="breakFlag"></span></li>
+				<li><div>overflow flag:</div><span id="overflowFlag"></span></li>
+				<li><div>negative flag:</div><span id="negativeFlag"></span></li>
+			</ul>
+		</div>
+
+		<br/><br/>
+		<div style="color: #bebebe;">
+			<label>Stack: </label>
+			<span id="stack"></span>
+		</div>
+
+		<br/>
+		<div style="color: #bebebe;">
+			<ul style="list-style: none;">
+				<li><div>Opcode: </div><span id="opcode"></span></li>
+				<li><div>Address: </div><span id="opaddr"></span></li>
+			</ul>
+		</div>
+
+		<br/>
+		<div style="color: #bebebe;">
+			<ul style="list-style: none;">
+				<li><div>CPU Cycles: </div><span id="cpuCycles"></span></li>
+			</ul>
+		</div>
+	</fieldset>
+
+	<fieldset>
+		<legend>PPU</legend>
+
+		<div style="color: #bebebe; display: inline-block">
+			<ul style="list-style: none;">
+				<li>
+					<div>control:</div><span id="cnrtl1">(0x2000)</span><br/>
+					<ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
+						<li><div>nametable:</div><span id="nametable"></span></li>
+						<li><div>increment:</div><span id="increment"></span></li>
+						<li><div>sprite table:</div><span id="spritetable"></span></li>
+						<li><div>background table:</div><span id="backgroundtable"></span></li>
+						<li><div>sprite size:</div><span id="spritesize"></span></li>
+						<li><div>masterslave:</div><span id="masterslave"></span></li>
+						<li><div>nmi:</div><span id="nmi"></span></li>
+					</ul>
+				</li>
+				<li><div>mask: </div><span id="mask">(0x2001)</span>
+					<ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
+						<li><div>nametable:</div><span id="grayscale"></span></li>
+						<li><div>increment:</div><span id="showbgleft"></span></li>
+						<li><div>sprite table:</div><span id="showspleft"></span></li>
+						<li><div>background table:</div><span id="showbg"></span></li>
+						<li><div>sprite size:</div><span id="showsprites"></span></li>
+						<li><div>masterslave:</div><span id="increds"></span></li>
+						<li><div>nmi:</div><span id="incgreens"></span></li>
+						<li><div>nmi:</div><span id="incblues"></span></li>
+					</ul>
+				</li>
+				<li>
+					<div>status:</div>
+					<span id="status">(0x2002)</span>
+					<ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
+						<li><div>spriteoverflow:</div><span id="spriteoverflow"></span></li>
+						<li><div>spritehit:</div><span id="spritehit"></span></li>
+						<li><div>vblank:</div><span id="vblank"></span></li>
+						<li><div>nmiOccurred:</div><span id="nmiOccurred"></span></li>
+						<li><div>writable:</div><span id="writable"></span></li>
+					</ul>
+				</li>
+				<li>
+					<div>oamaddr:</div><span id="oamaddr">(0x2003)</span>
+					<ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
+						<li><div>addr:</div><span id="val0"></span></li>
+					</ul>
+				</li>
+				<li>
+					<div>scroll:</div><span id="scroll">(0x2005)</span>
+					<ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
+						<li><div>val:</div><span id="val1"></span></li>
+						<li><div>temp:</div><span id="temp1"></span></li>
+					</ul>
+				</li>
+				<li>
+					<div>addr:</div><span id="addr">(0x2006)</span>
+					<ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
+						<li><div>val:</div><span id="val2"></span></li>
+						<li><div>temp:</div><span id="temp2"></span></li>
+					</ul>
+				</li>
+			</ul>
+		</div>
+
+	</fieldset>	
+	
 	<script type="text/javascript" src="js/hoones/lib/BinFileReader.js"></script>
 	<script type="text/javascript" src="js/hoones/cartridge.js"></script>
 	<script type="text/javascript" src="js/hoones/cpu.js"></script>
 	<script type="text/javascript" src="js/hoones/ppu.js"></script>
-
 	<script type="text/javascript" src="js/hoones/nes.js"></script>
 	<script type="text/javascript">
 
 		nes.load("./roms/palette_ram.nes");
 		nes.reset();
+		
+	</script>
+
+	<script type="text/javascript">
+
+		function regStatus() {
+			document.getElementById("carryFlag").innerHTML = cpu.registers.p.c == 1;
+			document.getElementById("zeroFlag").innerHTML = cpu.registers.p.z == 1;
+			document.getElementById("interruptFlag").innerHTML = cpu.registers.p.i == 1;
+			document.getElementById("decimalFlag").innerHTML = cpu.registers.p.d == 1;
+			document.getElementById("breakFlag").innerHTML = cpu.registers.p.b == 1;
+			document.getElementById("overflowFlag").innerHTML = cpu.registers.p.v == 1;
+			document.getElementById("negativeFlag").innerHTML = cpu.registers.p.n == 1;
+
+			document.getElementById("pc").innerHTML = "0x" + cpu.registers.pc.get().toString(16).toUpperCase();
+			document.getElementById("acc").innerHTML = "0x" + cpu.registers.a.get().toString(16).toUpperCase();
+			document.getElementById("x").innerHTML = "0x" + cpu.registers.x.get().toString(16).toUpperCase();
+			document.getElementById("y").innerHTML = "0x" + cpu.registers.y.get().toString(16).toUpperCase();
+			document.getElementById("pflags").innerHTML = "0x" + cpu.registers.p.get().toString(16).toUpperCase();
+			document.getElementById("cpuCycles").innerHTML = cpu.total_cycles;
+
+			document.getElementById("nametable").innerHTML = "0x" + ppu.registers.cntrl._nametable;
+			document.getElementById("increment").innerHTML = "0x" + ppu.registers.cntrl._increment;
+			document.getElementById("spritetable").innerHTML = "0x" + ppu.registers.cntrl._spritetable;
+			document.getElementById("backgroundtable").innerHTML = "0x" + ppu.registers.cntrl._backgroundtable;
+			document.getElementById("spritesize").innerHTML = "0x" + ppu.registers.cntrl._spritesize;
+			document.getElementById("masterslave").innerHTML = "0x" + ppu.registers.cntrl._masterslave;
+			document.getElementById("nmi").innerHTML = "0x" + ppu.registers.cntrl._nmi;
+
+			document.getElementById("grayscale").innerHTML = "0x" + ppu.registers.mask._grayscale;
+			document.getElementById("showbgleft").innerHTML = "0x" + ppu.registers.mask._showbgleft;
+			document.getElementById("showspleft").innerHTML = "0x" + ppu.registers.mask._showspleft;
+			document.getElementById("showbg").innerHTML = "0x" + ppu.registers.mask._showbg;
+			document.getElementById("showsprites").innerHTML = "0x" + ppu.registers.mask._showsprites;
+			document.getElementById("increds").innerHTML = "0x" + ppu.registers.mask._increds;
+			document.getElementById("incgreens").innerHTML = "0x" + ppu.registers.mask._incgreens;
+			document.getElementById("incblues").innerHTML = "0x" + ppu.registers.mask._incblues;
+
+			document.getElementById("spriteoverflow").innerHTML = "0x" + ppu.registers.status._spriteoverflow;
+			document.getElementById("spritehit").innerHTML = "0x" + ppu.registers.status._spritehit;
+			document.getElementById("vblank").innerHTML = "0x" + ppu.registers.status._vblank;
+			document.getElementById("nmiOccurred").innerHTML = "0x" + ppu.nmiOccurred ? 1:0 ;
+			document.getElementById("writable").innerHTML = "0x" + ppu.registers.status._writable;
+
+			document.getElementById("val0").innerHTML = "0x" + ppu.registers.oamaddr._addr;
+
+			document.getElementById("val1").innerHTML = "0x" + ppu.registers.scroll._val;
+			document.getElementById("temp1").innerHTML = "0x" + ppu.registers.scroll._temp;
+
+
+			document.getElementById("val2").innerHTML = "0x" + ppu.registers.addr._val;
+			document.getElementById("temp2").innerHTML = "0x" + ppu.registers.addr._temp;
+
+			var st = "";
+			var comma = " ,";
+			for (var i = nes.mmu._stack.length - 1; i >= 0; i--) {
+
+				if (i == 0) {
+					comma = "";
+				}
+				st += nes.mmu._stack[i].toString(16) + comma;
+			}
+
+			document.getElementById("stack").innerHTML = st;
+
+
+		};
+
+		function opCodeUpdate(val) {
+			if (val && val.opcode) {
+				document.getElementById("opcode").innerHTML = val.opcode.name;
+				document.getElementById("opaddr").innerHTML = val.address.toString(16).toUpperCase();
+			}
+		};
+
+		$(window).keypress(function (e) {
+			if (e.keyCode === 0 || e.keyCode === 32) {
+				e.preventDefault();
+				nes.tick();
+			}
+		});
+	</script>	
+	
+	</script>
+	<script type="text/javascript">
 		var nametable = {
 		
 			canvas : null,
