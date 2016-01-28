@@ -197,22 +197,36 @@ var cpu = {
 					this.index = 0;
 				}
 
-				this.data[this.index] = val;
+				this.data.push(val);
 				this.index += 1;
-				this.index &= 0xFF;
+
+				if (this.index > 0xFF) {
+					asdasdasdasd
+				}
+
 			},
 
 			popByte : function() {
-				var result = this.data[this.index];
 
 				this.index--;
-				this.index &= 0xFF;
+
+				var result = this.data.pop();
+
+				if (typeof result == 'undefined') {
+					asdasd.asdasdasd
+				}
+
+				if (this.index < 0) {
+					asdasdasdasd
+				}
+
+
 				return result;
 			},
 
 			pushWord: function(val) {
 				var low = val & 0x00FF;
-				var high = val >> 0xFF;
+				var high = val >> 8;
 
 				this.pushByte(high);
 				this.pushByte(low);
@@ -220,7 +234,7 @@ var cpu = {
 
 			popWord: function(addr) {
 				var low = this.popByte(addr);
-				var high = this.popByte(addr) << 0xFF;
+				var high = this.popByte(addr) << 8;
 
 				var result = high | low;
 				return result;
@@ -258,7 +272,7 @@ var cpu = {
 
 				addr -= 0x200;
 
-				if (addr > 0x599) {
+				if (addr > 0x5FF) {
 					asdasdasasd;
 				}
 
@@ -270,7 +284,6 @@ var cpu = {
 		io : {
 
 			readByte : function(addr) {
-				console.log("READ");
 				return ppu.registers.readByte(addr);
 			},
 
@@ -371,7 +384,7 @@ var cpu = {
 			if (typeof addr != 'number') {
 				asdasdasdasddas;
 			}
-			console.log("READ " + addr.toString(16));
+
 			if (addr < 0x2000) {
 				//Mimic mirrors 0000-07FF
 				addr  = addr % 0x800;
@@ -450,7 +463,7 @@ var cpu = {
 
 		writeWord : function(addr, val) {
 			var low = val & 0x00FF;
-			var high = val >> 0xFF;
+			var high = val >> 8;
 
 			this.writeByte(addr, low);
 			this.writeByte(addr + 1, high);
@@ -625,8 +638,15 @@ var cpu = {
 
 	reset : function() {
 		this.instructions.init();
+
+
+
 		this.registers.pc.set(this.mmu.readWord(0xFFFC));
+		this.mmu.stack.pushWord(0xFFFF);
+		this.mmu.stack.pushWord(0x0002);
+		this.mmu.stack.pushByte(0x30);
 		this.registers.p.set(0x24);
+		this.cycles += 7;
 	},
 
 	//operations
@@ -928,7 +948,7 @@ var cpu = {
 
 			//Jump to subroutine
 			jsr: function(info) {
-				cpu.mmu.stack.pushWord(cpu.registers.pc - 1);
+				cpu.mmu.stack.pushWord(cpu.registers.pc.get() - 1);
 				cpu.registers.pc.set(info.address);
 			},
 
@@ -1072,12 +1092,12 @@ var cpu = {
 
 			rti: function(info) {
 				cpu.registers.p.set(cpu.mmu.stack.popByte() & 0xEF | 0x20);
-				cpu.registers.pc = cpu.mmu.stack.popWord();
+				cpu.registers.pc.set(cpu.mmu.stack.popWord());
 			},
 
 			// RTS - Return from Subroutine
 			rts : function(info) {
-				cpu.registers.pc = cpu.mmu.stack.popWord() + 1;
+				cpu.registers.pc.set(cpu.mmu.stack.popWord() + 1);
 			},
 
 			sbc: function(info) {

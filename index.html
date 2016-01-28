@@ -118,20 +118,6 @@
 					<span id="stack"></span>
 				</div>
 
-				<br/>
-				<div style="color: #bebebe;">
-					<ul style="list-style: none;">
-						<li><div>Opcode: </div><span id="opcode"></span></li>
-						<li><div>Address: </div><span id="opaddr"></span></li>
-					</ul>
-				</div>
-
-				<br/>
-				<div style="color: #bebebe;">
-					<ul style="list-style: none;">
-						<li><div>CPU Cycles: </div><span id="cpuCycles"></span></li>
-					</ul>
-				</div>
 			</fieldset>
 		</div>
 		<div class="small-6 large-6 columns">
@@ -216,7 +202,7 @@
 	<script type="text/javascript">
 
 		function regStatus() {
-			console.log("ASD");
+
 
 			document.getElementById("carryFlag").innerHTML = cpu.registers.p.c == 1;
 			document.getElementById("zeroFlag").innerHTML = cpu.registers.p.z == 1;
@@ -231,7 +217,6 @@
 			document.getElementById("x").innerHTML = "0x" + cpu.registers.x.get().toString(16).toUpperCase();
 			document.getElementById("y").innerHTML = "0x" + cpu.registers.y.get().toString(16).toUpperCase();
 			document.getElementById("pflags").innerHTML = "0x" + cpu.registers.p.get().toString(16).toUpperCase();
-			document.getElementById("cpuCycles").innerHTML = cpu.cycles;
 
 			document.getElementById("nametable").innerHTML = "0x" + ppu.registers.cntrl.nametable;
 			document.getElementById("increment").innerHTML = "0x" + ppu.registers.cntrl.increment;
@@ -302,6 +287,11 @@
 
 		function tick() {
 			nes.tick();
+			regStatus();
+		};
+
+		function tickFor(val) {
+			nes.tickFor(val);
 			regStatus();
 		};
 
