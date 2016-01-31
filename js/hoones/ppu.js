@@ -271,9 +271,10 @@ var ppu = {
 	reset : function () {
 		this.screen.reset(); 
 		this.palette.reset();
-		
-		this.scanline = 239;
-		this.cycle = 340;
+		this.scanline = 241;
+		this.cycle = 0;
+		//this.scanline = 239;
+		//this.cycle = 340;
 		this.vars.f = 1;
 		this.registers.cntrl.write(0);
 		this.registers.mask.write(0);

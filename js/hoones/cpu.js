@@ -190,36 +190,32 @@ var cpu = {
 
 		stack : {
 			data : [],
-			index : 0,
 
 			pushByte : function(val) {
 				if (this.data.length > 0xFF) {
-					this.index = 0;
+					cpu.registers.sp.val = 0;
 				}
 
-				this.data.push(val);
-				this.index += 1;
+				this.data[cpu.registers.sp.get()] = val;
+				cpu.registers.sp.val -= 1;
 
-				if (this.index > 0xFF) {
+				if (cpu.registers.sp.val < 0) {
 					asdasdasdasd
 				}
 
 			},
 
 			popByte : function() {
-
-				this.index--;
-
-				var result = this.data.pop();
+				cpu.registers.sp.val++;
+				var result = this.data[cpu.registers.sp.get()];
 
 				if (typeof result == 'undefined') {
 					asdasd.asdasdasd
 				}
 
-				if (this.index < 0) {
+				if (cpu.registers.sp.val > 0xFF) {
 					asdasdasdasd
 				}
-
 
 				return result;
 			},
@@ -237,6 +233,16 @@ var cpu = {
 				var high = this.popByte(addr) << 8;
 
 				var result = high | low;
+				return result;
+			},
+
+			readByte: function(addr) {
+				addr -= 0x100;
+				var result = this.data[addr];
+
+				if (typeof result == 'undefined') {
+					asdasdasdasdsa.asdasdasdas;
+				}
 				return result;
 			},
 
@@ -392,7 +398,7 @@ var cpu = {
 				if (addr < 0x100) {
 					return this.zeropage.readByte(addr);
 				} else if (addr < 0x200) {
-					asdasdasdasdas;
+					return this.stack.readByte(addr);
 				} else if (addr < 0x800) {
 					return this.ram.readByte(addr);
 				} else {
@@ -412,6 +418,7 @@ var cpu = {
 			} else {
 				asdasdasdasd;
 			}
+			console.log(addr.toString(16));
 			asdasdasasdasd;
 		},
 
@@ -520,14 +527,17 @@ var cpu = {
 		var opcode = this.mmu.readByte(this.registers.pc.get());
 		var op = this.instructions.get(opcode);
 		var cycles = this.cycles;
-		log(opcode);
-		log(op);
 
 		//Interrupt
 		this.interrupts.tick();
 
 		var addr = null;
 		var isPageDifferent = false;
+
+
+		//Increment PC
+		var opaddr = this.registers.pc.get();
+		this.registers.pc.set(opaddr + op.size);
 
 		// Error
 		if (this.instructions.modes.equals(op.mode, this.instructions.modes.err)) {
@@ -536,18 +546,18 @@ var cpu = {
 
 		// Absolute
 		else if (this.instructions.modes.equals(op.mode, this.instructions.modes.abs)) {
-			addr = this.mmu.readWord(this.registers.pc.get() + 1 & 0xFFFF);
+			addr = this.mmu.readWord(opaddr + 1 & 0xFFFF);
 
 		// Absolute X
 		} else if (this.instructions.modes.equals(op.mode, this.instructions.modes.abx)) {
-			var val = this.mmu.readWord(this.registers.pc.get() + 1);
+			var val = this.mmu.readWord(opaddr + 1);
 			addr = val + this.registers.x.get();
 			addr &= 0xFFFF;
 			isPageDifferent = this.instructions.isPageDifferent(val, addr);
 
 		// Absolute Y
 		} else if (this.instructions.modes.equals(op.mode, this.instructions.modes.aby)) {
-			var val = this.mmu.readWord(this.registers.pc.get() + 1);
+			var val = this.mmu.readWord(opaddr + 1);
 			addr = val + this.registers.y.get();
 			addr &= 0xFFFF;
 			isPageDifferent = this.instructions.isPageDifferent(val, addr);
@@ -558,7 +568,7 @@ var cpu = {
 
 		//Immediate
 		} else if (this.instructions.modes.equals(op.mode, this.instructions.modes.imm)) {
-			addr = this.registers.pc.get() + 1 & 0xFFFF;
+			addr = opaddr + 1 & 0xFFFF;
 
 		//Implied
 		} else if (this.instructions.modes.equals(op.mode, this.instructions.modes.imp)) {
@@ -566,19 +576,19 @@ var cpu = {
 
 		//Indirect X (Indexed Indirect)
 		} else if (this.instructions.modes.equals(op.mode, this.instructions.modes.ini)) {
-			addr = this.mmu.readByte(this.registers.pc.get() + 1 & 0xFFFF);
+			addr = this.mmu.readByte(opaddr + 1 & 0xFFFF);
 			addr += this.registers.x.get();
 			addr &= 0xFF;
 			addr = this.mmu.readWord(addr);
 
 		//Indirect
 		} else if (this.instructions.modes.equals(op.mode, this.instructions.modes.ind)) {
-			addr = this.mmu.readByte(this.registers.pc.get() + 1 & 0xFFFF);
+			addr = this.mmu.readByte(opaddr + 1 & 0xFFFF);
 			addr = this.mmu.readWord(addr);
 			
 		//Indirect Y (Indirect Indexed)
 		} else if (this.instructions.modes.equals(op.mode, this.instructions.modes.inr)) {
-			var val = this.mmu.readByte(this.registers.pc.get() + 1 & 0xFFFF);
+			var val = this.mmu.readByte(opaddr + 1 & 0xFFFF);
 			val = this.mmu.readWord(val);
 			addr += this.registers.y.get(); 
 			addr &= 0xFFFF;
@@ -586,32 +596,30 @@ var cpu = {
 
 		//Relative
 		} else if (this.instructions.modes.equals(op.mode, this.instructions.modes.rel)) {
-			var offset = this.mmu.readByte(this.registers.pc.get() + 1 & 0xFFFF);
-			if (offset < 0x80) {
-				addr = this.registers.pc.get() + 2 + offset;
+			addr = this.mmu.readByte(opaddr + 1 & 0xFFFF) & 0xFF;
+			if (addr < 0x80) {
+				addr += this.registers.pc.get() ;
 			} else {
-				addr = this.registers.pc.get() + 2 + offset - 0x100;
+				addr += this.registers.pc.get() - 0x100;
 			}
 
 		//Zero page
 		} else if (this.instructions.modes.equals(op.mode, this.instructions.modes.zer)) {
-			addr = cpu.mmu.readByte(this.registers.pc.get() + 1 & 0xFFFF);
+			addr = cpu.mmu.readByte(opaddr + 1 & 0xFFFF);
 
 		//Zero page X
 		} else if (this.instructions.modes.equals(op.mode, this.instructions.modes.zex)) {
-			addr = this.mmu.readByte(this.registers.pc.get() + 1 & 0xFFFF);
+			addr = this.mmu.readByte(opaddr + 1 & 0xFFFF);
 			addr += this.registers.x.get();
 
 		//Zero page y
 		} else if (this.instructions.modes.equals(op.mode, this.instructions.modes.zey)) {
-			addr = this.mmu.readByte(this.registers.pc.get() + 1 & 0xFFFF);
+			addr = this.mmu.readByte(opaddr + 1 & 0xFFFF);
 			addr += this.registers.y.get();
 
 		}
 		
-		//Increment PC
-		var pc = this.registers.pc.get();
-		this.registers.pc.set(pc + op.size);
+
 
 		//Increment Cycles
 		this.cycles += op.cycles;
@@ -628,6 +636,14 @@ var cpu = {
 		};
 
 		this.op = info;
+		document.getElementById("log").innerHTML = document.getElementById("log").innerHTML + "" +
+			opaddr.toString(16).toUpperCase() + " " + "A:" + this.registers.a.get().toString(16).toUpperCase() + " X:"
+			+ this.registers.x.get().toString(16).toUpperCase() + " "
+			+ "Y:" + this.registers.y.get().toString(16).toUpperCase() + " "
+			+ "P:" + this.registers.p.get().toString(16).toUpperCase() + " "
+			+ "SP:" + this.registers.sp.get().toString(16).toUpperCase() + " "
+			+ "CYC:" + ppu.cycle + " "
+			+ "SL:" + ppu.scanline + "</br>";
 		op.func(info);
 		
 		//Update cpu information
@@ -640,13 +656,14 @@ var cpu = {
 	reset : function() {
 		this.instructions.init();
 
-
-
-		this.registers.pc.set(this.mmu.readWord(0xFFFC));
-		this.mmu.stack.pushWord(0xFFFF);
-		this.mmu.stack.pushWord(0x0002);
-		this.mmu.stack.pushByte(0x30);
+		this.registers.sp.set(0xFD);
+		this.registers.pc.set(0xC000);
+		//this.registers.pc.set(this.mmu.readWord(0xFFFC));
+		//this.mmu.stack.pushWord(0xFFFF);
+		//this.mmu.stack.pushWord(0x0002);
+		//this.mmu.stack.pushByte(0x30);
 		this.registers.p.set(0x24);
+
 		this.cycles += 7;
 	},
 
@@ -700,12 +717,13 @@ var cpu = {
 		ops : {
 
 			adc : function(info) {
+
 				var a = cpu.registers.a.get();
 				var b = cpu.mmu.readByte(info.address);
 				var c = cpu.registers.p.c;
 
 				var sum = a + b + c;
-				cpu.registers.p.v = ((((a ^ b) & 0x80==0) && ((a ^ sum) & 0x80)) !=0)? 1:0;
+				cpu.registers.p.v = ((!(((a ^ b) & 0x80)!=0) && (((a ^ sum) & 0x80)) !=0)? 1:0);
 				cpu.registers.p.c = (sum > 255 ? 1:0);
 				cpu.registers.p.n = (sum >> 7) & 1;
 				cpu.registers.p.z = ((sum & 0xFF) == 0)? 1:0;
@@ -714,7 +732,7 @@ var cpu = {
 			},
 
 			and : function(info) {
-				var temp = cpu.registers.a & cpu.mmu.readByte(info.address);
+				var temp = cpu.registers.a.get() & cpu.mmu.readByte(info.address);
 
 				cpu.registers.p.n = (temp>>7)&1;
 				cpu.registers.p.z = ((temp&0xFF) == 0)? 1:0;
@@ -731,7 +749,7 @@ var cpu = {
 
 					cpu.registers.p.n = (temp >> 7) & 1;
 					cpu.registers.p.z = ((temp & 0xFF) == 0)? 1:0;
-
+					console.log(temp.toString(16) +  " ASL")
 					cpu.registers.a.set(temp & 0xFF);
 				} else {
 					var temp = cpu.mmu.readByte(info.address);
@@ -986,16 +1004,16 @@ var cpu = {
 
 			//Shift Right one bit
 			lsr: function(info) {
-				var temp;				
+				var temp;
 				if (cpu.instructions.modes.equals(info.op.mode, cpu.instructions.modes.acc)) {
-					temp = cpu.registers.a.get() && 0xFF;
+					temp = cpu.registers.a.get() & 0xFF;
 					cpu.registers.p.c = temp & 1;
-					temp >>= 1;
+					temp = temp >> 1 & 0xFF;
 					cpu.registers.a.set(temp);
 				} else {
-					temp = cpu.mmu.readByte(info.address) && 0xFF;
+					temp = cpu.mmu.readByte(info.address) & 0xFF;
 					cpu.registers.p.c = temp & 1;
-					temp >>= 1;
+					temp = temp >> 1 & 0xFF;
 					cpu.registers.a.set(temp);
 				}
 				cpu.registers.p.n = (temp>>7)&1;
@@ -1044,7 +1062,7 @@ var cpu = {
 					var add = cpu.registers.p.c;
 
 					cpu.registers.p.c = (temp>>7) & 1;
-					temp = ((temp<<1)&0xFF) | add;
+					temp = ((temp<<1)&0xFF) + add;
 
 					cpu.registers.a.set(temp);
 
@@ -1056,7 +1074,7 @@ var cpu = {
 					var add = cpu.registers.p.c;
 
 					cpu.registers.p.c = (temp>>7) & 1;
-					temp = ((temp<<1)&0xFF) | add;
+					temp = ((temp<<1)&0xFF) + add;
 
 					cpu.mmu.writeByte(info.addr, temp);
 
@@ -1069,9 +1087,10 @@ var cpu = {
 				if (cpu.instructions.modes.equals(info.op.mode, cpu.instructions.modes.acc)) {
 					var temp = cpu.registers.a.get();
 					var c = cpu.registers.p.c;
+					var add = c << 7;
 
 					cpu.registers.p.c = temp & 1;
-					temp = (temp>>1) | (c << 7);
+					temp = (temp>>1) + add;
 
 					cpu.registers.a.set(temp);
 
@@ -1080,9 +1099,10 @@ var cpu = {
 				} else {
 					var temp = cpu.mmu.readByte(info.address);
 					var c = cpu.registers.p.c;
+					var add = c << 7;
 
 					cpu.registers.p.c = temp & 1;
-					temp = (temp>>1) | (c << 7);
+					temp = (temp>>1) + add;
 
 					cpu.mmu.writeByte(info.address, temp);
 
@@ -1170,7 +1190,7 @@ var cpu = {
 
 			// Transfer stack pointer to index X:
 			tsx: function(info) {
-				var temp = cpu.registers.sp;
+				var temp = cpu.registers.sp.get();
 
 				cpu.registers.p.n = (temp>>7)&1;
 				cpu.registers.p.z = ((temp&0xFF) == 0)? 1:0;
@@ -1191,7 +1211,7 @@ var cpu = {
 			//transfer x to sp
 			txs: function(info) {
 				//TODO
-				cpu.registers.sp = cpu.registers.x.get() & 0xFF;
+				cpu.registers.sp.set(cpu.registers.x.get() & 0xFF);
 			},
 
 			// Transfer index Y to accumulator:
@@ -1303,7 +1323,7 @@ var cpu = {
 
 				{name: 'PHP', cycles : 3, cross : 0, size: 1, mode: this.modes.imp, func: this.ops.php},
 				{name: 'ORA', cycles : 2, cross : 0, size: 2, mode: this.modes.imm, func: this.ops.ora},
-				{name: 'ASL', cycles : 2, cross : 0, size: 1, mode: this.modes.rel, func: this.ops.asl},
+				{name: 'ASL', cycles : 2, cross : 0, size: 1, mode: this.modes.acc, func: this.ops.asl},
 				{name: 'ANC', cycles : 2, cross : 0, size: 0, mode: this.modes.acc, func: this.ops.anc},
 				{name: 'NOP', cycles : 4, cross : 0, size: 3, mode: this.modes.err, func: this.ops.nop},
 				{name: 'ORA', cycles : 4, cross : 0, size: 3, mode: this.modes.abs, func: this.ops.ora},
@@ -1555,9 +1575,9 @@ var cpu = {
 
 				{name: 'INX', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.ops.inx},
 				{name: 'SBC', cycles : 2, cross : 0, size: 2, mode: this.modes.imm, func: this.ops.sbc},
-				{name: 'NOP', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.ops.kil},
-				{name: 'SBC', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.ops.isc},
-				{name: 'CPX', cycles : 4, cross : 0, size: 3, mode: this.modes.abs, func: this.ops.nop},
+				{name: 'NOP', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.ops.nop},
+				{name: 'SBC', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.ops.sbc},
+				{name: 'CPX', cycles : 4, cross : 0, size: 3, mode: this.modes.abs, func: this.ops.cpx},
 				{name: 'SBC', cycles : 4, cross : 0, size: 3, mode: this.modes.abs, func: this.ops.sbc},
 				{name: 'INC', cycles : 6, cross : 0, size: 3, mode: this.modes.abs, func: this.ops.inc},
 				{name: 'ISC', cycles : 6, cross : 0, size: 0, mode: this.modes.err, func: this.ops.isc},
