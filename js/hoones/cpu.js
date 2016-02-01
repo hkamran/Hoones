@@ -238,12 +238,21 @@ var cpu = {
 
 			readByte: function(addr) {
 				addr -= 0x100;
+
 				var result = this.data[addr];
 
 				if (typeof result == 'undefined') {
-					asdasdasdasdsa.asdasdasdas;
+					return 0x0;
 				}
 				return result;
+			},
+
+			writeByte: function(addr, val) {
+				addr -= 0x100;
+				if (addr > 0x100) {
+					asdasdasdasdasd;
+				}
+				this.data[addr] = val;
 			},
 
 		},
@@ -265,7 +274,9 @@ var cpu = {
 				var result = this.data[addr];
 
 				if (typeof result === 'undefined') {
-					result = 0x0;
+					asdasd
+					asdasdasdasdasdasd.asdasdasd;
+					console.log("CYCLE: " + cpu.cycles);
 				}
 
 				return result;
@@ -423,6 +434,10 @@ var cpu = {
 		},
 
 		writeByte : function(addr, val) {
+			if (addr == 0x0 || addr == 0xff) {
+
+				console.log(addr + ":" + val.toString(16) + ":" + cpu.ticks);
+			}
 			if (addr < 0x2000) {
 				//Mimic mirrors 0000-07FF
 				addr  = addr % 0x800;
@@ -431,7 +446,8 @@ var cpu = {
 					this.zeropage.writeByte(addr, val);
 					return;
 				} else if (addr < 0x200) {
-					asdasdasdasdas;
+					this.stack.writeByte(addr, val);
+					return;
 				} else if (addr < 0x800) {
 					this.ram.writeByte(addr, val);
 					return;
@@ -455,6 +471,7 @@ var cpu = {
 				this.prgrom.writeByte(addr, val);
 				return;
 			} else {
+				console.log("ERROR: " + addr.toString(16) + ":" + val.toString(16));
 				asdasdasdasd;
 			}
 			asdasdassaasd
@@ -463,6 +480,16 @@ var cpu = {
 		readWord : function(addr) {
 			var low = this.readByte(addr);
 			var high = this.readByte(addr +  1);
+
+			return (high << 8 | low) & 0xFFFF;
+		},
+
+		readWordBug: function(addr) {
+			var a = addr;
+			var b = (a & 0xFF00) | (a + 1 & 0xFF);
+
+			var low = this.readByte(a);
+			var high = this.readByte(b);
 
 			return (high << 8 | low) & 0xFFFF;
 		},
@@ -541,6 +568,7 @@ var cpu = {
 
 		// Error
 		if (this.instructions.modes.equals(op.mode, this.instructions.modes.err)) {
+			console.log(opcode + " MODE IS ERROR");
 			asdasdasdsad
 		}
 
@@ -579,17 +607,19 @@ var cpu = {
 			addr = this.mmu.readByte(opaddr + 1 & 0xFFFF);
 			addr += this.registers.x.get();
 			addr &= 0xFF;
-			addr = this.mmu.readWord(addr);
+			addr = this.mmu.readWordBug(addr);
 
 		//Indirect
 		} else if (this.instructions.modes.equals(op.mode, this.instructions.modes.ind)) {
-			addr = this.mmu.readByte(opaddr + 1 & 0xFFFF);
-			addr = this.mmu.readWord(addr);
+			addr = this.mmu.readWord(opaddr + 1 & 0xFFFF);
+			addr = this.mmu.readWordBug(addr);
 			
 		//Indirect Y (Indirect Indexed)
 		} else if (this.instructions.modes.equals(op.mode, this.instructions.modes.inr)) {
+			log("HEY " + opaddr.toString(16));
 			var val = this.mmu.readByte(opaddr + 1 & 0xFFFF);
-			val = this.mmu.readWord(val);
+			val = this.mmu.readWordBug(val);
+			addr += val;
 			addr += this.registers.y.get(); 
 			addr &= 0xFFFF;
 			isPageDifferent = this.instructions.isPageDifferent(val, addr);
@@ -605,17 +635,21 @@ var cpu = {
 
 		//Zero page
 		} else if (this.instructions.modes.equals(op.mode, this.instructions.modes.zer)) {
+
 			addr = cpu.mmu.readByte(opaddr + 1 & 0xFFFF);
 
 		//Zero page X
 		} else if (this.instructions.modes.equals(op.mode, this.instructions.modes.zex)) {
+			log(opaddr.toString(16));
 			addr = this.mmu.readByte(opaddr + 1 & 0xFFFF);
 			addr += this.registers.x.get();
+			addr &= 0xFF;
 
 		//Zero page y
 		} else if (this.instructions.modes.equals(op.mode, this.instructions.modes.zey)) {
 			addr = this.mmu.readByte(opaddr + 1 & 0xFFFF);
 			addr += this.registers.y.get();
+			addr &= 0xFF;
 
 		}
 		
@@ -634,7 +668,7 @@ var cpu = {
 			op : op,
 			opcode : opcode,
 		};
-
+		log(info);
 		this.op = info;
 		document.getElementById("log").innerHTML = document.getElementById("log").innerHTML + "" +
 			opaddr.toString(16).toUpperCase() + " " + "A:" + this.registers.a.get().toString(16).toUpperCase() + " X:"
@@ -649,7 +683,7 @@ var cpu = {
 		//Update cpu information
 		this.ticks++;
 		var difference = this.cycles - cycles;
-		
+		log(this.cycles + "-" + cycles + ":" + difference );
 		return difference;
 	},
 
@@ -733,7 +767,7 @@ var cpu = {
 
 			and : function(info) {
 				var temp = cpu.registers.a.get() & cpu.mmu.readByte(info.address);
-
+				log("AND " + temp.toString(16) + ":" + cpu.registers.a.get().toString(16) + ":" + cpu.mmu.readByte(info.address).toString(16));
 				cpu.registers.p.n = (temp>>7)&1;
 				cpu.registers.p.z = ((temp&0xFF) == 0)? 1:0;
 
@@ -826,8 +860,8 @@ var cpu = {
 
 			brk : function(info) {
 				cpu.mmu.stack.pushWord(cpu.registers.pc);
-				cpu.ops.php(info);
-				cpu.ops.sei(info);
+				cpu.instructions.ops.php(info);
+				cpu.instructions.ops.sei(info);
 				cpu.registers.pc.set(cpu.mmu.readWord(0xFFFE));
 			},
 
@@ -987,7 +1021,7 @@ var cpu = {
 
 				cpu.registers.p.n = (temp>>7)&1;
 				cpu.registers.p.z = ((temp&0xFF) == 0)? 1:0;
-
+				log(temp.toString(16) +  " LDX " + info.address.toString(16));
 				cpu.registers.x.set(temp);
 
 			},
@@ -1014,7 +1048,7 @@ var cpu = {
 					temp = cpu.mmu.readByte(info.address) & 0xFF;
 					cpu.registers.p.c = temp & 1;
 					temp = temp >> 1 & 0xFF;
-					cpu.registers.a.set(temp);
+					cpu.mmu.writeByte(info.address, temp);
 				}
 				cpu.registers.p.n = (temp>>7)&1;
 				cpu.registers.p.z = ((temp&0xFF) == 0)? 1:0;
@@ -1076,7 +1110,7 @@ var cpu = {
 					cpu.registers.p.c = (temp>>7) & 1;
 					temp = ((temp<<1)&0xFF) + add;
 
-					cpu.mmu.writeByte(info.addr, temp);
+					cpu.mmu.writeByte(info.address, temp);
 
 					cpu.registers.p.n = (temp>>7)&1;
 					cpu.registers.p.z = ((temp&0xFF) == 0)? 1:0;
@@ -1330,17 +1364,17 @@ var cpu = {
 				{name: 'ASL', cycles : 6, cross : 0, size: 3, mode: this.modes.abs, func: this.ops.asl},
 				{name: 'SLO', cycles : 6, cross : 0, size: 0, mode: this.modes.err, func: this.ops.slo},
 
-				{name: 'BPL', cycles : 2, cross : 1, size: 2, mode: this.modes.rel, func: this.ops.bpl},
+				{name: 'BPL', cycles : 2, cross : 1, size: 2, mode: this.modes.rel, func: this.ops.bpl},//0x10
 				{name: 'ORA', cycles : 5, cross : 1, size: 2, mode: this.modes.inr, func: this.ops.ora},
 				{name: 'KIL', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.ops.kil},
 				{name: 'SLO', cycles : 8, cross : 0, size: 0, mode: this.modes.err, func: this.ops.slo},
 				{name: 'NOP', cycles : 4, cross : 0, size: 2, mode: this.modes.err, func: this.ops.nop},
 				{name: 'ORA', cycles : 4, cross : 0, size: 2, mode: this.modes.zex, func: this.ops.ora},
-				{name: 'ASL', cycles : 6, cross : 0, size: 2, mode: this.modes.err, func: this.ops.asl},
+				{name: 'ASL', cycles : 6, cross : 0, size: 2, mode: this.modes.zex, func: this.ops.asl},
 				{name: 'SLO', cycles : 6, cross : 0, size: 0, mode: this.modes.err, func: this.ops.slo},
 
 				{name: 'CLC', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.ops.clc},
-				{name: 'ORA', cycles : 4, cross : 1, size: 3, mode: this.modes.inr, func: this.ops.ora},
+				{name: 'ORA', cycles : 4, cross : 1, size: 3, mode: this.modes.aby, func: this.ops.ora},
 				{name: 'NOP', cycles : 2, cross : 0, size: 1, mode: this.modes.err, func: this.ops.nop},
 				{name: 'SLO', cycles : 7, cross : 0, size: 0, mode: this.modes.err, func: this.ops.slo},
 				{name: 'NOP', cycles : 4, cross : 1, size: 3, mode: this.modes.err, func: this.ops.nop},
@@ -1348,7 +1382,7 @@ var cpu = {
 				{name: 'ASL', cycles : 7, cross : 0, size: 3, mode: this.modes.abx, func: this.ops.asl},
 				{name: 'SLO', cycles : 7, cross : 0, size: 0, mode: this.modes.err, func: this.ops.slo},
 
-				{name: 'JSR', cycles : 6, cross : 0, size: 3, mode: this.modes.abs, func: this.ops.jsr},
+				{name: 'JSR', cycles : 6, cross : 0, size: 3, mode: this.modes.abs, func: this.ops.jsr}, //0x20
 				{name: 'AND', cycles : 6, cross : 0, size: 2, mode: this.modes.ini, func: this.ops.and},
 				{name: 'KIL', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.ops.kil},
 				{name: 'RLA', cycles : 8, cross : 0, size: 0, mode: this.modes.err, func: this.ops.rla},
@@ -1366,22 +1400,22 @@ var cpu = {
 				{name: 'ROL', cycles : 6, cross : 0, size: 3, mode: this.modes.abs, func: this.ops.rol},
 				{name: 'RLA', cycles : 6, cross : 0, size: 0, mode: this.modes.err, func: this.ops.rla},
 
-				{name: 'BMI', cycles : 2, cross : 1, size: 2, mode: this.modes.rel, func: this.ops.bmi},
+				{name: 'BMI', cycles : 2, cross : 1, size: 2, mode: this.modes.rel, func: this.ops.bmi}, //0x30
 				{name: 'AND', cycles : 5, cross : 1, size: 2, mode: this.modes.inr, func: this.ops.and},
-				{name: 'KIL', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.ops.kil}, //32
+				{name: 'KIL', cycles : 2, cross : 0, size: 0, mode: this.modes.err, func: this.ops.kil},
 				{name: 'RLA', cycles : 8, cross : 0, size: 0, mode: this.modes.err, func: this.ops.rla},
 				{name: 'NOP', cycles : 4, cross : 0, size: 2, mode: this.modes.err, func: this.ops.nop},
-				{name: 'AND', cycles : 4, cross : 0, size: 2, mode: this.modes.zex, func: this.ops.and}, //53
+				{name: 'AND', cycles : 4, cross : 0, size: 2, mode: this.modes.zex, func: this.ops.and},
 				{name: 'ROL', cycles : 6, cross : 0, size: 2, mode: this.modes.zex, func: this.ops.rol},
 				{name: 'RLA', cycles : 6, cross : 0, size: 0, mode: this.modes.err, func: this.ops.rla},
 
 				{name: 'SEC', cycles : 2, cross : 0, size: 1, mode: this.modes.imp, func: this.ops.sec}, //38
-				{name: 'AND', cycles : 4, cross : 1, size: 3, mode: this.modes.aby, func: this.ops.adc},
+				{name: 'AND', cycles : 4, cross : 1, size: 3, mode: this.modes.aby, func: this.ops.and},
 				{name: 'NOP', cycles : 2, cross : 0, size: 1, mode: this.modes.err, func: this.ops.nop},
 				{name: 'RLA', cycles : 7, cross : 0, size: 0, mode: this.modes.err, func: this.ops.rla},
 				{name: 'NOP', cycles : 4, cross : 1, size: 3, mode: this.modes.err, func: this.ops.nop},
 				{name: 'AND', cycles : 4, cross : 1, size: 3, mode: this.modes.abx, func: this.ops.and}, //3d
-				{name: 'ROL', cycles : 7, cross : 0, size: 3, mode: this.modes.err, func: this.ops.rol},
+				{name: 'ROL', cycles : 7, cross : 0, size: 3, mode: this.modes.abx, func: this.ops.rol},
 				{name: 'RLA', cycles : 7, cross : 0, size: 0, mode: this.modes.err, func: this.ops.rla},
 
 				{name: 'RTI', cycles : 6, cross : 0, size: 1, mode: this.modes.imp, func: this.ops.rti}, //40

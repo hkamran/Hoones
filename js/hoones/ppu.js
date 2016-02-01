@@ -775,6 +775,7 @@ var ppu = {
 		var color = ppu.screen.getColor(pallete);
 		ppu.screen.setPixel(x, y, color);
 	},
+
 	
 	tick : function() {
 		
@@ -795,24 +796,19 @@ var ppu = {
 			ppu.nmi.delay--;
 			if (ppu.nmi.delay == 0 && ppu.nmi.output && ppu.nmi.occurred) {
 				console.log("TRIGGER");
-				nes.cpu.interrupt.triggerNMI(); 
+				asdasdasd.asdasdasd;
 			}
 		}
 
-		
 		//Update Cycle/Scanlines/Frame information
-		var brk = false;
-		if (renderingEnabled ) {
-			if (ppu.vars.f == 1 && ppu.scanline == 261 && ppu.cycle == 339) {
-				
+		if (renderingEnabled &&
+			(ppu.vars.f == 1 && ppu.scanline == 261 && ppu.cycle == 340)) {
 				ppu.cycle = 0;
 				ppu.scanline = 0;
 				ppu.frame++;
 				ppu.vars.f ^= 1;
-				brk = true;
-			}
-		}
-		
+
+		} else {
 			ppu.cycle++;
 			if (ppu.cycle > 340) {
 				ppu.cycle = 0;
@@ -822,9 +818,8 @@ var ppu = {
 					ppu.frame++;
 					ppu.vars.f ^= 1;
 				}
-			}	
-			brk = false;
-		
+			}
+		}
 		
 		//Print Pixel
 		if (renderingEnabled) {
