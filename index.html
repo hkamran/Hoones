@@ -95,6 +95,7 @@
 						<li><div>Accumulator: </div><span id="acc"></span></li>
 						<li><div>X: </div><span id="x"></span></li>
 						<li><div>Y: </div><span id="y"></span></li>
+						<li><div>SP: </div><span id="sp"></span></li>
 						<li><div>P: </div><span id="pflags"></span></li>
 					</ul>
 				</div>
@@ -190,6 +191,10 @@
 		</div>
 	</div>
 
+	<div id="log">
+
+	</div>
+
 	<script type="text/javascript" src="js/hoones/lib/BinFileReader.js"></script>
 	<script type="text/javascript" src="js/hoones/cartridge.js"></script>
 	<script type="text/javascript" src="js/hoones/cpu.js"></script>
@@ -219,6 +224,7 @@
 			document.getElementById("acc").innerHTML = "0x" + cpu.registers.a.get().toString(16).toUpperCase();
 			document.getElementById("x").innerHTML = "0x" + cpu.registers.x.get().toString(16).toUpperCase();
 			document.getElementById("y").innerHTML = "0x" + cpu.registers.y.get().toString(16).toUpperCase();
+			document.getElementById("sp").innerHTML = "0x" + cpu.registers.sp.get().toString(16).toUpperCase();
 			document.getElementById("pflags").innerHTML = "0x" + cpu.registers.p.get().toString(16).toUpperCase();
 
 			document.getElementById("nametable").innerHTML = "0x" + ppu.registers.cntrl.nametable;
@@ -251,12 +257,17 @@
 
 			var st = "";
 			var comma = " ,";
-			for (var i = cpu.mmu.stack.data.length - 1; i >= 0; i--) {
+			for (var i = cpu.mmu.stack.data.length - 1; i >= cpu.registers.sp.get(); i--) {
 
 				if (i == 0) {
 					comma = "";
 				}
-				st += cpu.mmu.stack.data[i].toString(16) + comma;
+				var result = cpu.mmu.stack.data[i];
+				if (typeof result == 'undefined') {
+					st += "0" + comma;
+				} else {
+					st += cpu.mmu.stack.data[i].toString(16) + comma;
+				}
 			}
 
 			document.getElementById("stack").innerHTML = st;

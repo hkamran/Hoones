@@ -670,14 +670,7 @@ var cpu = {
 		};
 		log(info);
 		this.op = info;
-		document.getElementById("log").innerHTML = document.getElementById("log").innerHTML + "" +
-			opaddr.toString(16).toUpperCase() + " " + "A:" + this.registers.a.get().toString(16).toUpperCase() + " X:"
-			+ this.registers.x.get().toString(16).toUpperCase() + " "
-			+ "Y:" + this.registers.y.get().toString(16).toUpperCase() + " "
-			+ "P:" + this.registers.p.get().toString(16).toUpperCase() + " "
-			+ "SP:" + this.registers.sp.get().toString(16).toUpperCase() + " "
-			+ "CYC:" + ppu.cycle + " "
-			+ "SL:" + ppu.scanline + "</br>";
+
 		op.func(info);
 		
 		//Update cpu information
@@ -691,11 +684,11 @@ var cpu = {
 		this.instructions.init();
 
 		this.registers.sp.set(0xFD);
-		this.registers.pc.set(0xC000);
-		//this.registers.pc.set(this.mmu.readWord(0xFFFC));
-		//this.mmu.stack.pushWord(0xFFFF);
-		//this.mmu.stack.pushWord(0x0002);
-		//this.mmu.stack.pushByte(0x30);
+		//this.registers.pc.set(0xC000);
+		this.registers.pc.set(this.mmu.readWord(0xFFFC));
+		this.mmu.stack.pushWord(0xFFFF);
+		this.mmu.stack.pushWord(0x0002);
+		this.mmu.stack.pushByte(0x30);
 		this.registers.p.set(0x24);
 
 		this.cycles += 7;
