@@ -789,7 +789,7 @@ var ppu = {
 		var visibleCycle = this.cycle >= 1 && this.cycle <= 256;
 		var fetchCycle = preCycle || visibleCycle;
 		
-		var renderingEnabled  = ppu.registers.cntrl.showbg != 0 || ppu.registers.cntrl.showsprites != 0;
+		var renderingEnabled  = ppu.registers.mask.showbg != 0 || ppu.registers.mask.showsprites != 0;
 		
 		//Trigger NMI
 		if (ppu.nmi.delay  > 0) {
