@@ -274,9 +274,8 @@ var cpu = {
 				var result = this.data[addr];
 
 				if (typeof result === 'undefined') {
-					asdasd
-					asdasdasdasdasdasd.asdasdasd;
-					console.log("CYCLE: " + cpu.cycles);
+					console.log("ERROR READING " + addr.toString(16));
+					return 0;
 				}
 
 				return result;
@@ -434,10 +433,6 @@ var cpu = {
 		},
 
 		writeByte : function(addr, val) {
-			if (addr == 0x0 || addr == 0xff) {
-
-				console.log(addr + ":" + val.toString(16) + ":" + cpu.ticks);
-			}
 			if (addr < 0x2000) {
 				//Mimic mirrors 0000-07FF
 				addr  = addr % 0x800;
@@ -616,7 +611,6 @@ var cpu = {
 			
 		//Indirect Y (Indirect Indexed)
 		} else if (this.instructions.modes.equals(op.mode, this.instructions.modes.inr)) {
-			log("HEY " + opaddr.toString(16));
 			var val = this.mmu.readByte(opaddr + 1 & 0xFFFF);
 			val = this.mmu.readWordBug(val);
 			addr += val;
@@ -640,7 +634,6 @@ var cpu = {
 
 		//Zero page X
 		} else if (this.instructions.modes.equals(op.mode, this.instructions.modes.zex)) {
-			log(opaddr.toString(16));
 			addr = this.mmu.readByte(opaddr + 1 & 0xFFFF);
 			addr += this.registers.x.get();
 			addr &= 0xFF;
@@ -668,7 +661,7 @@ var cpu = {
 			op : op,
 			opcode : opcode,
 		};
-		log(info);
+
 		this.op = info;
 
 		op.func(info);
@@ -676,7 +669,6 @@ var cpu = {
 		//Update cpu information
 		this.ticks++;
 		var difference = this.cycles - cycles;
-		log(this.cycles + "-" + cycles + ":" + difference );
 		return difference;
 	},
 
@@ -760,7 +752,6 @@ var cpu = {
 
 			and : function(info) {
 				var temp = cpu.registers.a.get() & cpu.mmu.readByte(info.address);
-				log("AND " + temp.toString(16) + ":" + cpu.registers.a.get().toString(16) + ":" + cpu.mmu.readByte(info.address).toString(16));
 				cpu.registers.p.n = (temp>>7)&1;
 				cpu.registers.p.z = ((temp&0xFF) == 0)? 1:0;
 
@@ -776,7 +767,7 @@ var cpu = {
 
 					cpu.registers.p.n = (temp >> 7) & 1;
 					cpu.registers.p.z = ((temp & 0xFF) == 0)? 1:0;
-					console.log(temp.toString(16) +  " ASL")
+
 					cpu.registers.a.set(temp & 0xFF);
 				} else {
 					var temp = cpu.mmu.readByte(info.address);
@@ -1014,7 +1005,7 @@ var cpu = {
 
 				cpu.registers.p.n = (temp>>7)&1;
 				cpu.registers.p.z = ((temp&0xFF) == 0)? 1:0;
-				log(temp.toString(16) +  " LDX " + info.address.toString(16));
+
 				cpu.registers.x.set(temp);
 
 			},

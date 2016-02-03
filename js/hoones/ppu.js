@@ -150,7 +150,6 @@ var ppu = {
 		data : [[],[]],
 
 		set : function(val) {
-			console.log(val[0x0, 0x1000]);
 			this.data[0] = val[0x0, 0x1000];
 			this.data[1] = val[0x1000, 0x2000];
 		},
@@ -246,16 +245,13 @@ var ppu = {
 			}
 			
 			var addr = ((addr - 0x2000) % 0x1000); //Mimic mirrors from 0x3000 to 0x3f00
-			console.log(addr.toString(16));
 			var index = Math.floor(addr / 0x400); //Segment
 			var offset = addr % 0x400; //offset inside the segment
 			
 			
 			if (offset >= 0x3c0) {
-				console.log("Attribute Table " + index);
 				this.attribute[index][offset & 0x0FF - 0xc0] = val;
 			} else {
-				//console.log("Name Table " + index + ":" + val);
 				this.table[index][offset] = val;
 			}
 			
@@ -426,7 +422,6 @@ var ppu = {
 				result |= this.spritehit << 6;		
 				
 				if (ppu.nmi.occurred) {
-					console.log("DOING");
 					result |= 1 << 7;
 				}
 				
@@ -514,6 +509,7 @@ var ppu = {
 			buffer : 0x0,
 			
 			write : function(val) {
+				log(ppu.vars.v.toString(16) + " " + val.toString(16));
 				ppu.mmu.writeByte(ppu.vars.v, val);
 				
 				//Increment vram addr
@@ -627,6 +623,7 @@ var ppu = {
 			} else if (addr == 0x2006) {
 				this.addr.write(val);
 			} else if (addr == 0x2007) {
+				log("aSDASDASDas");
 				this.data.write(val);
 			}
 		}
@@ -639,6 +636,9 @@ var ppu = {
 		lowTileByte   : 0x0,
 		highTileByte  : 0x0,
         tileData      : 0x0,
+
+		xpos: 0,
+		ypos: 0,
 		
 		// V ADDRESS
 		// yyy NNYY YYYX  XXXX
@@ -649,9 +649,9 @@ var ppu = {
 		
 		//Increment coarse X scroll
 		incrementX :  function() {
-			if (ppu.vars.v & 0x001F == 0x1F) {
+			if ((ppu.vars.v & 0x001F) == 31) {
 				ppu.vars.v &= 0xFFE0; //Set X=0
-				ppu.vars.v ^= 0x0400; //Switch horizontal nametable
+				//ppu.vars.v ^= 0x0400; //Switch horizontal nametable
 			} else {
 				ppu.vars.v++; //increase X
 			}
@@ -659,7 +659,7 @@ var ppu = {
 		
 		//Increment fine Y scroll
 		incrementY : function() {
-			if (ppu.vars.v & 0x7000 != 0x7000) {
+			if ((ppu.vars.v & 0x7000) != 0x7000) {
 				ppu.vars.v += 0x1000;
 			} else {
 				//set y=0
@@ -695,22 +695,30 @@ var ppu = {
 		fetchNameTableByte : function() {
 			var v = ppu.vars.v;
 			var address = 0x2000 | (v & 0x0FFF);
+
 			ppu.background.nameTableByte = ppu.mmu.readByte(address);
+
+			log("NAMETABLE " + ppu.background.nameTableByte + ":" + address.toString(16));
 		},
 		
 		fetchAttributeTableByte : function() {
 			var v = ppu.vars.v;
-			var addr = 0x24C0 | (v & 0x0C00) | ((v >> 4) & 0x38) | ((v >> 2) & 0x07);
+			var addr = 0x23C0 | (v & 0x0C00) | ((v >> 4) & 0x38) | ((v >> 2) & 0x07);
 			var shift = ((v >> 4) & 4) | (v & 2);
 			ppu.background.attributeTableByte = ((ppu.mmu.readByte(addr) >> shift) & 3) << 2;
+			//log("ATTRIBUTE " + ppu.background.attributeTableByte + ":" + addr.toString(16));
 		},
 		
 		fetchLowTileByte : function() {
-			ppu.background.lowTileByte  = ppu.mmu.readByte(this.fetchTileAddr());
+			var addr = this.fetchTileAddr();
+			ppu.background.lowTileByte  = ppu.mmu.readByte(addr);
+			log("Low Tile: " + ppu.background.lowTileByte.toString(16) + ":" + addr.toString(16));
 		},
 		
 		fetchHighTyleByte : function() {
-			ppu.background.highTileByte = ppu.mmu.readByte(this.fetchTileAddr() + 8);
+			var addr = this.fetchTileAddr() + 8;
+			ppu.background.highTileByte = ppu.mmu.readByte(addr);
+			log("High Tile: " + ppu.background.highTileByte.toString(16) + ":" + addr.toString(16));
 		},
 		
 		fetchTileAddr : function() {
@@ -726,8 +734,8 @@ var ppu = {
 			for (var i = 0; i < 8; i++) {
 				var a = ppu.background.attributeTableByte;
 				
-				var p1 = ppu.background.lowTileByte & 0x80;
-				var p2 = ppu.background.highTileByte & 0x80;
+				var p1 = (ppu.background.lowTileByte & 0x80) >> 7;
+				var p2 = (ppu.background.highTileByte & 0x80) >> 6;
 				
 				ppu.background.lowTileByte  <<= 1;
 				ppu.background.highTileByte <<= 1;
@@ -738,11 +746,13 @@ var ppu = {
 				ppu.background.highTileByte &= 0xFF;
 				
 				data <<= 4;
-				data |= (a | p1 | p2);
+				data |= (a | p1 | p2) & 0xFFFFFFFF;
 				
-				data &= 0xFFFFFFFF;
+				data &= 0xFFFFFFFFFFFFFFFF;
 			}
+
 			ppu.background.tileData |= data & 0xFFFFFFFFFFFFFFFF;
+			//log("Tile Data " + ppu.background.tileData.toString(16));
 		},
 		
 		fetchTileData : function() {
@@ -753,7 +763,7 @@ var ppu = {
 			if (ppu.registers.mask.showbg == 0) {
 				return 0x0;
 			}
-			var data = this.fetchTileData() >> (7 - ppu.vars.x) * 4;
+			var data = this.fetchTileData() >> ((7 - ppu.vars.x) * 4);
 			return data & 0x0f;
 		}
 	},
@@ -765,7 +775,9 @@ var ppu = {
 	renderPixel : function() {
 		var x = this.cycle - 2;
 		var y = this.scanline;
-		
+		ppu.background.xpos = x;
+		ppu.background.ypos = y;
+
 		var background = ppu.background.getPixelByte();
 		if (x < 8 && ppu.registers.mask.showbg == 0) {
 			background = 0;
@@ -802,7 +814,7 @@ var ppu = {
 
 		//Update Cycle/Scanlines/Frame information
 		if (renderingEnabled &&
-			(ppu.vars.f == 1 && ppu.scanline == 261 && ppu.cycle == 340)) {
+			((ppu.vars.f == 1) && (ppu.scanline == 261) && (ppu.cycle == 340))) {
 				ppu.cycle = 0;
 				ppu.scanline = 0;
 				ppu.frame++;
@@ -823,9 +835,7 @@ var ppu = {
 		
 		//Print Pixel
 		if (renderingEnabled) {
-			//console.log("DOING " + this.scanline + ":" + this.cycle);
 			if (visibleLine && visibleCycle) {
-				
 				this.renderPixel();
 			}
 		}
@@ -833,27 +843,29 @@ var ppu = {
 		//Prepare Background Pixel
 		if (renderingEnabled) {
 			if (renderLine && fetchCycle) {
-				ppu.background.tileData <<= 4;
-				ppu.background.tileData = 0xFFFFFFFFFFFFFFFF;
-				
-				var remainder = this.cycle % 8;
-                if (remainder == 0) {
-                    ppu.background.storeTileData();;
-                } else if (remainder == 1) {
-					ppu.background.fetchNameTableByte();
-                } else if (remainder == 3) {
-					ppu.background.fetchAttributeTableByte();
-                } else if (remainder == 5) {
-					ppu.background.fetchLowTileByte();
-                } else if (remainder == 7) {
-					ppu.background.fetchHighTyleByte();
-                }
+                ppu.background.tileData <<= 4;
+                ppu.background.tileData = 0xFFFFFFFFFFFFFFFF;
+
+                var remainder = this.cycle % 8;
+				log("REM " + this.cycle % 8);
+				switch (remainder) {
+					case 1:
+						ppu.background.fetchNameTableByte();
+					case 3:
+						ppu.background.fetchAttributeTableByte();
+					case 5:
+						ppu.background.fetchLowTileByte();
+					case 7:
+						ppu.background.fetchHighTyleByte();
+					case 0:
+						ppu.background.storeTileData();
+				}
 			}
-			if (preLine && ppu.cycle >= 280 && ppu.cycle <= 304) {
+			if (preLine && (ppu.cycle >= 280) && (ppu.cycle <= 304)) {
 				ppu.background.setY();
 			}
 			if (renderLine) {
-				if (fetchCycle && ppu.cycle % 8 == 0) {
+				if (fetchCycle && ((ppu.cycle % 8) == 0)) {
 					ppu.background.incrementX();
 				}
 				if (ppu.cycle == 256) {
@@ -865,7 +877,7 @@ var ppu = {
 			}
 		}
 
-		if (ppu.scanline == 241 && ppu.cycle == 1) {
+		if ((ppu.scanline == 241) && (ppu.cycle == 1)) {
 			ppu.nmi.setVerticalBlank();
 		}
 		if (preLine && ppu.cycle == 1) {
@@ -880,6 +892,7 @@ var ppu = {
 		var end = cycles;
 		for (var i = 0; i <= end; i++) {
 			this.tick();
+
 		}
 	},
 }

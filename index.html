@@ -43,31 +43,6 @@
 				<legend>Screen</legend>
 				<canvas id="screen" width="200" height="100" style="display: block;"></canvas>
 			</fieldset>
-		</div>
-		<div class="small-6 large-6 columns">
-			<fieldset>
-				<legend>Nametables</legend>
-				<canvas id="nametables" width="200" height="200" style="display: block;"></canvas>
-			</fieldset>
-		</div>	
-
-	</div>
-
-	<div class="row">
-		<div class="small-6 large-6 columns">
-			<fieldset>
-				<legend>Operation</legend>
-				<div style="color: #bebebe; display: inline-block">
-				<ul style="list-style: none;">
-					<li><div>Opcode: </div><span id="opcode"></span></li>
-					<li><div>Op: </div><span id="opname"></span></li>
-					<li><div>Mode: </div><span id="mode"></span></li>
-					<li><div>Address: </div><span id="opaddr"></span></li>
-				</ul>
-					</div>
-			</fieldset>
-		</div>
-		<div class="small-6 large-6 columns">
 			<fieldset>
 				<legend>Console</legend>
 				<div style="color: #bebebe; display: inline-block">
@@ -79,8 +54,28 @@
 					</ul>
 				</div>
 			</fieldset>
+			<fieldset>
+				<legend>Operation</legend>
+				<div style="color: #bebebe; display: inline-block">
+					<ul style="list-style: none;">
+						<li><div>Opcode: </div><span id="opcode"></span></li>
+						<li><div>Op: </div><span id="opname"></span></li>
+						<li><div>Mode: </div><span id="mode"></span></li>
+						<li><div>Address: </div><span id="opaddr"></span></li>
+					</ul>
+				</div>
+			</fieldset>
+
 		</div>
+		<div class="small-6 large-6 columns">
+			<fieldset>
+				<legend>Nametable</legend>
+				<canvas id="nametables" width="200" height="200" style="display: block;"></canvas>
+			</fieldset>
+		</div>	
+
 	</div>
+
 
 	<div class="row">
 		<div class="small-6 large-6 columns">
@@ -88,7 +83,9 @@
 				<legend>CPU</legend>
 				<div style="color: #bebebe; ">
 					<div style="margin-bottom: 10px">
-						<label>PC: </label><span id="pc"></span>
+						<ul style="list-style: none;">
+							<li><label>PC: </label><span id="pc"></span></li>
+						</ul>
 					</div>
 					<ul style="list-style: none;">
 						<li></li>
@@ -97,12 +94,7 @@
 						<li><div>Y: </div><span id="y"></span></li>
 						<li><div>SP: </div><span id="sp"></span></li>
 						<li><div>P: </div><span id="pflags"></span></li>
-					</ul>
-				</div>
-
-				<br/>
-				<div style="color: #bebebe; display: inline-block">
-					<ul style="list-style: none;">
+					<ul style="list-style: none;margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
 						<li><div>carry flag:</div><span id="carryFlag"></span></li>
 						<li><div>zero flag:</div><span id="zeroFlag"></span></li>
 						<li><div>interrupt flag:</div><span id="interruptFlag"></span></li>
@@ -110,10 +102,11 @@
 						<li><div>break flag:</div><span id="breakFlag"></span></li>
 						<li><div>overflow flag:</div><span id="overflowFlag"></span></li>
 						<li><div>negative flag:</div><span id="negativeFlag"></span></li>
+					</ul>						
 					</ul>
 				</div>
 
-				<br/><br/>
+
 				<div style="color: #bebebe;">
 					<label>Stack: </label>
 					<span id="stack"></span>
@@ -121,11 +114,31 @@
 
 			</fieldset>
 		</div>
-		<div class="small-6 large-6 columns">
-		<fieldset>
+		<div class="small-6 large-6 columns" >
+		<fieldset style="width: 535px;">
 			<legend>PPU</legend>
 
 			<div style="color: #bebebe; display: inline-block">
+				<div style="margin-bottom: 10px">
+					<ul style="list-style: none;">
+						<li>
+							<label>VRAM Address: </label><span id="vram"></span>
+						</li>
+						<li>
+							<label>Temp Address: </label><span id="temp"></span>
+						</li>
+						<li>
+							<label>OAM Address: </label><span id="val0"></span>
+						</li>
+						<li>
+							<label>X-Pos: </label><span id="xpos"></span>
+						</li>
+						<li>
+							<label>Y-Pos: </label><span id="ypos"></span>
+						</li>
+					</ul>
+				</div>			
+			
 				<ul style="list-style: none;">
 					<li>
 						<div>control:</div><span id="cnrtl1">(0x2000)</span><br/>
@@ -166,22 +179,9 @@
 						</ul>
 					</li>
 					<li>
-						<div>oamaddr:</div><span id="oamaddr">(0x2003)</span>
-						<ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
-							<li><div>addr:</div><span id="val0"></span></li>
-						</ul>
-					</li>
-					<li>
 						<div>scroll:</div><span id="scroll">(0x2005)</span>
 						<ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
 							<li><div>val:</div><span id="val"></span></li>
-						</ul>
-					</li>
-					<li>
-						<div>addr:</div><span id="Pointer">(0x2006)</span>
-						<ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
-							<li><div>vram:</div><span id="vram"></span></li>
-							<li><div>temp:</div><span id="temp"></span></li>
 						</ul>
 					</li>
 				</ul>
@@ -254,7 +254,8 @@
 
 			document.getElementById("vram").innerHTML = "0x" + ppu.vars.v.toString(16).toUpperCase();
 			document.getElementById("temp").innerHTML = "0x" + ppu.vars.t.toString(16).toUpperCase();
-
+			document.getElementById("xpos").innerHTML = "0x" + ppu.background.xpos.toString(16).toUpperCase();
+			document.getElementById("ypos").innerHTML = "0x" + ppu.background.ypos.toString(16).toUpperCase();
 			var st = "";
 			var comma = " ,";
 			for (var i = cpu.mmu.stack.data.length - 1; i >= cpu.registers.sp.get(); i--) {
@@ -315,6 +316,8 @@
 				tick();
 			}
 		});
+
+
 	</script>	
 	
 
@@ -326,12 +329,50 @@
 			init : function() {
 				var c = document.getElementById('nametables');	
 				c.width  = 511;
-				c.height = 479;
+				c.height = 555;
 				this.canvas = c.getContext('2d');					
 
 			},
 			
 			draw : function(nametables) {
+
+
+				var startX = 0;
+				var startY = 0;
+				for (var nameTablesIndex = 0; nameTablesIndex < nametables.length; nameTablesIndex++) {
+					var nameTable = nametables[nameTablesIndex];
+
+					var endX = startX + 8;
+					var endY = startY + 8;
+
+
+					for (var nameTableIndex = 0; nameTableIndex < nameTable.length; nameTableIndex++) {
+						var nameTableByte = nameTable[nameTableIndex];
+
+						var xpos;
+						var ypos;
+
+						for (; startX < endX; startX++) {
+							for (; startY < endY; startY++) {
+
+								xpos = startX;
+								ypos = startY;
+
+								this.fetchTileData() >> ((7 - ppu.vars.x) * 4)
+
+								this.setPixel(xpos, ypos, color);
+
+
+
+
+
+							}
+						}
+					}
+
+				}
+
+
 				for (var row=0; row<2; row++) {
 					for (var collumn=0; collumn<2; collumn++) {
 						var startX = row * 256;
@@ -345,20 +386,25 @@
 						
 						var xpos = startX;
 						var ypos = startY;
-						
+
+						for (var nameTableIndex = 0; nameTableIndex < table[0];)
+
 						for (var y=0; y < 241; y++) {
 							for (var x = 0; x < 257; x++) {
-								
+
+
 								var cell = nametables[collumn * 1 + row];
 								var color = "#ffffff";
-								
+
+
+
 								var tx = x % 8;
 								var ty = y % 8;
 								
 								if (typeof(cell) == "undefined") {
 									
 								} else {
-								
+
 								}
 
 								this.setPixel(xpos, ypos, color);
@@ -383,7 +429,7 @@
 				);
 			}
 		};
-		
+		nametable.init();
 		//nametable.init();
 		//nametable.draw([[],[],[],[]]);
 	</script>
