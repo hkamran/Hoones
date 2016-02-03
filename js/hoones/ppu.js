@@ -164,6 +164,7 @@ var ppu = {
 			var segment = Math.floor(addr / 0x1000);
 			var offset = addr % 0x1000;
 			
+			
 			var result = this.data[segment][offset];
 			if (typeof result === 'undefined') {
 				result = 0x0;
@@ -623,7 +624,6 @@ var ppu = {
 			} else if (addr == 0x2006) {
 				this.addr.write(val);
 			} else if (addr == 0x2007) {
-				log("aSDASDASDas");
 				this.data.write(val);
 			}
 		}
@@ -632,6 +632,7 @@ var ppu = {
 	background : {
 		
 		attributeTableByte : 0x00,
+		nameTableAddr : 0x0,
 		nameTableByte : 0x00,
 		lowTileByte   : 0x0,
 		highTileByte  : 0x0,
@@ -651,9 +652,9 @@ var ppu = {
 		incrementX :  function() {
 			if ((ppu.vars.v & 0x001F) == 31) {
 				ppu.vars.v &= 0xFFE0; //Set X=0
-				//ppu.vars.v ^= 0x0400; //Switch horizontal nametable
+				ppu.vars.v ^= 0x0400; //Switch horizontal nametable
 			} else {
-				ppu.vars.v++; //increase X
+				ppu.vars.v = ppu.vars.v + 1; //increase X
 			}
 		},
 		
@@ -697,7 +698,7 @@ var ppu = {
 			var address = 0x2000 | (v & 0x0FFF);
 
 			ppu.background.nameTableByte = ppu.mmu.readByte(address);
-
+			this.nameTableAddr = address;
 			log("NAMETABLE " + ppu.background.nameTableByte + ":" + address.toString(16));
 		},
 		

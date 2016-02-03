@@ -131,6 +131,18 @@
 							<label>OAM Address: </label><span id="val0"></span>
 						</li>
 						<li>
+							<label>Name Table Address: </label><span id="nameaddr"></span>
+						</li>
+						<li>
+							<label>NameTable Byte: </label><span id="namebyte"></span>
+						</li>						
+						<li>
+							<label>Tile Address: </label><span id="tileaddr"></span>
+						</li>		
+						<li>
+							<label>Tile Byte: </label><span id="tilebyte"></span>
+						</li>							
+						<li>
 							<label>X-Pos: </label><span id="xpos"></span>
 						</li>
 						<li>
@@ -256,6 +268,12 @@
 			document.getElementById("temp").innerHTML = "0x" + ppu.vars.t.toString(16).toUpperCase();
 			document.getElementById("xpos").innerHTML = "0x" + ppu.background.xpos.toString(16).toUpperCase();
 			document.getElementById("ypos").innerHTML = "0x" + ppu.background.ypos.toString(16).toUpperCase();
+			document.getElementById("nameaddr").innerHTML = "0x" + ppu.background.nameTableAddr.toString(16).toUpperCase();
+			document.getElementById("tileaddr").innerHTML = "0x" + ppu.background.fetchTileAddr().toString(16).toUpperCase();
+			document.getElementById("namebyte").innerHTML = "0x" + ppu.background.nameTableByte.toString(16).toUpperCase();
+			document.getElementById("tilebyte").innerHTML = "0x" + ppu.mmu.readByte(ppu.background.fetchTileAddr()).toString(16).toUpperCase();
+			 
+			 
 			var st = "";
 			var comma = " ,";
 			for (var i = cpu.mmu.stack.data.length - 1; i >= cpu.registers.sp.get(); i--) {
@@ -337,81 +355,45 @@
 			draw : function(nametables) {
 
 
-				var startX = 0;
-				var startY = 0;
-				for (var nameTablesIndex = 0; nameTablesIndex < nametables.length; nameTablesIndex++) {
+				for (var nameTablesIndex = 0; nameTablesIndex < 1; nameTablesIndex++) {
 					var nameTable = nametables[nameTablesIndex];
 
-					var endX = startX + 8;
-					var endY = startY + 8;
 
-
+					var xpos = 0;
+					var ypos = 0;
+					var width = 0;
 					for (var nameTableIndex = 0; nameTableIndex < nameTable.length; nameTableIndex++) {
 						var nameTableByte = nameTable[nameTableIndex];
 
-						var xpos;
-						var ypos;
+						var endX = xpos + 8;
+						var endY = ypos + 8;
 
-						for (; startX < endX; startX++) {
-							for (; startY < endY; startY++) {
-
-								xpos = startX;
-								ypos = startY;
-
-								this.fetchTileData() >> ((7 - ppu.vars.x) * 4)
-
-								this.setPixel(xpos, ypos, color);
-
-
-
-
-
-							}
-						}
-					}
-
-				}
-
-
-				for (var row=0; row<2; row++) {
-					for (var collumn=0; collumn<2; collumn++) {
-						var startX = row * 256;
-						var startY = collumn * 240;
-						var table = collumn * 2 + row
+						for (; ypos < endY; ypos++) {
 						
-						//0,0 correct
-						//0,1 2 + 0 correct
-						//1,0 1 correct
-						//1,1 2+1 3 correct
+							var address = (nameTableByte*16) + ypos;
+							console.log(address.toString(16));
+							var patternByte = ppu.mmu.readByte(address);
 						
-						var xpos = startX;
-						var ypos = startY;
+							for (; xpos < endX; xpos++) {
 
-						for (var nameTableIndex = 0; nameTableIndex < table[0];)
-
-						for (var y=0; y < 241; y++) {
-							for (var x = 0; x < 257; x++) {
-
-
-								var cell = nametables[collumn * 1 + row];
-								var color = "#ffffff";
-
-
-
-								var tx = x % 8;
-								var ty = y % 8;
-								
-								if (typeof(cell) == "undefined") {
-									
-								} else {
-
+								var pixelBit = patternByte & 0x1;
+								if (pixelBit != 0) {
+									this.setPixel(xpos, ypos, "#FFFFFF");
 								}
 
-								this.setPixel(xpos, ypos, color);
-								xpos += 1;
+								patternByte >>= 1;
+
+								
 							}
-							xpos = startX;
-							ypos += 1;
+							xpos = xpos - 8;
+							
+
+						}
+						width++;
+						if (width == 30) {
+							ypos = ypos + 8;
+							width = 0;
+							xpos = xpos - 240;
 						}
 					}
 				}
