@@ -175,7 +175,6 @@ var ppu = {
 		
 		writeByte : function(addr, val) {
 			if (addr >= 0x2000) {
-				console.log("Error " + addr.toString(16));
 				asdadsasdsad.asdasdsad;
 				return;
 			}
@@ -713,13 +712,11 @@ var ppu = {
 		fetchLowTileByte : function() {
 			var addr = this.fetchTileAddr();
 			ppu.background.lowTileByte  = ppu.mmu.readByte(addr);
-			log("Low Tile: " + ppu.background.lowTileByte.toString(16) + ":" + addr.toString(16));
 		},
 		
 		fetchHighTyleByte : function() {
 			var addr = this.fetchTileAddr() + 8;
 			ppu.background.highTileByte = ppu.mmu.readByte(addr);
-			log("High Tile: " + ppu.background.highTileByte.toString(16) + ":" + addr.toString(16));
 		},
 		
 		fetchTileAddr : function() {
@@ -732,6 +729,7 @@ var ppu = {
 		
 		storeTileData : function() {
 			var data = 0x0;
+				
 			for (var i = 0; i < 8; i++) {
 				var a = ppu.background.attributeTableByte;
 				
@@ -747,12 +745,10 @@ var ppu = {
 				ppu.background.highTileByte &= 0xFF;
 				
 				data <<= 4;
-				data |= (a | p1 | p2) & 0xFFFFFFFF;
-				
-				data &= 0xFFFFFFFFFFFFFFFF;
+				data |= (a | p1 | p2) & 0xFF;
 			}
-
-			ppu.background.tileData |= data & 0xFFFFFFFFFFFFFFFF;
+			log(data);
+			ppu.background.tileData |= data;
 			//log("Tile Data " + ppu.background.tileData.toString(16));
 		},
 		
@@ -781,6 +777,11 @@ var ppu = {
 
 		var background = ppu.background.getPixelByte();
 		if (x < 8 && ppu.registers.mask.showbg == 0) {
+			background = 0;
+		}
+		
+		var b = background % 4 != 0;
+		if (!b) {
 			background = 0;
 		}
 		
@@ -845,10 +846,8 @@ var ppu = {
 		if (renderingEnabled) {
 			if (renderLine && fetchCycle) {
                 ppu.background.tileData <<= 4;
-                ppu.background.tileData = 0xFFFFFFFFFFFFFFFF;
-
+				
                 var remainder = this.cycle % 8;
-				log("REM " + this.cycle % 8);
 				switch (remainder) {
 					case 1:
 						ppu.background.fetchNameTableByte();
@@ -856,6 +855,7 @@ var ppu = {
 						ppu.background.fetchAttributeTableByte();
 					case 5:
 						ppu.background.fetchLowTileByte();
+						
 					case 7:
 						ppu.background.fetchHighTyleByte();
 					case 0:
