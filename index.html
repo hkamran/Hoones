@@ -141,7 +141,13 @@
 						</li>		
 						<li>
 							<label>Tile Byte: </label><span id="tilebyte"></span>
-						</li>							
+						</li>
+						<li>
+							<label>Low Tile Byte: </label><span id="lowbyte"></span>
+						</li>			
+						<li>
+							<label>High Tile Byte: </label><span id="highbyte"></span>
+						</li>									
 						<li>
 							<label>X-Pos: </label><span id="xpos"></span>
 						</li>
@@ -272,7 +278,9 @@
 			document.getElementById("tileaddr").innerHTML = "0x" + ppu.background.fetchTileAddr().toString(16).toUpperCase();
 			document.getElementById("namebyte").innerHTML = "0x" + ppu.background.nameTableByte.toString(16).toUpperCase();
 			document.getElementById("tilebyte").innerHTML = "0x" + ppu.mmu.readByte(ppu.background.fetchTileAddr()).toString(16).toUpperCase();
-			 
+			document.getElementById("lowbyte").innerHTML = "0x" + ppu.background.lowTileByte.toString(16).toUpperCase();
+			document.getElementById("highbyte").innerHTML = "0x" + ppu.background.highTileByte.toString(16).toUpperCase();
+				 
 			 
 			var st = "";
 			var comma = " ,";
