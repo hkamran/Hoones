@@ -192,29 +192,30 @@ var cpu = {
 			data : [],
 
 			pushByte : function(val) {
-				if (this.data.length > 0xFF) {
-					cpu.registers.sp.val = 0;
-				}
-
 				this.data[cpu.registers.sp.get()] = val;
 				cpu.registers.sp.val -= 1;
 
+				if (typeof result == 'undefined') {
+					return 0x0;
+				}
+
 				if (cpu.registers.sp.val < 0) {
-					asdasdasdasd
+					cpu.registers.sp.val = 0;
 				}
 
 			},
 
 			popByte : function() {
 				cpu.registers.sp.val++;
+
+				if (cpu.registers.sp.val > 0xFF) {
+					cpu.registers.sp.val == 0xFF;
+				}
+
 				var result = this.data[cpu.registers.sp.get()];
 
 				if (typeof result == 'undefined') {
 					asdasd.asdasdasd
-				}
-
-				if (cpu.registers.sp.val > 0xFF) {
-					asdasdasdasd
 				}
 
 				return result;
@@ -527,19 +528,19 @@ var cpu = {
 		},
 		
 		triggerNMI : function() {
-			this.mmu.stack.pushWord(cpu.registers.pc.get());
-			this.instructions.ops.php({});
-			this.registers.pc.set(this.mmu.readWord(0xFFFA));
-			this.registers.p.i = 1;
-			this.cycles += 7;			
+			cpu.mmu.stack.pushWord(cpu.registers.pc.get());
+			cpu.instructions.ops.php({});
+			cpu.registers.pc.set(cpu.mmu.readWord(0xFFFA));
+			cpu.registers.p.i = 1;
+			cpu.cycles += 7;
 		},
 		
 		triggerIRQ : function() {
-			this.mmu.stack.pushWord(cpu.registers.pc.get());
-			this.instructions.ops.php({});
-			this.registers.pc.set(this.mmu.readWord(0xFFFE));
-			this.registers.p.i = 1;
-			this.cycles += 7;
+			cpu.mmu.stack.pushWord(cpu.registers.pc.get());
+			cpu.instructions.ops.php({});
+			cpu.registers.pc.set(cpu.mmu.readWord(0xFFFE));
+			cpu.registers.p.i = 1;
+			cpu.cycles += 7;
 		},
 		
 	},

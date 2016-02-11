@@ -8,8 +8,8 @@ var ppu = {
 	screen: {
 	
 		canvas : null,
-		pixelSize : 1,
-		spacer: 0,
+		pixelSize : 2,
+		spacer: 1,
 		height : 240,
 		width : 255,
 				
@@ -509,7 +509,6 @@ var ppu = {
 			buffer : 0x0,
 			
 			write : function(val) {
-				log(ppu.vars.v.toString(16) + " " + val.toString(16));
 				ppu.mmu.writeByte(ppu.vars.v, val);
 				
 				//Increment vram addr
@@ -635,7 +634,7 @@ var ppu = {
 		nameTableByte : 0x00,
 		lowTileByte   : 0x0,
 		highTileByte  : 0x0,
-        tileData      : 0x0,
+        tileData      : [],
 
 		xpos: 0,
 		ypos: 0,
@@ -698,7 +697,6 @@ var ppu = {
 
 			ppu.background.nameTableByte = ppu.mmu.readByte(address);
 			this.nameTableAddr = address;
-			log("NAMETABLE " + ppu.background.nameTableByte + ":" + address.toString(16));
 		},
 		
 		fetchAttributeTableByte : function() {
@@ -735,21 +733,16 @@ var ppu = {
 				
 				var p1 = (ppu.background.lowTileByte & 0x80) >> 7;
 				var p2 = (ppu.background.highTileByte & 0x80) >> 6;
-				
+
 				ppu.background.lowTileByte  <<= 1;
 				ppu.background.highTileByte <<= 1;
-				
-				p1 &= 0xFF;
-				p2 &= 0xFF;
-				ppu.background.lowTileByte  &= 0xFF;
-				ppu.background.highTileByte &= 0xFF;
-				
+				log("A: " + a.toString(2) + " low: " + p1.toString(2) + " high: " + p2.toString(2) + ": data" + data.toString(2));
 				data <<= 4;
-				data |= (a | p1 | p2) & 0xFF;
+				data |= (a | p1 | p2) & 0xf;
 			}
-			log(data);
+			log(data.toString(2) + ":" + ppu.background.tileData.toString(2));
 			ppu.background.tileData |= data;
-			//log("Tile Data " + ppu.background.tileData.toString(16));
+
 		},
 		
 		fetchTileData : function() {
@@ -810,7 +803,7 @@ var ppu = {
 			ppu.nmi.delay--;
 			if (ppu.nmi.delay == 0 && ppu.nmi.output && ppu.nmi.occurred) {
 				console.log("TRIGGER");
-				asdasdasd.asdasdasd;
+				cpu.interrupts.triggerIRQ();
 			}
 		}
 
@@ -846,7 +839,8 @@ var ppu = {
 		if (renderingEnabled) {
 			if (renderLine && fetchCycle) {
                 ppu.background.tileData <<= 4;
-				
+				console.log(ppu.background.tileData >> 28);
+				log("SHIFTING " + ppu.background.tileData.toString(2));
                 var remainder = this.cycle % 8;
 				switch (remainder) {
 					case 1:
