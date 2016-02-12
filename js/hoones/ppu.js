@@ -632,9 +632,13 @@ var ppu = {
 		attributeTableByte : 0x00,
 		nameTableAddr : 0x0,
 		nameTableByte : 0x00,
+
 		lowTileByte   : 0x0,
 		highTileByte  : 0x0,
-        tileData      : [],
+
+		tileData : 0x0,
+		lowTileData : 0x0,
+		highTileData : 0x0,
 
 		xpos: 0,
 		ypos: 0,
@@ -740,13 +744,14 @@ var ppu = {
 				data <<= 4;
 				data |= (a | p1 | p2) & 0xf;
 			}
-			log(data.toString(2) + ":" + ppu.background.tileData.toString(2));
+			log("STORING " + "LOW " + ppu.background.lowTileData.toString(2) + ":" + data.toString(2));
+			ppu.background.lowTileData |= data;
 			ppu.background.tileData |= data;
 
 		},
 		
 		fetchTileData : function() {
-			return ppu.background.tileData >> 32;
+			return ppu.background.lowTileData;
 		},
 		
 		getPixelByte: function() {
@@ -754,7 +759,7 @@ var ppu = {
 				return 0x0;
 			}
 			var data = this.fetchTileData() >> ((7 - ppu.vars.x) * 4);
-			return data & 0x0f;
+			return data;
 		}
 	},
 		
@@ -838,22 +843,42 @@ var ppu = {
 		//Prepare Background Pixel
 		if (renderingEnabled) {
 			if (renderLine && fetchCycle) {
-                ppu.background.tileData <<= 4;
-				console.log(ppu.background.tileData >> 28);
-				log("SHIFTING " + ppu.background.tileData.toString(2));
+				log("BEFORE LOW: "  + ppu.background.lowTileData.toString(2));
+				log("BEFORE HIGH: " + ppu.background.highTileData.toString(2));
+				log("REAL BEFORE " + ppu.background.tileData.toString(2));
+				if (ppu.background.lowTileData > 0x80000000) {
+					console.log("error");
+				}
+				ppu.background.tileData <<= 4;
+				var transfer = (ppu.background.lowTileData >> 28) & 0xF;
+
+                ppu.background.lowTileData &= 0xFFFFFFF;
+				ppu.background.lowTileData <<= 4;
+				ppu.background.highTileData &= 0xFFFFFFF;
+				ppu.background.highTileData <<= 4;
+				ppu.background.highTileData |= transfer;
+
+				log("AFTER LOW: "  + ppu.background.lowTileData.toString(2));
+				log("AFTER HIGH: " + ppu.background.highTileData.toString(2));
+				log("REAL AFTER: " + ppu.background.tileData.toString(2));
                 var remainder = this.cycle % 8;
+				log("Remainder " + remainder);
 				switch (remainder) {
 					case 1:
 						ppu.background.fetchNameTableByte();
+						break;
 					case 3:
 						ppu.background.fetchAttributeTableByte();
+						break;
 					case 5:
 						ppu.background.fetchLowTileByte();
-						
+						break;
 					case 7:
 						ppu.background.fetchHighTyleByte();
+						break;
 					case 0:
 						ppu.background.storeTileData();
+						break;
 				}
 			}
 			if (preLine && (ppu.cycle >= 280) && (ppu.cycle <= 304)) {
