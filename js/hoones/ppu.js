@@ -131,7 +131,7 @@ var ppu = {
 		
 		writeByte : function(addr, val) {
 			addr = addr % 0x20;
-			if (addr >= 0x10) {
+			if (addr > 0x10) {
 				return this.sprite.write(addr % 0x10, val % 0x40);
 			}
 			return this.image.write(addr % 0x10, val % 0x40);
@@ -139,7 +139,7 @@ var ppu = {
 		
 		readByte : function(addr) {
 			addr = addr % 0x20;
-			if (addr >= 0x10) {
+			if (addr > 0x10) {
 				return this.sprite.read(addr % 0x10);
 			}
 			return this.image.read(addr % 0x10);
@@ -147,11 +147,10 @@ var ppu = {
 	},
 	
 	pattern : {
-		data : [[],[]],
+		data : [],
 
 		set : function(val) {
-			this.data[0] = val[0x0, 0x1000];
-			this.data[1] = val[0x1000, 0x2000];
+			this.data = val;
 		},
 
 		readByte : function(addr) {
@@ -160,12 +159,8 @@ var ppu = {
 				asdadasdsad.asdasdsa;
 				return 0x0;
 			}
-
-			var segment = Math.floor(addr / 0x1000);
-			var offset = addr % 0x1000;
 			
-			
-			var result = this.data[segment][offset];
+			var result = this.data[addr];
 			if (typeof result === 'undefined') {
 				result = 0x0;
 			}
@@ -179,9 +174,7 @@ var ppu = {
 				return;
 			}
 
-			var segment = Math.floor(addr / 0x1000);
-			var offset = addr % 0x1000;
-			this.data[segment][offset] = val;
+			this.data[addr] = val;
 		},
 		
 	},
@@ -269,8 +262,8 @@ var ppu = {
 		this.palette.reset();
 		//this.scanline = 241;
 		//this.cycle = 0;
-		this.scanline = 239;
-		this.cycle = 340;
+		this.scanline = 0;
+		this.cycle = 0;
 		this.vars.f = 1;
 		this.registers.cntrl.write(0);
 		this.registers.mask.write(0);
@@ -417,7 +410,7 @@ var ppu = {
 			},
 			
 			read: function(val) {
-				var result = 0x1F; //0001 1111
+				var result = 0x0; //0001 1111
 				result |= this.spriteoverflow << 5;
 				result |= this.spritehit << 6;		
 				
@@ -488,10 +481,14 @@ var ppu = {
 		addr : {
 			
 			write : function(val) {
+
 				if (ppu.vars.w == 0) {
+
 					ppu.vars.t = (ppu.vars.t & 0x80FF) | ((val & 0x3F) << 8);
+					log("W=0 " + val.toString(16) + " " + ppu.vars.t.toString(16));
 					ppu.vars.w = 1;
 				} else {
+					log("W=1 " + val.toString(16) + " " + ((ppu.vars.t & 0xFF00) | val).toString(16));
 					ppu.vars.t = (ppu.vars.t & 0xFF00) | val;
 					ppu.vars.v = ppu.vars.t;
 					ppu.vars.w = 0;
@@ -509,6 +506,7 @@ var ppu = {
 			buffer : 0x0,
 			
 			write : function(val) {
+				log("WRITING: " + val.toString(16) + " at " + ppu.vars.v.toString(16));
 				ppu.mmu.writeByte(ppu.vars.v, val);
 				
 				//Increment vram addr
@@ -520,6 +518,7 @@ var ppu = {
 			},
 			
 			read: function(val) {
+				log(ppu.vars.v);
 				var result;
 				
 				//Before palette
@@ -535,7 +534,7 @@ var ppu = {
 						this.buffer = ppu.mmu.readByte(ppu.vars.v);
 						result = this.buffer;	
 				}
-				
+				log("READING 2007: " + result.toString(16) + " AT " + ppu.vars.v.toString(16));
 				//Increment vram addr
 				if (ppu.registers.cntrl.increment == 0) {
 					ppu.vars.v += 1;
@@ -636,13 +635,9 @@ var ppu = {
 		lowTileByte   : 0x0,
 		highTileByte  : 0x0,
 
-		tileData : 0x0,
 		lowTileData : 0x0,
 		highTileData : 0x0,
 
-		xpos: 0,
-		ypos: 0,
-		
 		// V ADDRESS
 		// yyy NNYY YYYX  XXXX
 		// ||| |||| |||+--++++- coarse X scroll
@@ -699,8 +694,8 @@ var ppu = {
 			var v = ppu.vars.v;
 			var address = 0x2000 | (v & 0x0FFF);
 
-			ppu.background.nameTableByte = ppu.mmu.readByte(address);
 			this.nameTableAddr = address;
+			this.nameTableByte = ppu.mmu.readByte(address);
 		},
 		
 		fetchAttributeTableByte : function() {
@@ -708,7 +703,6 @@ var ppu = {
 			var addr = 0x23C0 | (v & 0x0C00) | ((v >> 4) & 0x38) | ((v >> 2) & 0x07);
 			var shift = ((v >> 4) & 4) | (v & 2);
 			ppu.background.attributeTableByte = ((ppu.mmu.readByte(addr) >> shift) & 3) << 2;
-			//log("ATTRIBUTE " + ppu.background.attributeTableByte + ":" + addr.toString(16));
 		},
 		
 		fetchLowTileByte : function() {
@@ -740,14 +734,11 @@ var ppu = {
 
 				ppu.background.lowTileByte  <<= 1;
 				ppu.background.highTileByte <<= 1;
-				log("A: " + a.toString(2) + " low: " + p1.toString(2) + " high: " + p2.toString(2) + ": data" + data.toString(2));
+
 				data <<= 4;
 				data |= (a | p1 | p2) & 0xf;
 			}
-			log("STORING " + "LOW " + ppu.background.lowTileData.toString(2) + ":" + data.toString(2));
 			ppu.background.lowTileData |= data;
-			ppu.background.tileData |= data;
-
 		},
 		
 		fetchTileData : function() {
@@ -758,8 +749,7 @@ var ppu = {
 			if (ppu.registers.mask.showbg == 0) {
 				return 0x0;
 			}
-			var data = this.fetchTileData() >> ((7 - ppu.vars.x) * 4);
-			return data;
+			return this.fetchTileData() >> ((7 - ppu.vars.x) * 4);
 		}
 	},
 		
@@ -770,8 +760,6 @@ var ppu = {
 	renderPixel : function() {
 		var x = this.cycle - 2;
 		var y = this.scanline;
-		ppu.background.xpos = x;
-		ppu.background.ypos = y;
 
 		var background = ppu.background.getPixelByte();
 		if (x < 8 && ppu.registers.mask.showbg == 0) {
@@ -783,11 +771,26 @@ var ppu = {
 			background = 0;
 		}
 		
-		var pallete = ppu.palette.readByte(background);
-		var color = ppu.screen.getColor(pallete);
+		var palette = ppu.palette.readByte(background);
+		var color = ppu.screen.getColor(palette);
 		ppu.screen.setPixel(x, y, color);
 	},
 
+	renderer : {
+
+		background : {
+
+		},
+
+		sprite : {
+
+		},
+
+		tick : function() {
+
+		},
+
+	},
 	
 	tick : function() {
 		
@@ -808,7 +811,7 @@ var ppu = {
 			ppu.nmi.delay--;
 			if (ppu.nmi.delay == 0 && ppu.nmi.output && ppu.nmi.occurred) {
 				console.log("TRIGGER");
-				cpu.interrupts.triggerIRQ();
+				cpu.interrupts.triggerNMI();
 			}
 		}
 
@@ -843,13 +846,10 @@ var ppu = {
 		//Prepare Background Pixel
 		if (renderingEnabled) {
 			if (renderLine && fetchCycle) {
-				log("BEFORE LOW: "  + ppu.background.lowTileData.toString(2));
-				log("BEFORE HIGH: " + ppu.background.highTileData.toString(2));
-				log("REAL BEFORE " + ppu.background.tileData.toString(2));
-				if (ppu.background.lowTileData > 0x80000000) {
-					console.log("error");
-				}
-				ppu.background.tileData <<= 4;
+				//log("BEFORE LOW: "  + ppu.background.lowTileData.toString(2));
+				//log("BEFORE HIGH: " + ppu.background.highTileData.toString(2));
+				//log("REAL BEFORE " + ppu.background.tileData.toString(2));
+
 				var transfer = (ppu.background.lowTileData >> 28) & 0xF;
 
                 ppu.background.lowTileData &= 0xFFFFFFF;
@@ -858,37 +858,35 @@ var ppu = {
 				ppu.background.highTileData <<= 4;
 				ppu.background.highTileData |= transfer;
 
-				log("AFTER LOW: "  + ppu.background.lowTileData.toString(2));
-				log("AFTER HIGH: " + ppu.background.highTileData.toString(2));
-				log("REAL AFTER: " + ppu.background.tileData.toString(2));
+				//log("AFTER LOW: "  + ppu.background.lowTileData.toString(2));
+				//log("AFTER HIGH: " + ppu.background.highTileData.toString(2));
+				//log("REAL AFTER: " + ppu.background.tileData.toString(2));
                 var remainder = this.cycle % 8;
-				log("Remainder " + remainder);
-				switch (remainder) {
-					case 1:
-						ppu.background.fetchNameTableByte();
-						break;
-					case 3:
-						ppu.background.fetchAttributeTableByte();
-						break;
-					case 5:
-						ppu.background.fetchLowTileByte();
-						break;
-					case 7:
-						ppu.background.fetchHighTyleByte();
-						break;
-					case 0:
-						ppu.background.storeTileData();
-						break;
+				//log("Remainder " + remainder);
+
+				if (remainder == 1) {
+					ppu.background.fetchNameTableByte();
+				} else if (remainder == 3) {
+					ppu.background.fetchAttributeTableByte();
+				} else if (remainder == 5) {
+					ppu.background.fetchLowTileByte();
+				} else if (remainder == 7) {
+					ppu.background.fetchHighTyleByte();
+				} else if (remainder == 0) {
+					ppu.background.storeTileData();
 				}
+
 			}
 			if (preLine && (ppu.cycle >= 280) && (ppu.cycle <= 304)) {
 				ppu.background.setY();
 			}
 			if (renderLine) {
 				if (fetchCycle && ((ppu.cycle % 8) == 0)) {
+					log("INC X");
 					ppu.background.incrementX();
 				}
 				if (ppu.cycle == 256) {
+					log("INC X");
 					ppu.background.incrementY();
 				}
 				if (ppu.cycle == 257) {
@@ -910,6 +908,7 @@ var ppu = {
 	tickFor : function(cycles) {
 		var start = 0;
 		var end = cycles;
+
 		for (var i = 0; i <= end; i++) {
 			this.tick();
 

@@ -12,13 +12,14 @@ var nes = {
         cpu.mmu.prgrom.setUpperBank(cartridge.prgrom.getUpperBank());
 
         ppu.nametables.setMirrorType(cartridge.mirroring.getType());
-        //ppu.pattern.set(cartridge.chrrom.getBank());
+        ppu.pattern.set(cartridge.chrrom.getBank());
     },
 
     reset : function() {
         cpu.reset();
         ppu.reset();
         cartridge.reset();
+
     },
 
     tick : function() {

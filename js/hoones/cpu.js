@@ -518,16 +518,20 @@ var cpu = {
 		
 		tick : function() {
 			if (this.val.localeCompare(this.types.nmi) == 0) {
-				this.triggerNMI();
+				this._triggerNMI();
 			} else if (this.val.localeCompare(this.types.irq) == 0) {
 				if (this.registers.p.i == 0) {
-					this.triggerIRQ();			
+					this._triggerIRQ();
 				}
 			}
 			this.val = this.types.none;
 		},
-		
+
 		triggerNMI : function() {
+			this.val = this.types.nmi;
+		},
+
+		_triggerNMI : function() {
 			cpu.mmu.stack.pushWord(cpu.registers.pc.get());
 			cpu.instructions.ops.php({});
 			cpu.registers.pc.set(cpu.mmu.readWord(0xFFFA));
@@ -535,7 +539,7 @@ var cpu = {
 			cpu.cycles += 7;
 		},
 		
-		triggerIRQ : function() {
+		_triggerIRQ : function() {
 			cpu.mmu.stack.pushWord(cpu.registers.pc.get());
 			cpu.instructions.ops.php({});
 			cpu.registers.pc.set(cpu.mmu.readWord(0xFFFE));
@@ -554,13 +558,19 @@ var cpu = {
 		//Interrupt
 		this.interrupts.tick();
 
-		var addr = null;
-		var isPageDifferent = false;
+		if (debug) {
 
+			output(this.registers.pc.get().toString(16).toUpperCase() + " " + opcode.toString(16) + " " + op.name + "  A:" + cpu.registers.a.get().toString(16).toUpperCase() + " X:" + cpu.registers.x.get().toString(16).toUpperCase() + " Y:"
+				+ cpu.registers.y.get().toString(16).toUpperCase() + " P:" + cpu.registers.p.get().toString(16).toUpperCase() + " SP:" + cpu.registers.sp.get().toString(16).toUpperCase()
+				+ " CYC:" + ppu.cycle + " SL:" + ppu.scanline);
+		}
 
 		//Increment PC
 		var opaddr = this.registers.pc.get();
 		this.registers.pc.set(opaddr + op.size);
+
+		var addr = null;
+		var isPageDifferent = false;
 
 		// Error
 		if (this.instructions.modes.equals(op.mode, this.instructions.modes.err)) {
@@ -646,7 +656,7 @@ var cpu = {
 			addr &= 0xFF;
 
 		}
-		
+
 
 
 		//Increment Cycles
@@ -662,7 +672,6 @@ var cpu = {
 			op : op,
 			opcode : opcode,
 		};
-
 		this.op = info;
 
 		op.func(info);
@@ -679,9 +688,7 @@ var cpu = {
 		this.registers.sp.set(0xFD);
 		//this.registers.pc.set(0xC000);
 		this.registers.pc.set(this.mmu.readWord(0xFFFC));
-		this.mmu.stack.pushWord(0xFFFF);
-		this.mmu.stack.pushWord(0x0002);
-		this.mmu.stack.pushByte(0x30);
+
 		this.registers.p.set(0x24);
 
 		this.cycles += 7;
@@ -752,6 +759,7 @@ var cpu = {
 			},
 
 			and : function(info) {
+				console.log( cpu.registers.a.get().toString(16) + " & " + cpu.mmu.readByte(info.address).toString(16));
 				var temp = cpu.registers.a.get() & cpu.mmu.readByte(info.address);
 				cpu.registers.p.n = (temp>>7)&1;
 				cpu.registers.p.z = ((temp&0xFF) == 0)? 1:0;
@@ -993,7 +1001,7 @@ var cpu = {
 			//Load Accumulator with m
 			lda: function(info) {
 				var temp = cpu.mmu.readByte(info.address);
-
+				log("LDA: " + temp.toString(16));
 				cpu.registers.p.n = (temp>>7)&1;
 				cpu.registers.p.z = ((temp&0xFF) == 0)? 1:0;
 
@@ -1173,6 +1181,7 @@ var cpu = {
 
 			//Store accumulator
 			sta: function(info) {
+
 				cpu.mmu.writeByte(info.address, cpu.registers.a.get());
 			},
 
