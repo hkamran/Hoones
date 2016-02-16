@@ -5,6 +5,11 @@ var cpu = {
 	stall : 0,
 	op : null,
 
+	setCartidge : function(cartridge) {
+		this.mmu.prgrom.setLowerBank(cartridge.prgrom.getLowerBank());
+		this.mmu.prgrom.setUpperBank(cartridge.prgrom.getUpperBank());
+	},
+
 	registers : {
 		//Accumulator 	  (8 bits)
 		a : {

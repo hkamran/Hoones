@@ -80,186 +80,229 @@ var ppu = {
 			);
 		},
 	},
-	
-	palette : {
-		
-		//Background colours
-		image : {
-			data: [],
-			
-			reset : function() {
-				this.data = new Array(0xf);
-                for (var i = 0; i != 0xf; ++i) {
-                    this.data[i] = 0;
-                }
+
+	mmu : {
+
+		//-----------------
+		//Pattern 0x2000
+		//----------------
+		//Nametables 0x3F00
+		//----------------
+		//Patette 0x4000
+		//------------------
+
+		palette : {
+
+			//Background colours
+			image : {
+				data: [],
+
+				reset : function() {
+					this.data = new Array(0xf);
+					for (var i = 0; i != 0xf; ++i) {
+						this.data[i] = 0;
+					}
+				},
+
+				write : function(addr, val) {
+					this.data[addr] = val;
+				},
+
+				read : function(addr) {
+					return this.data[addr];
+				},
 			},
-			
-			write : function(addr, val) {
+
+			//Sprite colours
+			sprite : {
+				data: [],
+
+				reset : function() {
+					this.data = new Array(0xf);
+					for (var i = 0; i != 0xf; ++i) {
+						this.data[i] = 0;
+					}
+				},
+
+				write : function(addr, val) {
+					this.data[addr] = val;
+				},
+
+				read : function(addr) {
+					return this.data[addr];
+				},
+
+			},
+
+			reset : function() {
+				this.image.reset();
+				this.sprite.reset();
+			},
+
+			writeByte : function(addr, val) {
+				addr = addr % 0x20;
+				if (addr > 0x10) {
+					return this.sprite.write(addr % 0x10, val % 0x40);
+				}
+				return this.image.write(addr % 0x10, val % 0x40);
+			},
+
+			readByte : function(addr) {
+				addr = addr % 0x20;
+				if (addr > 0x10) {
+					return this.sprite.read(addr % 0x10);
+				}
+				return this.image.read(addr % 0x10);
+			},
+		},
+
+		pattern : {
+			data : [],
+
+			set : function(val) {
+				this.data = val;
+			},
+
+			readByte : function(addr) {
+				if (addr >= 0x2000) {
+					console.log("Error " + addr.toString(16));
+					asdadasdsad.asdasdsa;
+					return 0x0;
+				}
+
+				var result = this.data[addr];
+				if (typeof result === 'undefined') {
+					result = 0x0;
+				}
+
+				return result;
+			},
+
+			writeByte : function(addr, val) {
+				if (addr >= 0x2000) {
+					asdadsasdsad.asdasdsad;
+					return;
+				}
+
 				this.data[addr] = val;
 			},
-			
-			read : function(addr) {
-				return this.data[addr];
-			},
+
 		},
-		
-		//Sprite colours
-		sprite : {
-			data: [],
-			
+
+		nametables : {
+			table : 	[[],[],[],[]],
+			attribute : [[],[],[],[]],
+			mirror : [0, 0, 0, 0],
+
 			reset : function() {
-				this.data = new Array(0xf);
-                for (var i = 0; i != 0xf; ++i) {
-                    this.data[i] = 0;
-                }
+				for (var i = 0; i < 4; i++) {
+					this.table[i] = [];
+					this.attribute[i] = [];
+				}
 			},
-			
-			write : function(addr, val) {
-				this.data[addr] = val;
+
+			setMirrorType : function(val) {
+				this.mirror = val;
 			},
-			
-			read : function(addr) {
-				return this.data[addr];
+
+			getAddress: function(addr) {
+				addr = (addr - 0x2000) % 0x1000;
+				var table = Math.floor(addr / 0x0400);
+				var offset = addr % 0x0400;
+				return 0x2000 + this.mirror[table]*0x0400 + offset;
 			},
-		
+
+			readByte : function(addr) {
+
+				if (addr > 0x3f00 || addr < 0x2000) {
+					console.log("error " + addr.toString(16));
+					asdasdasd.asdasdasdasd;
+				}
+
+				addr = this.getAddress(addr);
+				addr = ((addr - 0x2000) % 0x1000); //Mimic mirrors from 0x3000 to 0x3f00
+
+				var index = Math.floor(addr / 0x400); //Segment
+				var offset = addr % 0x400; //offset inside the segment
+
+				var result;
+				if (offset >= 0x3c0) {
+					//console.log("Attribute Table " + index);
+					result = this.attribute[index][offset & 0x0FF - 0xc0];
+				} else {
+					//console.log("Name Table " + index + ":" + this.table[index][offset]);
+					result = this.table[index][offset];
+				}
+
+				if(typeof result === 'undefined') {
+					result = 0x0;
+				}
+				return result;
+			},
+
+			writeByte: function(addr, val) {
+
+				if (addr > 0x3f00 || addr < 0x2000) {
+					console.log("error " + addr.toString(16));
+					asdasdasd.asdasdasdasd;
+				}
+
+				var addr = ((addr - 0x2000) % 0x1000); //Mimic mirrors from 0x3000 to 0x3f00
+				var index = Math.floor(addr / 0x400); //Segment
+				var offset = addr % 0x400; //offset inside the segment
+
+
+				if (offset >= 0x3c0) {
+					this.attribute[index][offset & 0x0FF - 0xc0] = val;
+				} else {
+					this.table[index][offset] = val;
+				}
+
+			},
+
 		},
-		
-		reset : function() {
-			this.image.reset();
-			this.sprite.reset();
+
+		oam : {
+			addr : 0x0,
+			data : [],
 		},
-		
-		writeByte : function(addr, val) {
-			addr = addr % 0x20;
-			if (addr > 0x10) {
-				return this.sprite.write(addr % 0x10, val % 0x40);
-			}
-			return this.image.write(addr % 0x10, val % 0x40);
-		},
-		
+
 		readByte : function(addr) {
-			addr = addr % 0x20;
-			if (addr > 0x10) {
-				return this.sprite.read(addr % 0x10);
-			}
-			return this.image.read(addr % 0x10);
-		},
-	},
-	
-	pattern : {
-		data : [],
-
-		set : function(val) {
-			this.data = val;
-		},
-
-		readByte : function(addr) {
-			if (addr >= 0x2000) {
-				console.log("Error " + addr.toString(16));
-				asdadasdsad.asdasdsa;
-				return 0x0;
-			}
-			
-			var result = this.data[addr];
-			if (typeof result === 'undefined') {
-				result = 0x0;
-			}
-
-			return result;
-		},
-		
-		writeByte : function(addr, val) {
-			if (addr >= 0x2000) {
-				asdadsasdsad.asdasdsad;
-				return;
-			}
-
-			this.data[addr] = val;
-		},
-		
-	},
-	
-	nametables : {
-		table : 	[[],[],[],[]],
-		attribute : [[],[],[],[]],
-		mirror : [0, 0, 0, 0],
-		
-		reset : function() {
-			for (var i = 0; i < 4; i++) {
-				this.table[i] = [];
-				this.attribute[i] = [];
-			}
-		},
-
-		setMirrorType : function(val) {
-			this.mirror = val;
-		},
-
-		getAddress: function(addr) {
-			addr = (addr - 0x2000) % 0x1000;
-			var table = Math.floor(addr / 0x0400);
-			var offset = addr % 0x0400;
-			return 0x2000 + this.mirror[table]*0x0400 + offset;
-		},
-		
-		readByte : function(addr) {
-
-			if (addr > 0x3f00 || addr < 0x2000) {
-				console.log("error " + addr.toString(16));
-				asdasdasd.asdasdasdasd;
-			}
-
-			addr = this.getAddress(addr);
-			addr = ((addr - 0x2000) % 0x1000); //Mimic mirrors from 0x3000 to 0x3f00
-			
-			var index = Math.floor(addr / 0x400); //Segment
-			var offset = addr % 0x400; //offset inside the segment
-			
-			var result;
-			if (offset >= 0x3c0) {
-				//console.log("Attribute Table " + index);
-				result = this.attribute[index][offset & 0x0FF - 0xc0];
+			addr = addr % 0x4000;
+			if (addr < 0x2000) {
+				return this.pattern.readByte(addr);
+			} else if (addr < 0x3F00) {
+				return this.nametables.readByte(addr);
+			} else if (addr < 0x4000) {
+				return this.palette.readByte(addr);
 			} else {
-				//console.log("Name Table " + index + ":" + this.table[index][offset]);
-				result = this.table[index][offset];
+				//console.log("ERROR READING " + addr.toString(16));
 			}
-			
-			if(typeof result === 'undefined') {
-				result = 0x0;
-			}
-			return result;
+
 		},
-		
-		writeByte: function(addr, val) {
-			
-			if (addr > 0x3f00 || addr < 0x2000) {
-				console.log("error " + addr.toString(16));
-				asdasdasd.asdasdasdasd;
-			}
-			
-			var addr = ((addr - 0x2000) % 0x1000); //Mimic mirrors from 0x3000 to 0x3f00
-			var index = Math.floor(addr / 0x400); //Segment
-			var offset = addr % 0x400; //offset inside the segment
-			
-			
-			if (offset >= 0x3c0) {
-				this.attribute[index][offset & 0x0FF - 0xc0] = val;
+
+		writeByte : function(addr, val) {
+			addr = addr % 0x4000;
+			if (addr < 0x2000) {
+				return this.pattern.writeByte(addr, val);
+			} else if (addr < 0x3F00) {
+				return this.nametables.writeByte(addr, val);
+			} else if (addr < 0x4000) {
+				return this.palette.writeByte(addr, val);
 			} else {
-				this.table[index][offset] = val;
+				//console.log("ERROR WRITING " + addr.toString(16));
 			}
-			
-		},
-		
+		}
 	},
-	
-	oam : {
-		addr : 0x0,
-		data : [],
+
+	setCartidge : function(cartridge) {
+		this.mmu.nametables.setMirrorType(cartridge.mirroring.getType());
+		this.mmu.pattern.set(cartridge.chrrom.getBank());
 	},
-	
+
 	reset : function () {
 		this.screen.reset(); 
-		this.palette.reset();
+		this.mmu.palette.reset();
 		//this.scanline = 241;
 		//this.cycle = 0;
 		this.scanline = 0;
@@ -304,36 +347,7 @@ var ppu = {
 		},
 		
 	},
-	
-	mmu : {
-		
-		readByte : function(addr) {
-			addr = addr % 0x4000;
-			if (addr < 0x2000) {
-				return ppu.pattern.readByte(addr);
-			} else if (addr < 0x3F00) {
-				return ppu.nametables.readByte(addr);
-			} else if (addr < 0x4000) {
-				return ppu.palette.readByte(addr);
-			} else {
-				//console.log("ERROR READING " + addr.toString(16));
-			}
-			
-		},
-		
-		writeByte : function(addr, val) {
-			addr = addr % 0x4000;
-			if (addr < 0x2000) {
-				return ppu.pattern.writeByte(addr, val);
-			} else if (addr < 0x3F00) {
-				return ppu.nametables.writeByte(addr, val);
-			} else if (addr < 0x4000) {
-				return ppu.palette.writeByte(addr, val);
-			} else {
-				//console.log("ERROR WRITING " + addr.toString(16));
-			}
-		}
-	},
+
 	
 	registers : {
 		
@@ -433,7 +447,7 @@ var ppu = {
 		oamaddr : {
 			
 			write : function(val) {
-				ppu.oam.addr = val;
+				ppu.mmu.oam.addr = val;
 			},
 			
 			read: function(val) {
@@ -446,12 +460,12 @@ var ppu = {
 		oamdata : {
 			
 			write : function(val) {
-				ppu.oam.data[ppu.oam.addr] = val;
-				ppu.oam.addr = (ppu.oam.addr + 1) & 0xFF;	
+				ppu.mmu.oam.data[ppu.mmu.oam.addr] = val;
+				ppu.mmu.oam.addr = (ppu.mmu.oam.addr + 1) & 0xFF;
 			},
 			
 			read: function(val) {
-				return ppu.oam.data[ppu.oam.addr];
+				return ppu.mmu.oam.data[ppu.mmu.oam.addr];
 			}
 		},
 		
@@ -625,18 +639,106 @@ var ppu = {
 			}
 		}
 	},
-	
-	background : {
+
+	renderPixel : function() {
+		var x = this.cycle - 2;
+		var y = this.scanline;
+
+		var background = ppu.renderer.background.getPixelByte();
+		if (x < 8 && ppu.registers.mask.showbg == 0) {
+			background = 0;
+		}
 		
-		attributeTableByte : 0x00,
-		nameTableAddr : 0x0,
-		nameTableByte : 0x00,
+		var b = background % 4 != 0;
+		if (!b) {
+			background = 0;
+		}
+		
+		var palette = ppu.mmu.palette.readByte(background);
+		var color = ppu.screen.getColor(palette);
+		ppu.screen.setPixel(x, y, color);
+	},
 
-		lowTileByte   : 0x0,
-		highTileByte  : 0x0,
+	renderer : {
 
-		lowTileData : 0x0,
-		highTileData : 0x0,
+		background : {
+
+			attributeTableByte : 0x00,
+			nameTableAddr : 0x0,
+			nameTableByte : 0x00,
+
+			lowTileByte   : 0x0,
+			highTileByte  : 0x0,
+
+			lowTileData : 0x0,
+			highTileData : 0x0,
+
+			fetchNameTableByte : function() {
+				var v = ppu.vars.v;
+				var address = 0x2000 | (v & 0x0FFF);
+
+				this.nameTableAddr = address;
+				this.nameTableByte = ppu.mmu.readByte(address);
+			},
+
+			fetchAttributeTableByte : function() {
+				var v = ppu.vars.v;
+				var addr = 0x23C0 | (v & 0x0C00) | ((v >> 4) & 0x38) | ((v >> 2) & 0x07);
+				var shift = ((v >> 4) & 4) | (v & 2);
+				this.attributeTableByte = ((ppu.mmu.readByte(addr) >> shift) & 3) << 2;
+			},
+
+			fetchLowTileByte : function() {
+				var addr = this.fetchTileAddr();
+				this.lowTileByte  = ppu.mmu.readByte(addr);
+			},
+
+			fetchHighTyleByte : function() {
+				var addr = this.fetchTileAddr() + 8;
+				this.highTileByte = ppu.mmu.readByte(addr);
+			},
+
+			fetchTileAddr : function() {
+				var fineY = (ppu.vars.v >> 12) & 7;
+				var table = ppu.registers.cntrl.backgroundtable;
+				var tile = this.nameTableByte;
+				var address = (0x1000*table) + (tile*16) + fineY;
+				return address;
+			},
+
+			storeTileData : function() {
+				var data = 0x0;
+
+				for (var i = 0; i < 8; i++) {
+					var a = this.attributeTableByte;
+
+					var p1 = (this.lowTileByte & 0x80) >> 7;
+					var p2 = (this.highTileByte & 0x80) >> 6;
+
+					this.lowTileByte  <<= 1;
+					this.highTileByte <<= 1;
+
+					data <<= 4;
+					data |= (a | p1 | p2) & 0xf;
+				}
+				this.lowTileData |= data;
+			},
+
+			fetchTileData : function() {
+				return this.lowTileData;
+			},
+
+			getPixelByte: function() {
+				if (ppu.registers.mask.showbg == 0) {
+					return 0x0;
+				}
+				return this.fetchTileData() >> ((7 - ppu.vars.x) * 4);
+			}
+		},
+
+		sprite : {
+
+		},
 
 		// V ADDRESS
 		// yyy NNYY YYYX  XXXX
@@ -644,7 +746,7 @@ var ppu = {
 		// ||| ||++-+++-------- coarse Y scroll
 		// ||| ++-------------- nametable select
 		// +++----------------- fine Y scroll
-		
+
 		//Increment coarse X scroll
 		incrementX :  function() {
 			if ((ppu.vars.v & 0x001F) == 31) {
@@ -654,7 +756,7 @@ var ppu = {
 				ppu.vars.v = ppu.vars.v + 1; //increase X
 			}
 		},
-		
+
 		//Increment fine Y scroll
 		incrementY : function() {
 			if ((ppu.vars.v & 0x7000) != 0x7000) {
@@ -662,7 +764,7 @@ var ppu = {
 			} else {
 				//set y=0
 				ppu.vars.v &= 0x8FFF;
-				
+
 				var y = (ppu.vars.v & 0x03E0) >> 5;
 				if (y == 29) {
 					//Set coarse y=0
@@ -679,112 +781,17 @@ var ppu = {
 				ppu.vars.v = (ppu.vars.v & 0xFC1F) | (y << 5);
 			}
 		},
-		
+
 		//Copy T to V (X pos)
 		setX : function() {
-			ppu.vars.v = (ppu.vars.v & 0xFBE0) | (ppu.vars.t & 0x041F); 
+			ppu.vars.v = (ppu.vars.v & 0xFBE0) | (ppu.vars.t & 0x041F);
 		},
-		
+
 		//Copy T to V (Y pos)
 		setY : function() {
 			ppu.vars.v = (ppu.vars.v & 0x841F) | (ppu.vars.t & 0x7BE0);
 		},
-		
-		fetchNameTableByte : function() {
-			var v = ppu.vars.v;
-			var address = 0x2000 | (v & 0x0FFF);
 
-			this.nameTableAddr = address;
-			this.nameTableByte = ppu.mmu.readByte(address);
-		},
-		
-		fetchAttributeTableByte : function() {
-			var v = ppu.vars.v;
-			var addr = 0x23C0 | (v & 0x0C00) | ((v >> 4) & 0x38) | ((v >> 2) & 0x07);
-			var shift = ((v >> 4) & 4) | (v & 2);
-			ppu.background.attributeTableByte = ((ppu.mmu.readByte(addr) >> shift) & 3) << 2;
-		},
-		
-		fetchLowTileByte : function() {
-			var addr = this.fetchTileAddr();
-			ppu.background.lowTileByte  = ppu.mmu.readByte(addr);
-		},
-		
-		fetchHighTyleByte : function() {
-			var addr = this.fetchTileAddr() + 8;
-			ppu.background.highTileByte = ppu.mmu.readByte(addr);
-		},
-		
-		fetchTileAddr : function() {
-			var fineY = (ppu.vars.v >> 12) & 7;
-			var table = ppu.registers.cntrl.backgroundtable;
-			var tile = ppu.background.nameTableByte;
-			var address = (0x1000*table) + (tile*16) + fineY;
-			return address;
-		},
-		
-		storeTileData : function() {
-			var data = 0x0;
-				
-			for (var i = 0; i < 8; i++) {
-				var a = ppu.background.attributeTableByte;
-				
-				var p1 = (ppu.background.lowTileByte & 0x80) >> 7;
-				var p2 = (ppu.background.highTileByte & 0x80) >> 6;
-
-				ppu.background.lowTileByte  <<= 1;
-				ppu.background.highTileByte <<= 1;
-
-				data <<= 4;
-				data |= (a | p1 | p2) & 0xf;
-			}
-			ppu.background.lowTileData |= data;
-		},
-		
-		fetchTileData : function() {
-			return ppu.background.lowTileData;
-		},
-		
-		getPixelByte: function() {
-			if (ppu.registers.mask.showbg == 0) {
-				return 0x0;
-			}
-			return this.fetchTileData() >> ((7 - ppu.vars.x) * 4);
-		}
-	},
-		
-	sprites : {
-		
-	},
-		
-	renderPixel : function() {
-		var x = this.cycle - 2;
-		var y = this.scanline;
-
-		var background = ppu.background.getPixelByte();
-		if (x < 8 && ppu.registers.mask.showbg == 0) {
-			background = 0;
-		}
-		
-		var b = background % 4 != 0;
-		if (!b) {
-			background = 0;
-		}
-		
-		var palette = ppu.palette.readByte(background);
-		var color = ppu.screen.getColor(palette);
-		ppu.screen.setPixel(x, y, color);
-	},
-
-	renderer : {
-
-		background : {
-
-		},
-
-		sprite : {
-
-		},
 
 		tick : function() {
 
@@ -835,14 +842,14 @@ var ppu = {
 				}
 			}
 		}
-		
+
 		//Print Pixel
 		if (renderingEnabled) {
 			if (visibleLine && visibleCycle) {
 				this.renderPixel();
 			}
 		}
-		
+
 		//Prepare Background Pixel
 		if (renderingEnabled) {
 			if (renderLine && fetchCycle) {
@@ -850,13 +857,13 @@ var ppu = {
 				//log("BEFORE HIGH: " + ppu.background.highTileData.toString(2));
 				//log("REAL BEFORE " + ppu.background.tileData.toString(2));
 
-				var transfer = (ppu.background.lowTileData >> 28) & 0xF;
+				var transfer = (ppu.renderer.background.lowTileData >> 28) & 0xF;
 
-                ppu.background.lowTileData &= 0xFFFFFFF;
-				ppu.background.lowTileData <<= 4;
-				ppu.background.highTileData &= 0xFFFFFFF;
-				ppu.background.highTileData <<= 4;
-				ppu.background.highTileData |= transfer;
+                ppu.renderer.background.lowTileData &= 0xFFFFFFF;
+				ppu.renderer.background.lowTileData <<= 4;
+				ppu.renderer.background.highTileData &= 0xFFFFFFF;
+				ppu.renderer.background.highTileData <<= 4;
+				ppu.renderer.background.highTileData |= transfer;
 
 				//log("AFTER LOW: "  + ppu.background.lowTileData.toString(2));
 				//log("AFTER HIGH: " + ppu.background.highTileData.toString(2));
@@ -865,32 +872,32 @@ var ppu = {
 				//log("Remainder " + remainder);
 
 				if (remainder == 1) {
-					ppu.background.fetchNameTableByte();
+					ppu.renderer.background.fetchNameTableByte();
 				} else if (remainder == 3) {
-					ppu.background.fetchAttributeTableByte();
+					ppu.renderer.background.fetchAttributeTableByte();
 				} else if (remainder == 5) {
-					ppu.background.fetchLowTileByte();
+					ppu.renderer.background.fetchLowTileByte();
 				} else if (remainder == 7) {
-					ppu.background.fetchHighTyleByte();
+					ppu.renderer.background.fetchHighTyleByte();
 				} else if (remainder == 0) {
-					ppu.background.storeTileData();
+					ppu.renderer.background.storeTileData();
 				}
 
 			}
 			if (preLine && (ppu.cycle >= 280) && (ppu.cycle <= 304)) {
-				ppu.background.setY();
+				ppu.renderer.setY();
 			}
 			if (renderLine) {
 				if (fetchCycle && ((ppu.cycle % 8) == 0)) {
 					log("INC X");
-					ppu.background.incrementX();
+					ppu.renderer.incrementX();
 				}
 				if (ppu.cycle == 256) {
 					log("INC X");
-					ppu.background.incrementY();
+					ppu.renderer.incrementY();
 				}
 				if (ppu.cycle == 257) {
-					ppu.background.setX();
+					ppu.renderer.setX();
 				}
 			}
 		}

@@ -8,11 +8,8 @@ var nes = {
     load : function(file) {
         cartridge.load(file);
 
-        cpu.mmu.prgrom.setLowerBank(cartridge.prgrom.getLowerBank());
-        cpu.mmu.prgrom.setUpperBank(cartridge.prgrom.getUpperBank());
-
-        ppu.nametables.setMirrorType(cartridge.mirroring.getType());
-        ppu.pattern.set(cartridge.chrrom.getBank());
+        cpu.setCartidge(cartridge);
+        ppu.setCartidge(cartridge);
     },
 
     reset : function() {
