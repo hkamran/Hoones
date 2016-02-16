@@ -209,10 +209,9 @@
 		</div>
 	</div>
 
-	<div id="log">
+	<div style="background: #333; color: #fff" id="log" rows="500" cols="50">
 
 	</div>
-
 	<script type="text/javascript" src="js/hoones/lib/BinFileReader.js"></script>
 	<script type="text/javascript" src="js/hoones/cartridge.js"></script>
 	<script type="text/javascript" src="js/hoones/cpu.js"></script>
@@ -272,14 +271,14 @@
 
 			document.getElementById("vram").innerHTML = "0x" + ppu.vars.v.toString(16).toUpperCase();
 			document.getElementById("temp").innerHTML = "0x" + ppu.vars.t.toString(16).toUpperCase();
-			document.getElementById("xpos").innerHTML = "0x" + ppu.background.xpos.toString(16).toUpperCase();
-			document.getElementById("ypos").innerHTML = "0x" + ppu.background.ypos.toString(16).toUpperCase();
-			document.getElementById("nameaddr").innerHTML = "0x" + ppu.background.nameTableAddr.toString(16).toUpperCase();
-			document.getElementById("tileaddr").innerHTML = "0x" + ppu.background.fetchTileAddr().toString(16).toUpperCase();
-			document.getElementById("namebyte").innerHTML = "0x" + ppu.background.nameTableByte.toString(16).toUpperCase();
-			document.getElementById("tilebyte").innerHTML = "0x" + ppu.mmu.readByte(ppu.background.fetchTileAddr()).toString(16).toUpperCase();
-			document.getElementById("lowbyte").innerHTML = "0x" + ppu.background.lowTileByte.toString(16).toUpperCase();
-			document.getElementById("highbyte").innerHTML = "0x" + ppu.background.highTileByte.toString(16).toUpperCase();
+			//document.getElementById("xpos").innerHTML = "0x" + ppu.background.xpos.toString(16).toUpperCase();
+			//document.getElementById("ypos").innerHTML = "0x" + ppu.background.ypos.toString(16).toUpperCase();
+			//document.getElementById("nameaddr").innerHTML = "0x" + ppu.background.nameTableAddr.toString(16).toUpperCase();
+			//document.getElementById("tileaddr").innerHTML = "0x" + ppu.background.fetchTileAddr().toString(16).toUpperCase();
+			//document.getElementById("namebyte").innerHTML = "0x" + ppu.background.nameTableByte.toString(16).toUpperCase();
+			//document.getElementById("tilebyte").innerHTML = "0x" + ppu.mmu.readByte(ppu.background.fetchTileAddr()).toString(16).toUpperCase();
+			//document.getElementById("lowbyte").innerHTML = "0x" + ppu.background.lowTileByte.toString(16).toUpperCase();
+			//document.getElementById("highbyte").innerHTML = "0x" + ppu.background.highTileByte.toString(16).toUpperCase();
 				 
 			 
 			var st = "";
@@ -334,6 +333,13 @@
 		function tickFor(val) {
 			nes.tickFor(val);
 			regStatus();
+		};
+
+		var counter = 1;
+
+		function output(val) {
+			document.getElementById("log").innerHTML = document.getElementById("log").innerHTML + "</br>" + counter + " " + val;
+			counter++;
 		};
 
 		$(window).keypress(function (e) {

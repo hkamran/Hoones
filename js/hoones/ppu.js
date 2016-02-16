@@ -736,7 +736,18 @@ var ppu = {
 			}
 		},
 
-		sprite : {
+		sprites : {
+
+			spriteCount : 0x0,
+			spritePatterns: [],
+			spritePositions: [],
+			spritePriorities: [],
+			spriteIndexes: [],
+
+			tick : function(){
+
+
+			},
 
 		},
 
