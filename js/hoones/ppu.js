@@ -744,6 +744,26 @@ var ppu = {
 			spritePriorities: [],
 			spriteIndexes: [],
 
+			// OAM 4 Bytes per sprite
+			//-------------------------------------------------------------------
+			// +-Byte 0 - Y Positions of top of sprite (delay by 1 scanline)
+			// +-Byte 1 - Tile Index Number
+			// |
+			// |  $00: $0000-$001F
+			// |  $01: $1000-$101F
+			// |  $02: $0020-$003F
+			// |  $03: $1020-$103F
+			// |  $04: $0040-$005F
+			// |	   [...]
+			// +-Byte 2 - Attribute
+			// |  76543210
+			// |  ||||||||
+			// |  |||||||+- Bank ($0000 or $1000) of tiles
+			// |  +++++++-- Tile number of top of sprite (0 to 254; bottom half gets the next tile)
+			// |
+			// +-Byte 3 - X position of the left side of sprite
+
+
 			tick : function(){
 
 
