@@ -265,6 +265,59 @@ var ppu = {
 		oam : {
 			addr : 0x0,
 			data : [],
+
+			// OAM 4 Bytes per sprite
+			//-------------------------------------------------------------------
+			// +-Byte 0 - Y Positions of top of sprite (delay by 1 scanline)
+			// +-Byte 1 - Tile Index Number
+			// |
+			// |  $00: $0000-$001F
+			// |  $01: $1000-$101F
+			// |  $02: $0020-$003F
+			// |  $03: $1020-$103F
+			// |  $04: $0040-$005F
+			// |	   [...]
+			// +-Byte 2 - Attribute
+			// |  76543210
+			// |  ||||||||
+			// |  |||||||+- Bank ($0000 or $1000) of tiles
+			// |  +++++++-- Tile number of top of sprite (0 to 254; bottom half gets the next tile)
+			// |
+			// +-Byte 3 - X position of the left side of sprite
+
+			setAddr : function(addr) {
+				this.addr = addr;
+			},
+
+			readByte : function() {
+				return this.data[this.addr];
+			},
+
+			writeByte : function(val) {
+				this.data[this.addr] = val;
+				this.addr = (this.addr + 1) & 0xFF;
+			},
+
+			getYpos : function(spriteIndex) {
+				var ypos = this.data[spriteIndex * 4 + 0];
+				return ypos;
+			},
+
+			getTile : function(spriteIndex) {
+				var tile = this.data[spriteIndex * 4 + 1];
+				return tile;
+			},
+
+			getAttr : function(spriteIndex) {
+				var attr = this.data[spriteIndex * 4 + 2];
+				return attr;
+			},
+
+			getXpos : function(spriteIndex) {
+				var xpos = this.data[spriteIndex * 4 + 3];
+				return xpos;
+			},
+
 		},
 
 		readByte : function(addr) {
@@ -447,7 +500,7 @@ var ppu = {
 		oamaddr : {
 			
 			write : function(val) {
-				ppu.mmu.oam.addr = val;
+				ppu.mmu.oam.setAddr(val);
 			},
 			
 			read: function(val) {
@@ -460,12 +513,11 @@ var ppu = {
 		oamdata : {
 			
 			write : function(val) {
-				ppu.mmu.oam.data[ppu.mmu.oam.addr] = val;
-				ppu.mmu.oam.addr = (ppu.mmu.oam.addr + 1) & 0xFF;
+				ppu.mmu.oam.writeByte(val);
 			},
 			
-			read: function(val) {
-				return ppu.mmu.oam.data[ppu.mmu.oam.addr];
+			read: function() {
+				return ppu.mmu.oam.readByte();
 			}
 		},
 		
@@ -568,10 +620,14 @@ var ppu = {
 				
 				//Copy from PROG
 				for (var i = 0; i < 256; i++) {
-					ppu.oam.data[ppu.oam.addr] = 0x0; //TODO read
-					ppu.oam.addr = (ppu.oam.addr + 1) & 0xFF;	
+					ppu.mmu.oam.writeByte(ppu.mmu.readByte(val));
 					addr++;
 				}
+
+				//cpu.stall += 513
+				//if cpu.Cycles%2 == 1 {
+				//	cpu.stall++
+				//}
 				
 				//TODO Stall?
 			},
@@ -645,19 +701,32 @@ var ppu = {
 		var y = this.scanline;
 
 		var background = ppu.renderer.background.getPixelByte();
+		var sprite = ppu.renderer.sprites.getPixelByte();
+
 		if (x < 8 && ppu.registers.mask.showbg == 0) {
 			background = 0;
 		}
-		
-		var b = background % 4 != 0;
-		if (!b) {
-			background = 0;
+		if (x < 8 && ppu.registers.mask.showspleft == 0) {
+			sprite = 0;
 		}
 		
-		var palette = ppu.mmu.palette.readByte(background);
-		var color = ppu.screen.getColor(palette);
-		ppu.screen.setPixel(x, y, color);
+		var b = background % 4 != 0;
+		var s = sprite % 4 != 0;
+		var color;
+		if (!b && !s) {
+			color = 0;
+		} else if (!b && s) {
+			color = sprite | 0x10;
+		} else if (b && !s) {
+			color = background;
+		}
+
+		var palette = ppu.mmu.palette.readByte(color);
+		var hex = ppu.screen.getColor(palette);
+		ppu.screen.setPixel(x, y, hex);
 	},
+
+
 
 	renderer : {
 
@@ -763,12 +832,123 @@ var ppu = {
 			// |
 			// +-Byte 3 - X position of the left side of sprite
 
+			fetchTileAddr : function(spriteIndex, row) {
+				var table = ppu.registers.cntrl.spritetable;
+				var attr = ppu.mmu.oam.getAttr(spriteIndex);
+				var tile = ppu.mmu.oam.getTile(spriteIndex);
 
-			tick : function(){
+				if (ppu.registers.cntrl.spritesize == 0) {
+					if ((attr & 0x80) == 0x80) {
+						row = 7 - row;
+					}
+					table = ppu.registers.cntrl.spritetable;
+				} else {
+					if ((attr & 0x80) == 0x80) {
+						row = 15 - row;
+					}
+					table = tile & 1;
+					tile &= 0xFE;
+					if (row > 7) {
+						row -= 8;
+					}
+				}
 
-
+				var addr = (0x1000 * table) + (tile * 16) + row;
+				return addr;
 			},
 
+
+			fetchLowTileByte : function(addr) {
+				return ppu.mmu.readByte(addr);
+			},
+
+			fetchHighTileByte : function(addr) {
+				return ppu.mmu.readByte(addr + 8);
+			},
+
+			fetchAttributeByte : function(spriteIndex) {
+				return ppu.mmu.oam.getAttr(spriteIndex);
+			},
+
+			fetchSpriteData : function(spriteIndex, row) {
+				var tile = this.fetchTileAddr(spriteIndex, row)
+				var lowTileByte = this.fetchLowTileByte(tile);
+				var highTileByte = this.fetchHighTileByte(tile);
+				var attr = this.fetchAttributeByte(spriteIndex);
+
+				var a = (attr & 3) << 2;
+
+				var data = 0;
+				for (var i = 0; i < 8; i++) {
+					var p1;
+					var p2;
+					if ((attr & 0x40) == 0x40) {
+						p1 = (lowTileByte & 1) << 0;
+						p2 = (highTileByte & 1) << 1;
+						lowTileByte >>= 1;
+						highTileByte >>= 1;
+					} else {
+						p1 = (lowTileByte & 1) << 7;
+						p2 = (highTileByte & 1) << 6;
+						lowTileByte <<= 1;
+						highTileByte <<= 1;
+					}
+					data <<= 4;
+					data |= (a | p1 | p2);
+				}
+				return data;
+			},
+
+			storeSpriteData : function() {
+				var height = 0;
+				if (ppu.registers.cntrl.spritesize == 0) {
+					height = 8;
+				} else {
+					height = 16;
+				}
+				var count = 0;
+				for (var i = 0; i < 64; i++) {
+					var ypos = ppu.mmu.oam.getYpos(i);
+					var attr = ppu.mmu.oam.getAttr(i);
+					var xpos = ppu.mmu.oam.getXpos(i);
+
+					var row = ppu.scanline - ypos;
+					if (row < 0 || row >= height) {
+						continue;
+					}
+					if (count < 8) {
+						this.spritePatterns[count] = this.fetchSpriteData(i, row);
+						this.spritePositions[count] = xpos;
+						this.spritePriorities[count] = (attr >> 5 & 1);
+						this.spriteIndexes[count] = i;
+					}
+					count++;
+				}
+				if (count > 8) {
+					count = 8;
+					ppu.registers.status.spriteoverflow = 1;
+				}
+				this.spriteCount = count;
+			},
+
+			getPixelByte : function() {
+				if (ppu.registers.mask.showsprites == 0) {
+					return 0;
+				}
+				for (var i = 0; i < this.spriteCount; i++) {
+					var offset = (ppu.cycle - 1) - this.spritePositions[i];
+					if (offset < 0 || offset > 7) {
+						continue;
+					}
+					offset = 7 - offset;
+					var color = this.spritePatterns[i] >> ((offset * 4) & 0x0F);
+					if (color % 4 == 0) {
+						continue;
+					}
+					return color;
+				}
+				return 0;
+			},
 		},
 
 		// V ADDRESS
@@ -929,6 +1109,17 @@ var ppu = {
 				}
 				if (ppu.cycle == 257) {
 					ppu.renderer.setX();
+				}
+			}
+		}
+
+
+		if (renderingEnabled) {
+			if (ppu.cycle == 257) {
+				if (visibleLine) {
+					ppu.renderer.sprites.storeSpriteData();
+				} else {
+					ppu.renderer.sprites.spriteCount = 0;
 				}
 			}
 		}
