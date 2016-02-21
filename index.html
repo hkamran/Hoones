@@ -67,12 +67,7 @@
 			</fieldset>
 
 		</div>
-		<div class="small-6 large-6 columns">
-			<fieldset>
-				<legend>Nametable</legend>
-				<canvas id="nametables" width="200" height="200" style="display: block;"></canvas>
-			</fieldset>
-		</div>	
+
 
 	</div>
 
@@ -219,7 +214,7 @@
 	<script type="text/javascript" src="js/hoones/nes.js"></script>
 	<script type="text/javascript">
 
-		nes.load("./roms/sprite_ram.nes");
+		nes.load("./roms/nestest.nes");
 		nes.reset();
 		
 	</script>
@@ -354,78 +349,7 @@
 	
 
 	<script type="text/javascript">
-		var nametable = {
-		
-			canvas : null,
-			
-			init : function() {
-				var c = document.getElementById('nametables');	
-				c.width  = 511;
-				c.height = 555;
-				this.canvas = c.getContext('2d');					
 
-			},
-			
-			draw : function(nametables) {
-
-
-				for (var nameTablesIndex = 0; nameTablesIndex < 1; nameTablesIndex++) {
-					var nameTable = nametables[nameTablesIndex];
-
-
-					var xpos = 0;
-					var ypos = 0;
-					var width = 0;
-					for (var nameTableIndex = 0; nameTableIndex < nameTable.length; nameTableIndex++) {
-						var nameTableByte = nameTable[nameTableIndex];
-
-						var endX = xpos + 8;
-						var endY = ypos + 8;
-
-						for (; ypos < endY; ypos++) {
-						
-							var address = (nameTableByte*16) + ypos;
-							console.log(address.toString(16));
-							var patternByte = ppu.mmu.readByte(address);
-						
-							for (; xpos < endX; xpos++) {
-
-								var pixelBit = patternByte & 0x1;
-								if (pixelBit != 0) {
-									this.setPixel(xpos, ypos, "#FFFFFF");
-								}
-
-								patternByte >>= 1;
-
-								
-							}
-							xpos = xpos - 8;
-							
-
-						}
-						width++;
-						if (width == 30) {
-							ypos = ypos + 8;
-							width = 0;
-							xpos = xpos - 240;
-						}
-					}
-				}
-			},
-			
-			setPixel: function(x, y, hex) {
-				var color = hex;
-
-				this.canvas.fillStyle = color;
-				this.canvas.fillRect(
-					x, 
-					y, 
-					1,
-					1
-				);
-			}
-		};
-		nametable.init();
 		//nametable.init();
 		//nametable.draw([[],[],[],[]]);
 	</script>

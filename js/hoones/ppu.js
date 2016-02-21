@@ -286,7 +286,7 @@ var ppu = {
 			// +-Byte 3 - X position of the left side of sprite
 
 			setAddr : function(addr) {
-				this.addr = addr;
+				this.addr = addr & 0xFF;
 			},
 
 			readByte : function() {
@@ -294,7 +294,7 @@ var ppu = {
 			},
 
 			writeByte : function(val) {
-				this.data[this.addr] = val;
+				this.data[this.addrWRITING] = val;
 				this.addr = (this.addr + 1) & 0xFF;
 			},
 
@@ -500,6 +500,7 @@ var ppu = {
 		oamaddr : {
 			
 			write : function(val) {
+				log("Setting OAM Addr " + val.toString(16));
 				ppu.mmu.oam.setAddr(val);
 			},
 			
@@ -513,6 +514,7 @@ var ppu = {
 		oamdata : {
 			
 			write : function(val) {
+				log("Writing to OAM " + val.toString(16) + ":" + ppu.mmu.oam.addr.toString(16));
 				ppu.mmu.oam.writeByte(val);
 			},
 			
@@ -529,12 +531,14 @@ var ppu = {
 				if (ppu.vars.w == 0) {
 					ppu.vars.t = (ppu.vars.t & 0xFFE0) | (val >> 3); 
 					ppu.vars.x = val & 0x07;
+
 					ppu.vars.w = 1;
 				} else {
 					ppu.vars.t = (ppu.vars.t & 0x8FFF) | ((val >> 0x07) << 12); 
 					ppu.vars.t = (ppu.vars.t & 0xFC1F) | ((val >> 0xF8) << 2); 					
 					ppu.vars.w = 0;
 				}
+				log("SCROLL " + ppu.vars.w);
 			},
 			
 			read: function(val) {
@@ -554,9 +558,10 @@ var ppu = {
 					log("W=0 " + val.toString(16) + " " + ppu.vars.t.toString(16));
 					ppu.vars.w = 1;
 				} else {
-					log("W=1 " + val.toString(16) + " " + ((ppu.vars.t & 0xFF00) | val).toString(16));
+					log("W=1 " + val.toString(16) + " " + ((ppu.vars.t & 0xFF00) | val).toString(16) + " " + ppu.vars.t.toString(16));
 					ppu.vars.t = (ppu.vars.t & 0xFF00) | val;
 					ppu.vars.v = ppu.vars.t;
+
 					ppu.vars.w = 0;
 				}
 			},
@@ -617,10 +622,10 @@ var ppu = {
 		dma : {
 			write : function(val) {
 				var addr = val << 8;
-				
+				log("DMA " + ppu.mmu.oam.addr.toString(16) + ":" + addr.toString(16));
 				//Copy from PROG
 				for (var i = 0; i < 256; i++) {
-					ppu.mmu.oam.writeByte(ppu.mmu.readByte(val));
+					ppu.mmu.oam.writeByte(cpu.mmu.readByte(addr));
 					addr++;
 				}
 
@@ -670,6 +675,7 @@ var ppu = {
 			
 			if (addr == 0x4014) {
 				this.dma.write(val);
+				return;
 			}
 			
 			addr = 0x2000 + addr % 8;
