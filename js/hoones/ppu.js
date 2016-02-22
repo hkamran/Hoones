@@ -8,8 +8,8 @@ var ppu = {
 	screen: {
 	
 		canvas : null,
-		pixelSize : 1,
-		spacer: 0,
+		pixelSize : 2,
+		spacer: 1,
 		height : 240,
 		width : 255,
 				
