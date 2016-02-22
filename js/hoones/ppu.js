@@ -8,8 +8,8 @@ var ppu = {
 	screen: {
 	
 		canvas : null,
-		pixelSize : 2,
-		spacer: 1,
+		pixelSize : 1,
+		spacer: 0,
 		height : 240,
 		width : 255,
 				
@@ -1042,7 +1042,6 @@ var ppu = {
 		if (ppu.nmi.delay  > 0) {
 			ppu.nmi.delay--;
 			if (ppu.nmi.delay == 0 && ppu.nmi.output && ppu.nmi.occurred) {
-				console.log("TRIGGER");
 				cpu.interrupts.triggerNMI();
 			}
 		}
