@@ -289,17 +289,13 @@ var ppu = {
 				this.addr = addr & 0xFF;
 			},
 
-			readByte : function() {
-				return this.data[this.addr];
-			},
-
 			writeByte : function(val) {
 				this.data[this.addr] = val;
 				this.addr = (this.addr + 1) & 0xFF;
 			},
 
 			readByte : function(val) {
-				var result = this.data[this.addr];
+				var result = this.data[val];
 				if (typeof result == 'undefined') {
 					result = 0xFF;
 				}
@@ -902,13 +898,14 @@ var ppu = {
 						lowTileByte >>= 1;
 						highTileByte >>= 1;
 					} else {
-						p1 = (lowTileByte & 1) << 7;
-						p2 = (highTileByte & 1) << 6;
+						p1 = (lowTileByte & 0x80) >> 7;
+						p2 = (highTileByte & 0x80) >> 6;
+
 						lowTileByte <<= 1;
 						highTileByte <<= 1;
 					}
 					data <<= 4;
-					data |= (a | p1 | p2);
+					data |= (a | p1 | p2) & 0xf;
 				}
 				return data;
 			},
@@ -933,7 +930,7 @@ var ppu = {
 					if (count < 8) {
 						this.spritePatterns[count] = this.fetchSpriteData(i, row);
 						this.spritePositions[count] = xpos;
-						this.spritePriorities[count] = (attr >> 5 & 1);
+						this.spritePriorities[count] = ((attr >> 5) & 1);
 						this.spriteIndexes[count] = i;
 					}
 					count++;
@@ -955,11 +952,11 @@ var ppu = {
 						continue;
 					}
 					offset = 7 - offset;
-					var color = this.spritePatterns[i] >> (((offset * 4)* 0xFF) & 0x0F);
+					var color = this.spritePatterns[i] >> ((offset * 4) & 0x0F);
 					if (color % 4 == 0) {
 						continue;
 					}
-					return color & 0xFF;
+					return color;
 				}
 				return 0;
 			},
