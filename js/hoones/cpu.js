@@ -421,10 +421,25 @@ var cpu = {
 					asdasdasdasdasd;
 				}
 			} else if (addr < 0x4000) {
+				log("WRITING TO PPU " + addr.toString(16));
 				return ppu.registers.readByte(addr);
+			} else if (addr < 0x4014) {
+				//TODO APU
+				log("READING TO APU " + addr.toString(16));
+				return 0x0;
+			} else if (addr == 0x4014) {
+				return ppu.registers.readByte(addr);
+			} else if (addr == 0x4015) {
+				//TODO APU
+				log("READING TO APU " + addr.toString(16));
+				return 0x0;
+			} else if (addr == 0x4016) {
+				//TODO Controller
+				return 0x0;
 			} else if (addr < 0x4020) {
-				//TODO look over this
-				return ppu.registers.readByte(addr);
+				//TODO APU
+				log("READING TO APU " + addr.toString(16));
+				return 0x0;
 			} else if (addr < 0x6000) {
 				return this.erom.readByte(addr);
 			} else if (addr < 0x8000) {
@@ -439,6 +454,8 @@ var cpu = {
 		},
 
 		writeByte : function(addr, val) {
+
+
 			if (addr < 0x2000) {
 				//Mimic mirrors 0000-07FF
 				addr  = addr % 0x800;
@@ -456,12 +473,25 @@ var cpu = {
 					asdasdasdasdasd;
 				}
 			} else if (addr < 0x4000) {
-				ppu.registers.writeByte(addr, val);
-				return;
+				return ppu.registers.writeByte(addr, val);
+			} else if (addr < 0x4014) {
+				//TODO APU
+				log("WRITING TO APU " + addr.toString(16));
+				return 0x0;
+			} else if (addr == 0x4014) {
+				return ppu.registers.writeByte(addr, val);
+			} else if (addr == 0x4015) {
+				//TODO APU
+				log("WRITING TO APU " + addr.toString(16));
+				return 0x0;
+			} else if (addr == 0x4016) {
+				//TODO Controller
+				log("WRITING TO CONTROLLER " + addr.toString(16));
+				return 0x0;
 			} else if (addr < 0x4020) {
-				//TODO look over this
-				ppu.registers.writeByte(addr, val);
-				return;
+				//TODO APU
+				log("WRITING TO APU " + addr.toString(16));
+				return 0x0;
 			} else if (addr < 0x6000) {
 				this.erom.writeByte(addr, val);
 				return;
@@ -469,7 +499,7 @@ var cpu = {
 				this.sram.writeByte(addr, val);
 				return;
 			} else if (addr < 0x10000) {
-				this.prgrom.writeByte(addr, val);
+				//this.prgrom.writeByte(addr, val);
 				return;
 			} else {
 				console.log("ERROR: " + addr.toString(16) + ":" + val.toString(16));
@@ -556,15 +586,15 @@ var cpu = {
 	
 	tick : function() {
 
+		//Handle Interrupts first
+		this.interrupts.tick();
+
+		//CPU Execution
 		var opcode = this.mmu.readByte(this.registers.pc.get());
 		var op = this.instructions.get(opcode);
 		var cycles = this.cycles;
 
-		//Interrupt
-		this.interrupts.tick();
-
 		if (debug) {
-
 			output(this.registers.pc.get().toString(16).toUpperCase() + " " + opcode.toString(16) + " " + op.name + "  A:" + cpu.registers.a.get().toString(16).toUpperCase() + " X:" + cpu.registers.x.get().toString(16).toUpperCase() + " Y:"
 				+ cpu.registers.y.get().toString(16).toUpperCase() + " P:" + cpu.registers.p.get().toString(16).toUpperCase() + " SP:" + cpu.registers.sp.get().toString(16).toUpperCase()
 				+ " CYC:" + ppu.cycle + " SL:" + ppu.scanline);
@@ -764,7 +794,7 @@ var cpu = {
 			},
 
 			and : function(info) {
-				console.log( cpu.registers.a.get().toString(16) + " & " + cpu.mmu.readByte(info.address).toString(16));
+				log( cpu.registers.a.get().toString(16) + " & " + cpu.mmu.readByte(info.address).toString(16));
 				var temp = cpu.registers.a.get() & cpu.mmu.readByte(info.address);
 				cpu.registers.p.n = (temp>>7)&1;
 				cpu.registers.p.z = ((temp&0xFF) == 0)? 1:0;
@@ -1077,7 +1107,7 @@ var cpu = {
 
 			pla : function(info) {
 				var temp = cpu.mmu.stack.popByte();
-
+				log("PLA " + temp.toString(16));
 				cpu.registers.p.n = (temp>>7)&1;
 				cpu.registers.p.z = ((temp&0xFF) == 0)? 1:0;
 
@@ -1180,7 +1210,6 @@ var cpu = {
 
 			//Set i flag
 			sei: function(info) {
-				//TODO interrupt
 				cpu.registers.i = 1;
 			},
 

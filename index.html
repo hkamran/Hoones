@@ -214,7 +214,7 @@
 	<script type="text/javascript" src="js/hoones/nes.js"></script>
 	<script type="text/javascript">
 
-		nes.load("./roms/nestest.nes");
+		nes.load("./roms/dkong.nes");
 		nes.reset();
 		
 	</script>
@@ -278,7 +278,7 @@
 			 
 			var st = "";
 			var comma = " ,";
-			for (var i = cpu.mmu.stack.data.length - 1; i >= cpu.registers.sp.get(); i--) {
+			for (var i = cpu.mmu.stack.data.length - 1; i >= cpu.registers.sp.get() + 1; i--) {
 
 				if (i == 0) {
 					comma = "";

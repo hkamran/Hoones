@@ -170,7 +170,7 @@ var ppu = {
 					return 0x0;
 				}
 
-				var result = this.data[addr];
+				var result = this.data.charCodeAt(addr);
 				if (typeof result === 'undefined') {
 					result = 0x0;
 				}
@@ -184,7 +184,7 @@ var ppu = {
 					return;
 				}
 
-				this.data[addr] = val;
+				this.data[addr] = String.fromCharCode(val);
 			},
 
 		},
@@ -294,27 +294,35 @@ var ppu = {
 			},
 
 			writeByte : function(val) {
-				this.data[this.addrWRITING] = val;
+				this.data[this.addr] = val;
 				this.addr = (this.addr + 1) & 0xFF;
 			},
 
+			readByte : function(val) {
+				var result = this.data[this.addr];
+				if (typeof result == 'undefined') {
+					result = 0xFF;
+				}
+				return result;
+			},
+
 			getYpos : function(spriteIndex) {
-				var ypos = this.data[spriteIndex * 4 + 0];
+				var ypos = this.readByte(spriteIndex * 4 + 0);
 				return ypos;
 			},
 
 			getTile : function(spriteIndex) {
-				var tile = this.data[spriteIndex * 4 + 1];
+				var tile = this.readByte(spriteIndex * 4 + 1);
 				return tile;
 			},
 
 			getAttr : function(spriteIndex) {
-				var attr = this.data[spriteIndex * 4 + 2];
+				var attr = this.readByte(spriteIndex * 4 + 2);
 				return attr;
 			},
 
 			getXpos : function(spriteIndex) {
-				var xpos = this.data[spriteIndex * 4 + 3];
+				var xpos = this.readByte(spriteIndex * 4 + 3);
 				return xpos;
 			},
 
@@ -649,7 +657,7 @@ var ppu = {
 			}
 			
 			addr = 0x2000 + addr % 8;
-			
+	
 			if (addr == 0x2000) {
 				return ppu.vars.l;
 			} else if (addr == 0x2001) {
@@ -708,7 +716,7 @@ var ppu = {
 
 		var background = ppu.renderer.background.getPixelByte();
 		var sprite = ppu.renderer.sprites.getPixelByte();
-
+		
 		if (x < 8 && ppu.registers.mask.showbg == 0) {
 			background = 0;
 		}
@@ -947,11 +955,11 @@ var ppu = {
 						continue;
 					}
 					offset = 7 - offset;
-					var color = this.spritePatterns[i] >> ((offset * 4) & 0x0F);
+					var color = this.spritePatterns[i] >> (((offset * 4)* 0xFF) & 0x0F);
 					if (color % 4 == 0) {
 						continue;
 					}
-					return color;
+					return color & 0xFF;
 				}
 				return 0;
 			},
