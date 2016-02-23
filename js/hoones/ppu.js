@@ -733,12 +733,43 @@ var ppu = {
 
 		var palette = ppu.mmu.palette.readByte(color);
 		var hex = ppu.screen.getColor(palette);
-		ppu.screen.setPixel(x, y, hex);
+
+		ppu.renderer.buffer.push(hex);
+		//
 	},
 
 
 
 	renderer : {
+
+		buffer : {
+			data : [],
+			buffer: [],
+
+			getFrame : function() {
+				if (this.data.length == 0) {
+					return [];
+				}
+				return this.data.shift();
+			},
+
+			isReady : function() {
+				if (this.data.length > 0) {
+					return true;
+				}
+				return false;
+			},
+
+			push : function(val) {
+
+				if (this.buffer.length <= 61440) {
+					this.buffer.push(val);
+				} else {
+					this.data.push(this.buffer);
+					this.buffer = [];
+				}
+			},
+		},
 
 		background : {
 
@@ -966,6 +997,8 @@ var ppu = {
 			},
 		},
 
+
+
 		// V ADDRESS
 		// yyy NNYY YYYX  XXXX
 		// ||| |||| |||+--++++- coarse X scroll
@@ -1021,7 +1054,29 @@ var ppu = {
 
 		tick : function() {
 
+			while (ppu.renderer.buffer.isReady()) {
+				var frame = ppu.renderer.buffer.getFrame();
+				var x = 0;
+				var y = 0;
+
+				for (var i = 0; i < frame.length; i++) {
+					ppu.screen.setPixel(x, y, frame[i]);
+
+					x++;
+					if (x > 255) {
+						x = 0;
+						y++;
+						if (y > 239) {
+							y = 0;
+						}
+					}
+
+				}
+
+			}
 		},
+
+
 
 	},
 	

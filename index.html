@@ -380,7 +380,9 @@
 				if (!startEmulation) {
 					ppu.screen.reset();
 				} else {
-					tickFor(100000);
+					tickFor(45000);
+					ppu.renderer.tick();
+
 				}
 
 			}, 1000 / fps);
