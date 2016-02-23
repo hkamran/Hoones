@@ -906,6 +906,7 @@ var ppu = {
 					}
 					data <<= 4;
 					data |= (a | p1 | p2) & 0xf;
+
 				}
 				return data;
 			},
@@ -952,10 +953,13 @@ var ppu = {
 						continue;
 					}
 					offset = 7 - offset;
-					var color = this.spritePatterns[i] >> ((offset * 4) & 0x0F);
-					if (color % 4 == 0) {
+					var color = (this.spritePatterns[i] >> (offset * 4)) & 0xFF;
+					//console.log(this.spritePatterns[i].toString(16)  + " FETCH " + this.spritePatterns[i].toString(2) + ":" + (offset * 4)
+					//	+ ":OFFSET" + offset + ":" + (color % 4 == 0) + ":" + color.toString(16));
+					if ((color % 4) == 0) {
 						continue;
 					}
+
 					return color;
 				}
 				return 0;

@@ -1673,7 +1673,7 @@ var cpu = {
 };
 var debug = false;
 var log = function(msg) {
-	if (debug) {
-		console.log(msg);
-	}
+	//if (debug) {
+		//console.log(msg);
+	//}
 };

@@ -4,11 +4,11 @@
 		<link href="./css/foundation.css" rel="stylesheet">
 		<style>
 			body {
-				background-color: #000;
+				background-color: #181818;
 			}
 
 			li div, label {
-				min-width: 150px; !important;
+				min-width: 120px; !important;
 				font-weight: bold;
 				color: #ffffff;
 				display: inline-block;
@@ -24,185 +24,208 @@
 				color: #fff;
 				padding: 10px;
 				margin: 10px;
+
+			}
+			#Tabs {
+				position: absolute;
+				white-space: nowrap;
+				top: 0;
+				right: 100%;
+				text-align: right;
+				-webkit-transform-origin: 100% 100%;
+				-webkit-transform: rotate(-90deg);
+				transform-origin: 100% 100%;
+				transform: rotate(-90deg);
+				list-style: none;
+				background: #4b4b4b;
+				color: #fff;
+				padding: 10px;
+
+				-webkit-border-top-left-radius: 5px;
+				-webkit-border-top-right-radius: 5px;
+				-moz-border-radius-topleft: 5px;
+				-moz-border-radius-topright: 5px;
+				border-top-left-radius: 5px;
+				border-top-right-radius: 5px;
+
+				-webkit-box-shadow: -18px 0px 16px -13px rgba(0,0,0,0.85);
+				-moz-box-shadow: -18px 0px 16px -13px rgba(0,0,0,0.85);
+				box-shadow: -18px 0px 16px -13px rgba(0,0,0,0.85);
+
+
 			}
 
+			#Tabs .menu-link:active  {
+				color: #fff; !important
+			}
+
+
+			#Tabs .menu-link:link {
+				color: #fff;
+			}
+
+			#Tabs .menu-link:visited {
+				color: #fff;
+			}
+
+
+			.panel {
+				position: fixed;
+				right: -30.625em;
+				width: 30.625em;
+
+			}
+
+			#menu .content span, div {
+				color: #fff;
+				font-size: 12px;
+			}
+
+			#menu {
+				-webkit-box-shadow: -14px 0px 28px -13px rgba(0,0,0,0.75);
+				-moz-box-shadow: -14px 0px 28px -13px rgba(0,0,0,0.75);
+				box-shadow: -14px 0px 28px -13px rgba(0,0,0,0.75);
+			}
 		</style>
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+		<script src="js/bigSlide/bigSlide.min.js"></script>
 	</head>
 	<body>
-	<div class="row">
-		<div class="small-12 large-12 columns">
 
-			<button onclick="tick();">Tick</button>
-		</div>
-	</div>
 
-	<div class="row">
-		<div class="small-6 large-6 columns">
+	<div class="row" style="height: 100%">
+		<div class="small-6 large-6 columns" style="top: 50%; transform: translateY(-50%);">
 			<fieldset>
 				<legend>Screen</legend>
-				<canvas id="screen" width="200" height="100" style="display: block;"></canvas>
+				<canvas id="screen" height="100" style="display: block;"></canvas>
 			</fieldset>
-			<fieldset>
-				<legend>Console</legend>
-				<div style="color: #bebebe; display: inline-block">
-					<ul style="list-style: none;">
-						<li><div>CPU Cycles: </div><span id="cpucycles"></span></li>
-						<li><div>PPU Cycles: </div><span id="ppucycles"></span></li>
-						<li><div>Scanline: </div><span id="scanline"></span></li>
-						<li><div>Ticks: </div><span id="ticks"></span></li>
-					</ul>
-				</div>
-			</fieldset>
-			<fieldset>
-				<legend>Operation</legend>
-				<div style="color: #bebebe; display: inline-block">
-					<ul style="list-style: none;">
-						<li><div>Opcode: </div><span id="opcode"></span></li>
-						<li><div>Op: </div><span id="opname"></span></li>
-						<li><div>Mode: </div><span id="mode"></span></li>
-						<li><div>Address: </div><span id="opaddr"></span></li>
-					</ul>
-				</div>
-			</fieldset>
-
 		</div>
-
-
 	</div>
 
+	<nav id="menu" class="panel" role="navigation" style="border: 2px solid #434343; background: #323232" >
+		<ul id="Tabs">
+			<li><a class="menu-link" href="#">Debugger</a></li>
+		</ul>
+		<div class="content">
 
-	<div class="row">
-		<div class="small-6 large-6 columns">
-			<fieldset class="border">
-				<legend>CPU</legend>
-				<div style="color: #bebebe; ">
-					<div style="margin-bottom: 10px">
-						<ul style="list-style: none;">
-							<li><label>PC: </label><span id="pc"></span></li>
-						</ul>
-					</div>
-					<ul style="list-style: none;">
-						<li></li>
-						<li><div>Accumulator: </div><span id="acc"></span></li>
-						<li><div>X: </div><span id="x"></span></li>
-						<li><div>Y: </div><span id="y"></span></li>
-						<li><div>SP: </div><span id="sp"></span></li>
-						<li><div>P: </div><span id="pflags"></span></li>
-					<ul style="list-style: none;margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
-						<li><div>carry flag:</div><span id="carryFlag"></span></li>
-						<li><div>zero flag:</div><span id="zeroFlag"></span></li>
-						<li><div>interrupt flag:</div><span id="interruptFlag"></span></li>
-						<li><div>decimal </div><span id="decimalFlag"></span></li>
-						<li><div>break flag:</div><span id="breakFlag"></span></li>
-						<li><div>overflow flag:</div><span id="overflowFlag"></span></li>
-						<li><div>negative flag:</div><span id="negativeFlag"></span></li>
-					</ul>						
-					</ul>
+			<div class="row">
+				<div class="small-6 large-6 columns">
+					<fieldset>
+						<legend>Console</legend>
+						<div style="color: #bebebe; display: inline-block">
+							<ul style="list-style: none;">
+								<li><div>CPU Cycles: </div><span id="cpucycles"></span></li>
+								<li><div>PPU Cycles: </div><span id="ppucycles"></span></li>
+								<li><div>Scanline: </div><span id="scanline"></span></li>
+								<li><div>Ticks: </div><span id="ticks"></span></li>
+							</ul>
+						</div>
+					</fieldset>
 				</div>
-
-
-				<div style="color: #bebebe;">
-					<label>Stack: </label>
-					<span id="stack"></span>
+				<div class="small-6 large-6 columns">
+					<fieldset>
+						<legend>Operation</legend>
+						<div style="color: #bebebe; display: inline-block">
+							<ul style="list-style: none;">
+								<li><div>Opcode: </div><span id="opcode"></span></li>
+								<li><div>Op: </div><span id="opname"></span></li>
+								<li><div>Mode: </div><span id="mode"></span></li>
+								<li><div>Address: </div><span id="opaddr"></span></li>
+							</ul>
+						</div>
+					</fieldset>
 				</div>
-
-			</fieldset>
-		</div>
-		<div class="small-6 large-6 columns" >
-		<fieldset style="width: 535px;">
-			<legend>PPU</legend>
-
-			<div style="color: #bebebe; display: inline-block">
-				<div style="margin-bottom: 10px">
-					<ul style="list-style: none;">
-						<li>
-							<label>VRAM Address: </label><span id="vram"></span>
-						</li>
-						<li>
-							<label>Temp Address: </label><span id="temp"></span>
-						</li>
-						<li>
-							<label>OAM Address: </label><span id="val0"></span>
-						</li>
-						<li>
-							<label>Name Table Address: </label><span id="nameaddr"></span>
-						</li>
-						<li>
-							<label>NameTable Byte: </label><span id="namebyte"></span>
-						</li>						
-						<li>
-							<label>Tile Address: </label><span id="tileaddr"></span>
-						</li>		
-						<li>
-							<label>Tile Byte: </label><span id="tilebyte"></span>
-						</li>
-						<li>
-							<label>Low Tile Byte: </label><span id="lowbyte"></span>
-						</li>			
-						<li>
-							<label>High Tile Byte: </label><span id="highbyte"></span>
-						</li>									
-						<li>
-							<label>X-Pos: </label><span id="xpos"></span>
-						</li>
-						<li>
-							<label>Y-Pos: </label><span id="ypos"></span>
-						</li>
-					</ul>
-				</div>			
-			
-				<ul style="list-style: none;">
-					<li>
-						<div>control:</div><span id="cnrtl1">(0x2000)</span><br/>
-						<ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
-							<li><div>nametable:</div><span id="nametable"></span></li>
-							<li><div>increment:</div><span id="increment"></span></li>
-							<li><div>sprite table:</div><span id="spritetable"></span></li>
-							<li><div>background table:</div><span id="backgroundtable"></span></li>
-							<li><div>sprite size:</div><span id="spritesize"></span></li>
-							<li><div>masterslave:</div><span id="masterslave"></span></li>
-							<li><div>nmi:</div><span id="nmi"></span></li>
-						</ul>
-					</li>
-
-
-
-					<li><div>mask: </div><span id="mask">(0x2001)</span>
-						<ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
-							<li><div>greyscale:</div><span id="grayscale"></span></li>
-							<li><div>showbgleft:</div><span id="showbgleft"></span></li>
-							<li><div>showspleft:</div><span id="showspleft"></span></li>
-							<li><div>showbg:</div><span id="showbg"></span></li>
-							<li><div>showsprites:</div><span id="showsprites"></span></li>
-							<li><div>increds:</div><span id="increds"></span></li>
-							<li><div>incgreens:</div><span id="incgreens"></span></li>
-							<li><div>incblues:</div><span id="incblues"></span></li>
-						</ul>
-					</li>
-					<li>
-						<div>status:</div>
-						<span id="status">(0x2002)</span>
-						<ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
-							<li><div>spriteoverflow:</div><span id="spriteoverflow"></span></li>
-							<li><div>spritehit:</div><span id="spritehit"></span></li>
-							<li><div>vblank:</div><span id="vblank"></span></li>
-							<li><div>nmiOccurred:</div><span id="nmiOccurred"></span></li>
-							<li><div>writable:</div><span id="writable"></span></li>
-						</ul>
-					</li>
-					<li>
-						<div>scroll:</div><span id="scroll">(0x2005)</span>
-						<ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
-							<li><div>val:</div><span id="val"></span></li>
-						</ul>
-					</li>
-				</ul>
 			</div>
 
-		</fieldset>
+			<div class="small-6 large-6 columns">
+				<fieldset class="border">
+					<legend>CPU</legend>
+					<div style="color: #bebebe;">
+						<ul style="list-style: none;">
+							<li><div>PC: </div><span id="pc"></span></li>
+							<li><div>Accumulator: </div><span id="acc"></span></li>
+							<li><div>X: </div><span id="x"></span></li>
+							<li><div>Y: </div><span id="y"></span></li>
+							<li><div>SP: </div><span id="sp"></span></li>
+							<li><div>P: </div><span id="pflags"></span></li>
+							<ul style="list-style: none;margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
+								<li><div>carry flag:</div><span id="carryFlag"></span></li>
+								<li><div>zero flag:</div><span id="zeroFlag"></span></li>
+								<li><div>interrupt flag:</div><span id="interruptFlag"></span></li>
+								<li><div>decimal </div><span id="decimalFlag"></span></li>
+								<li><div>break flag:</div><span id="breakFlag"></span></li>
+								<li><div>overflow flag:</div><span id="overflowFlag"></span></li>
+								<li><div>negative flag:</div><span id="negativeFlag"></span></li>
+							</ul>
+						</ul>
+					</div>
+				</fieldset>
+				<fieldset class="border">
+					<legend>Stack</legend>
+					<div style="color: #bebebe; min-height: 18px;">
+						<span id="stack"> </span>
+					</div>
+				</fieldset>
+			</div>
+
+
+			<div class="small-6 large-6 columns" >
+				<fieldset>
+					<legend>PPU</legend>
+					<div style="color: #bebebe; display: inline-block">
+						<ul style="list-style: none;">
+							<li>
+								<div>VRAM Address: </div><span id="vram"></span>
+							</li>
+							<li>
+								<div>Temp Address: </div><span id="temp"></span>
+							</li>
+							<li>
+								<div>Control:</div>
+								<ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
+									<li><div>nametable:</div><span id="nametable"></span></li>
+									<li><div>increment:</div><span id="increment"></span></li>
+									<li><div>sprite table:</div><span id="spritetable"></span></li>
+									<li><div>background table:</div><span id="backgroundtable"></span></li>
+									<li><div>sprite size:</div><span id="spritesize"></span></li>
+									<li><div>masterslave:</div><span id="masterslave"></span></li>
+									<li><div>nmi:</div><span id="nmi"></span></li>
+								</ul>
+							</li>
+
+
+
+							<li><div>Mask:</div>
+								<ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
+									<li><div>greyscale:</div><span id="grayscale"></span></li>
+									<li><div>showbgleft:</div><span id="showbgleft"></span></li>
+									<li><div>showspleft:</div><span id="showspleft"></span></li>
+									<li><div>showbg:</div><span id="showbg"></span></li>
+									<li><div>showsprites:</div><span id="showsprites"></span></li>
+									<li><div>increds:</div><span id="increds"></span></li>
+									<li><div>incgreens:</div><span id="incgreens"></span></li>
+									<li><div>incblues:</div><span id="incblues"></span></li>
+								</ul>
+							</li>
+							<li>
+								<div>Status:</div>
+								<ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
+									<li><div>spriteoverflow:</div><span id="spriteoverflow"></span></li>
+									<li><div>spritehit:</div><span id="spritehit"></span></li>
+									<li><div>vblank:</div><span id="vblank"></span></li>
+									<li><div>nmiOccurred:</div><span id="nmiOccurred"></span></li>
+									<li><div>writable:</div><span id="writable"></span></li>
+								</ul>
+							</li>
+						</ul>
+					</div>
+				</fieldset>
+			</div>
+
+
 		</div>
-	</div>
+	</nav>
+
 
 	<div style="background: #333; color: #fff" id="log" rows="500" cols="50">
 
@@ -262,7 +285,7 @@
 			document.getElementById("nmiOccurred").innerHTML = "0x" + ppu.nmi.occurred ? 1:0 ;
 			document.getElementById("writable").innerHTML = "0x" + ppu.vars.w;
 
-			document.getElementById("val").innerHTML = "0x" + ppu.registers.scroll.data.toString(16).toUpperCase();
+			//document.getElementById("val").innerHTML = "0x" + ppu.registers.scroll.data.toString(16).toUpperCase();
 
 			document.getElementById("vram").innerHTML = "0x" + ppu.vars.v.toString(16).toUpperCase();
 			document.getElementById("temp").innerHTML = "0x" + ppu.vars.t.toString(16).toUpperCase();
@@ -285,9 +308,9 @@
 				}
 				var result = cpu.mmu.stack.data[i];
 				if (typeof result == 'undefined') {
-					st += "0" + comma;
+					st += "0xERR" + comma;
 				} else {
-					st += cpu.mmu.stack.data[i].toString(16) + comma;
+					st += "0x" + cpu.mmu.stack.data[i].toString(16).toUpperCase() + comma;
 				}
 			}
 
@@ -344,6 +367,21 @@
 			}
 		});
 
+		var fps = 60;
+		var startEmulation = false;
+		function static() {
+			setTimeout(function() {
+				requestAnimationFrame(static);
+				if (!startEmulation) {
+					ppu.screen.reset();
+				} else {
+					tickFor(100000);
+				}
+
+			}, 1000 / fps);
+		}
+
+
 
 	</script>	
 	
@@ -353,7 +391,15 @@
 		//nametable.init();
 		//nametable.draw([[],[],[],[]]);
 	</script>
-	
+	<script>
+		$(document).ready(function() {
+			$('.menu-link').bigSlide(
+					{side: "right",
+						push: '.drawer-push',
+						menuWidth: '35.625em'
+					});
+		});
+	</script>
 
 
 	</body>
