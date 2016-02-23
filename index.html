@@ -98,8 +98,8 @@
 	<body>
 
 
-	<div class="row" style="height: 100%">
-		<div class="small-6 large-6 columns" style="top: 50%; transform: translateY(-50%);">
+	<div class="row " style="height: 100%; position: relative;">
+		<div class="small-6 large-6 columns pushy" style="top: 50%; transform: translateY(-50%);">
 			<fieldset>
 				<legend>Screen</legend>
 				<canvas id="screen" height="100" style="display: block;"></canvas>
@@ -401,7 +401,8 @@
 			$('.menu-link').bigSlide(
 					{side: "right",
 						push: '.drawer-push',
-						menuWidth: '35.625em'
+						menuWidth: '35.625em',
+						push: '.pushy'
 					});
 		});
 	</script>
