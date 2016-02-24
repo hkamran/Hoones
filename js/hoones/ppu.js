@@ -8,11 +8,12 @@ var ppu = {
 	screen: {
 	
 		canvas : null,
-		pixelSize : 2,
-		spacer: 1,
+		pixelSize : 1,
+		spacer: 0,
 		height : 240,
 		width : 255,
-				
+
+
 		colors:[
 			"#666666", "#002A88", "#1412A7", "#3B00A4", "#5C007E", "#6E0040", "#6C0600", "#561D00",
 			"#333500", "#0B4800", "#005200", "#004F08", "#00404D", "#000000", "#000000", "#000000",
@@ -23,28 +24,110 @@ var ppu = {
 			"#FFFEFF", "#C0DFFF", "#D3D2FF", "#E8C8FF", "#FBC2FF", "#FEC4EA", "#FECCC5", "#F7D8A5",
 			"#E4E594", "#CFEF96", "#BDF4AB", "#B3F3CC", "#B5EBF2", "#B8B8B8", "#000000", "#000000"
 		],
-		
+
+		rbgs:[
+			[102,102,102],
+			[0,42,136],
+			[20,18,167],
+			[59,0,164],
+			[92,0,126],
+			[110,0,64],
+			[108,6,0],
+			[86,29,0],
+
+			[51,53,0],
+			[11,72,0],
+			[0,82,0],
+			[0,79,8],
+			[0,64,77],
+			[0,0,0],
+			[0,0,0],
+			[0,0,0],
+
+			[173,173,173],
+			[21,95,217],
+			[66,64,255],
+			[117,39,254],
+			[160,26,204],
+			[183,30,123],
+			[181,49,32],
+			[153,78,0],
+
+			[107,109,0],
+			[56,135,0],
+			[12,147,0],
+			[0,143,50],
+			[0,124,141],
+			[0,0,0],
+			[0,0,0],
+			[0,0,0],
+
+			[255,254,255],
+			[100,176,255],
+			[146,144,255],
+			[198,118,255],
+			[243,106,255],
+			[254,110,204],
+			[254,129,112],
+			[234,158,34],
+
+			[188,190,0],
+			[136,216,0],
+			[92,228,48],
+			[69,224,130],
+			[72,205,222],
+			[79,79,79],
+			[0,0,0],
+			[0,0,0],
+
+			[255,254,255],
+			[192,223,255],
+			[211,210,255],
+			[232,200,255],
+			[251,194,255],
+			[254,196,234],
+			[254,204,197],
+			[247,216,165],
+
+			[228,229,148],
+			[207,239,150],
+			[189,244,171],
+			[179,243,204],
+			[181,235,242],
+			[184,184,184],
+			[0,0,0],
+			[0,0,0],
+
+		],
+
 		
 		reset : function() {
 			var c = document.getElementById('screen');	
 			c.width  = this.width * (this.pixelSize + this.spacer);
 			c.height = this.height * (this.pixelSize + this.spacer);
-			this.canvas = c.getContext('2d');	
-			
+			this.canvas = c.getContext('2d');
+
 			this.clear();
+			ppu.renderer.buffer.reset();
 		},
-		
+
+
+
 		clear : function() {
+			ppu.renderer.buffer.reset();
 			var randomPixel = function() {
 				//return (Math.floor(Math.random() * (0xffffff - 0x000000) + 0x000000)).toString(16);
 				//return 0xffffff.toString(16);
-				return ppu.screen.colors[(Math.floor(Math.random() * (64 - 0) + 0))];
+				return ppu.screen.rbgs[(Math.floor(Math.random() * (63 - 0) + 0))];
 			};
 			for (var x = 0; x < this.width; x++) {
 				for (var y = 0; y < this.height; y++) {
-					this.setPixel(x, y, randomPixel());
+					var color =  randomPixel();
+					//console.log(color);
+					ppu.renderer.buffer.setPixel(x, y, color);
 				}
 			}
+			ppu.renderer.buffer.print();
 		},
 		
 		getColor : function(val) {
@@ -52,7 +135,12 @@ var ppu = {
 				console.log("ERROR COLOR " + val.toString(16));
 				asdasdasd.asdasdasd;
 			}
-			return this.colors[val];
+
+			var result = this.rbgs[val];
+			if (typeof result == 'undefined') {
+				console.log("ERROR " + val.toString(16));
+			}
+			return result;
 		},
 		
 		setPixel : function(x, y, hex) {
@@ -732,9 +820,10 @@ var ppu = {
 		}
 
 		var palette = ppu.mmu.palette.readByte(color);
-		var hex = ppu.screen.getColor(palette);
 
-		ppu.renderer.buffer.push(hex);
+		var hex = ppu.screen.getColor(palette & 0xFF);
+		
+		ppu.renderer.buffer.setPixel(x, y, hex);
 		//
 	},
 
@@ -743,32 +832,45 @@ var ppu = {
 	renderer : {
 
 		buffer : {
-			data : [],
-			buffer: [],
+			frame : [],
 
-			getFrame : function() {
-				if (this.data.length == 0) {
-					return [];
-				}
-				return this.data.shift();
+			reset : function() {
+				var width  = ppu.screen.width * (ppu.screen.pixelSize + ppu.screen.spacer);
+				var height = ppu.screen.height * (ppu.screen.pixelSize + ppu.screen.spacer);
+				this.frame = ppu.screen.canvas.getImageData(0, 0, width, height);
 			},
 
-			isReady : function() {
-				if (this.data.length > 0) {
-					return true;
+			setPixel : function(x, y, color) {
+				var width  = (ppu.screen.width * (ppu.screen.pixelSize + ppu.screen.spacer)) * 4;
+				var xpos = x * ((ppu.screen.pixelSize + ppu.screen.spacer)* 4) ;
+
+				var ypos =  y * width ;
+				var index = (ypos + xpos);
+
+
+				for (var cy = y; cy < (y + ppu.screen.pixelSize); cy++) {
+					var counter = 0;
+					for (var cx = x; cx <= (x + ppu.screen.pixelSize); cx++) {
+						this.frame.data[index + 0] = color[0];
+						this.frame.data[index + 1] = color[1];
+						this.frame.data[index + 2] = color[2];
+						this.frame.data[index + 3] = 255;
+						index += 4;
+						counter += 4;
+
+					}
+					index += 4 * ppu.screen.spacer;
+					index += width;
+					index -= counter;
+					index -= 4;
 				}
-				return false;
+
 			},
 
-			push : function(val) {
+			print : function() {
+				ppu.screen.canvas.putImageData(this.frame, 0, 0);
+			}
 
-				if (this.buffer.length <= 61440) {
-					this.buffer.push(val);
-				} else {
-					this.data.push(this.buffer);
-					this.buffer = [];
-				}
-			},
 		},
 
 		background : {
@@ -1054,26 +1156,7 @@ var ppu = {
 
 		tick : function() {
 
-			while (ppu.renderer.buffer.isReady()) {
-				var frame = ppu.renderer.buffer.getFrame();
-				var x = 0;
-				var y = 0;
 
-				for (var i = 0; i < frame.length; i++) {
-					ppu.screen.setPixel(x, y, frame[i]);
-
-					x++;
-					if (x > 255) {
-						x = 0;
-						y++;
-						if (y > 239) {
-							y = 0;
-						}
-					}
-
-				}
-
-			}
 		},
 
 
@@ -1108,6 +1191,8 @@ var ppu = {
 				ppu.cycle = 0;
 				ppu.scanline = 0;
 				ppu.frame++;
+
+				ppu.renderer.buffer.print();
 				ppu.vars.f ^= 1;
 
 		} else {
@@ -1117,6 +1202,7 @@ var ppu = {
 				ppu.scanline++;
 				if (ppu.scanline > 261) {
 					ppu.scanline = 0;
+					ppu.renderer.buffer.print();
 					ppu.frame++;
 					ppu.vars.f ^= 1;
 				}
