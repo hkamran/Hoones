@@ -8,8 +8,8 @@ var ppu = {
 	screen: {
 	
 		canvas : null,
-		pixelSize : 1,
-		spacer: 0,
+		pixelSize : 2,
+		spacer: 1,
 		height : 240,
 		width : 255,
 
@@ -822,7 +822,7 @@ var ppu = {
 		var palette = ppu.mmu.palette.readByte(color);
 
 		var hex = ppu.screen.getColor(palette & 0xFF);
-		
+
 		ppu.renderer.buffer.setPixel(x, y, hex);
 		//
 	},
@@ -841,28 +841,27 @@ var ppu = {
 			},
 
 			setPixel : function(x, y, color) {
-				var width  = (ppu.screen.width * (ppu.screen.pixelSize + ppu.screen.spacer)) * 4;
-				var xpos = x * ((ppu.screen.pixelSize + ppu.screen.spacer)* 4) ;
+				var pixelWidth = (ppu.screen.pixelSize + ppu.screen.spacer);
+				var height  = (ppu.screen.width * pixelWidth) * 4 ;
+				var width = (x * pixelWidth * 4);
 
-				var ypos =  y * width ;
-				var index = (ypos + xpos);
+				var index = (y * height * pixelWidth) + width;
 
 
 				for (var cy = y; cy < (y + ppu.screen.pixelSize); cy++) {
-					var counter = 0;
-					for (var cx = x; cx <= (x + ppu.screen.pixelSize); cx++) {
+					var counter = 4;
+					for (var cx = x; cx < (x + ppu.screen.pixelSize); cx++) {
 						this.frame.data[index + 0] = color[0];
 						this.frame.data[index + 1] = color[1];
 						this.frame.data[index + 2] = color[2];
 						this.frame.data[index + 3] = 255;
+
 						index += 4;
 						counter += 4;
-
 					}
-					index += 4 * ppu.screen.spacer;
-					index += width;
-					index -= counter;
-					index -= 4;
+					index += (height - width) - counter + 4;
+					index += width ;
+
 				}
 
 			},
