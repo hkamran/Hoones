@@ -794,12 +794,6 @@ var ppu = {
 		}
 	},
 
-	renderPixel : function() {
-
-	},
-
-
-
 	renderer : {
 
 		buffer : {

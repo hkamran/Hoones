@@ -220,7 +220,7 @@ var cpu = {
 				var result = this.data[cpu.registers.sp.get()];
 
 				if (typeof result == 'undefined') {
-					asdasd.asdasdasd
+					return 0x0;
 				}
 
 				return result;
@@ -280,7 +280,7 @@ var cpu = {
 				var result = this.data[addr];
 
 				if (typeof result === 'undefined') {
-					console.log("ERROR READING " + addr.toString(16));
+					//console.log("ERROR READING " + addr.toString(16));
 					return 0;
 				}
 
@@ -434,7 +434,12 @@ var cpu = {
 				log("READING TO APU " + addr.toString(16));
 				return 0x0;
 			} else if (addr == 0x4016) {
-				//TODO Controller
+				//TODO Controller 1
+				var result = player1.readByte()
+
+				return result;
+			} else if (addr == 0x4017) {
+				//TODO Controller 2
 				return 0x0;
 			} else if (addr < 0x4020) {
 				//TODO APU
@@ -486,7 +491,10 @@ var cpu = {
 				return 0x0;
 			} else if (addr == 0x4016) {
 				//TODO Controller
-				log("WRITING TO CONTROLLER " + addr.toString(16));
+				return player1.writeByte(val);
+			} else if (addr == 0x4017) {
+				//TODO Controller
+				log("WRITING TO CONTROLLER 2" + addr.toString(16));
 				return 0x0;
 			} else if (addr < 0x4020) {
 				//TODO APU
