@@ -9,7 +9,7 @@ var ppu = {
 	
 		canvas : null,
 		pixelSize : 2,
-		spacer: 1,
+		spacer: 0,
 		height : 240,
 		width : 255,
 
@@ -795,36 +795,7 @@ var ppu = {
 	},
 
 	renderPixel : function() {
-		var x = this.cycle - 2;
-		var y = this.scanline;
 
-		var background = ppu.renderer.background.getPixelByte();
-		var sprite = ppu.renderer.sprites.getPixelByte();
-		
-		if (x < 8 && ppu.registers.mask.showbg == 0) {
-			background = 0;
-		}
-		if (x < 8 && ppu.registers.mask.showspleft == 0) {
-			sprite = 0;
-		}
-		
-		var b = background % 4 != 0;
-		var s = sprite % 4 != 0;
-		var color;
-		if (!b && !s) {
-			color = 0;
-		} else if (!b && s) {
-			color = sprite | 0x10;
-		} else if (b && !s) {
-			color = background;
-		}
-
-		var palette = ppu.mmu.palette.readByte(color);
-
-		var hex = ppu.screen.getColor(palette & 0xFF);
-
-		ppu.renderer.buffer.setPixel(x, y, hex);
-		//
 	},
 
 
@@ -841,27 +812,28 @@ var ppu = {
 			},
 
 			setPixel : function(x, y, color) {
-				var pixelWidth = (ppu.screen.pixelSize + ppu.screen.spacer);
-				var height  = (ppu.screen.width * pixelWidth) * 4 ;
+
+				var screen = ppu.screen;
+				var pixelSize = screen.pixelSize;
+				var pixelWidth = (screen.pixelSize + screen.spacer);
+				var height  = (screen.width * pixelWidth) * 4 ;
 				var width = (x * pixelWidth * 4);
 
 				var index = (y * height * pixelWidth) + width;
 
+				var startInter = pixelSize;
+				var heightSub = height - ((4 * startInter) + 4) + (pixelSize * pixelSize);
 
-				for (var cy = y; cy < (y + ppu.screen.pixelSize); cy++) {
-					var counter = 4;
-					for (var cx = x; cx < (x + ppu.screen.pixelSize); cx++) {
+
+				for (var cy = startInter; cy != 0; cy--) {
+					for (var cx = startInter; cx != 0; cx--) {
 						this.frame.data[index + 0] = color[0];
 						this.frame.data[index + 1] = color[1];
 						this.frame.data[index + 2] = color[2];
 						this.frame.data[index + 3] = 255;
-
 						index += 4;
-						counter += 4;
 					}
-					index += (height - width) - counter + 4;
-					index += width ;
-
+					index += heightSub;
 				}
 
 			},
@@ -1154,8 +1126,35 @@ var ppu = {
 
 
 		tick : function() {
+			var x = ppu.cycle - 2;
+			var y = ppu.scanline;
 
+			var background = this.background.getPixelByte();
+			var sprite = this.sprites.getPixelByte();
 
+			if (x < 8 && ppu.registers.mask.showbg == 0) {
+				background = 0;
+			}
+			if (x < 8 && ppu.registers.mask.showspleft == 0) {
+				sprite = 0;
+			}
+
+			var b = background % 4 != 0;
+			var s = sprite % 4 != 0;
+			var color;
+			if (!b && !s) {
+				color = 0;
+			} else if (!b && s) {
+				color = sprite | 0x10;
+			} else if (b && !s) {
+				color = background;
+			}
+
+			var palette = ppu.mmu.palette.readByte(color);
+
+			var hex = ppu.screen.getColor(palette & 0xFF);
+
+			this.buffer.setPixel(x, y, hex);
 		},
 
 
@@ -1211,7 +1210,7 @@ var ppu = {
 		//Print Pixel
 		if (renderingEnabled) {
 			if (visibleLine && visibleCycle) {
-				this.renderPixel();
+				ppu.renderer.tick();
 			}
 		}
 

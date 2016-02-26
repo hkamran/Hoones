@@ -5,6 +5,7 @@
 		<style>
 			body {
 				background-color: #181818;
+				-webkit-font-smoothing: none;
 			}
 
 			li div, label {
@@ -26,6 +27,16 @@
 				margin: 10px;
 
 			}
+
+			canvas {
+				image-rendering: optimizeSpeed;             /* Older versions of FF          */
+				image-rendering: -moz-crisp-edges;          /* FF 6.0+                       */
+				image-rendering: -webkit-optimize-contrast; /* Safari                        */
+				image-rendering: -o-crisp-edges;            /* OS X & Windows Opera (12.02+) */
+				image-rendering: pixelated;                 /* Awesome future-browsers       */
+				-ms-interpolation-mode: nearest-neighbor;   /* IE                            */
+			}
+
 			#Tabs {
 				position: absolute;
 				white-space: nowrap;
@@ -325,7 +336,7 @@
 			if (op) {
 				document.getElementById("opcode").innerHTML = "0x" + cpu.op.opcode.toString(16).toUpperCase();
 				document.getElementById("opname").innerHTML = cpu.op.op.name;
-				document.getElementById("mode").innerHTML = cpu.op.op.mode.toUpperCase();
+				document.getElementById("mode").innerHTML = cpu.op.op.mode.name.toUpperCase();
 				document.getElementById("opaddr").innerHTML = "0x" + cpu.op.address.toString(16).toUpperCase();
 			} else {
 				document.getElementById("opcode").innerHTML = "NULL";
@@ -372,21 +383,50 @@
 			}
 		});
 
-		var fps = 60;
-		var startEmulation = false;
-		function static() {
-			setTimeout(function() {
-				requestAnimationFrame(static);
-				if (!startEmulation) {
-					ppu.screen.reset();
-				} else {
-					tickFor(45000);
-					ppu.renderer.tick();
-
-				}
-
-			}, 1000 / fps);
+		
+	(function() {
+		var lastTime = 0;
+		var vendors = ['ms', 'moz', 'webkit', 'o'];
+		for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+			window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
+			window.cancelAnimationFrame = window[vendors[x]+'CancelAnimationFrame'] 
+									   || window[vendors[x]+'CancelRequestAnimationFrame'];
 		}
+	 
+		if (!window.requestAnimationFrame)
+			window.requestAnimationFrame = function(callback, element) {
+				var currTime = new Date().getTime();
+				var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+				var id = window.setTimeout(function() { callback(currTime + timeToCall); }, 
+				  timeToCall);
+				lastTime = currTime + timeToCall;
+				return id;
+			};
+	 
+		if (!window.cancelAnimationFrame)
+			window.cancelAnimationFrame = function(id) {
+				clearTimeout(id);
+			};
+	}());	
+
+	var fps = 60;
+	var startEmulation = false;
+	var interval = 1000 / fps;
+		ppu.screen.reset();
+	function draw() {
+		setTimeout(function() {
+			window.requestAnimationFrame(draw);
+
+			nes.tickFor(35000);
+			ppu.renderer.tick();
+
+
+		}, interval);
+	}
+
+	
+		
+
 
 
 

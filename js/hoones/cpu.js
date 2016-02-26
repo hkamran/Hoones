@@ -538,9 +538,9 @@ var cpu = {
 		val : "NONE",
 		
 		types : {
-			none : "NONE",
-			nmi  : "NMI",
-			irq  : "IRQ",
+			none : 0,
+			nmi  : 1,
+			irq  : 2,
 		},
 		
 		set : function(type) {
@@ -552,9 +552,9 @@ var cpu = {
 		},
 		
 		tick : function() {
-			if (this.val.localeCompare(this.types.nmi) == 0) {
+			if (this.val == this.types.nmi) {
 				this._triggerNMI();
-			} else if (this.val.localeCompare(this.types.irq) == 0) {
+			} else if (this.val == this.types.irq) {
 				if (this.registers.p.i == 0) {
 					this._triggerIRQ();
 				}
@@ -594,105 +594,14 @@ var cpu = {
 		var op = this.instructions.get(opcode);
 		var cycles = this.cycles;
 
-		if (debug) {
-			output(this.registers.pc.get().toString(16).toUpperCase() + " " + opcode.toString(16) + " " + op.name + "  A:" + cpu.registers.a.get().toString(16).toUpperCase() + " X:" + cpu.registers.x.get().toString(16).toUpperCase() + " Y:"
-				+ cpu.registers.y.get().toString(16).toUpperCase() + " P:" + cpu.registers.p.get().toString(16).toUpperCase() + " SP:" + cpu.registers.sp.get().toString(16).toUpperCase()
-				+ " CYC:" + ppu.cycle + " SL:" + ppu.scanline);
-		}
-
 		//Increment PC
 		var opaddr = this.registers.pc.get();
 		this.registers.pc.set(opaddr + op.size);
 
-		var addr = null;
-		var isPageDifferent = false;
-
-		// Error
-		if (this.instructions.modes.equals(op.mode, this.instructions.modes.err)) {
-			console.log(opcode + " MODE IS ERROR");
-			asdasdasdsad
-		}
-
-		// Absolute
-		else if (this.instructions.modes.equals(op.mode, this.instructions.modes.abs)) {
-			addr = this.mmu.readWord(opaddr + 1 & 0xFFFF);
-
-		// Absolute X
-		} else if (this.instructions.modes.equals(op.mode, this.instructions.modes.abx)) {
-			var val = this.mmu.readWord(opaddr + 1);
-			addr = val + this.registers.x.get();
-			addr &= 0xFFFF;
-			isPageDifferent = this.instructions.isPageDifferent(val, addr);
-
-		// Absolute Y
-		} else if (this.instructions.modes.equals(op.mode, this.instructions.modes.aby)) {
-			var val = this.mmu.readWord(opaddr + 1);
-			addr = val + this.registers.y.get();
-			addr &= 0xFFFF;
-			isPageDifferent = this.instructions.isPageDifferent(val, addr);
-
-		//Accumulator
-		} else if (this.instructions.modes.equals(op.mode, this.instructions.modes.acc)) {
-			addr = this.registers.a.get();
-
-		//Immediate
-		} else if (this.instructions.modes.equals(op.mode, this.instructions.modes.imm)) {
-			addr = opaddr + 1 & 0xFFFF;
-
-		//Implied
-		} else if (this.instructions.modes.equals(op.mode, this.instructions.modes.imp)) {
-			addr = 0;
-
-		//Indirect X (Indexed Indirect)
-		} else if (this.instructions.modes.equals(op.mode, this.instructions.modes.ini)) {
-			addr = this.mmu.readByte(opaddr + 1 & 0xFFFF);
-			addr += this.registers.x.get();
-			addr &= 0xFF;
-			addr = this.mmu.readWordBug(addr);
-
-		//Indirect
-		} else if (this.instructions.modes.equals(op.mode, this.instructions.modes.ind)) {
-			addr = this.mmu.readWord(opaddr + 1 & 0xFFFF);
-			addr = this.mmu.readWordBug(addr);
-			
-		//Indirect Y (Indirect Indexed)
-		} else if (this.instructions.modes.equals(op.mode, this.instructions.modes.inr)) {
-			var val = this.mmu.readByte(opaddr + 1 & 0xFFFF);
-			val = this.mmu.readWordBug(val);
-			addr += val;
-			addr += this.registers.y.get(); 
-			addr &= 0xFFFF;
-			isPageDifferent = this.instructions.isPageDifferent(val, addr);
-
-		//Relative
-		} else if (this.instructions.modes.equals(op.mode, this.instructions.modes.rel)) {
-			addr = this.mmu.readByte(opaddr + 1 & 0xFFFF) & 0xFF;
-			if (addr < 0x80) {
-				addr += this.registers.pc.get() ;
-			} else {
-				addr += this.registers.pc.get() - 0x100;
-			}
-
-		//Zero page
-		} else if (this.instructions.modes.equals(op.mode, this.instructions.modes.zer)) {
-
-			addr = cpu.mmu.readByte(opaddr + 1 & 0xFFFF);
-
-		//Zero page X
-		} else if (this.instructions.modes.equals(op.mode, this.instructions.modes.zex)) {
-			addr = this.mmu.readByte(opaddr + 1 & 0xFFFF);
-			addr += this.registers.x.get();
-			addr &= 0xFF;
-
-		//Zero page y
-		} else if (this.instructions.modes.equals(op.mode, this.instructions.modes.zey)) {
-			addr = this.mmu.readByte(opaddr + 1 & 0xFFFF);
-			addr += this.registers.y.get();
-			addr &= 0xFF;
-
-		}
-
-
+		//Get Execution Address
+		var result = op.mode.getResult(opaddr);
+		var addr = result.addr;
+		var isPageDifferent = result.isDifferent;
 
 		//Increment Cycles
 		this.cycles += op.cycles;
@@ -735,28 +644,220 @@ var cpu = {
 		
 		//Addressing Modes
 		modes : {
-            abs: "absolute",
-            abx: "absolute x",
-            aby: "absolute y",
-            acc: "accumulator",
-            imm: "immediate",
-            imp: "implied",
-            ini: "indexed indirect", //indirect X
-            ind: "indirect",         //indirect
-            inr: "indirect indexed", //indirect y
-            rel: "relative",
-            zer: "zeropage",
-            zex: "zeropage x",
-            zey: "zeropage y",
-			err: "not implemented",
+            abs: {
+				name : "absolute",
+				id : 0,
+
+				getResult : function(opaddr) {
+					var addr = cpu.mmu.readWord(opaddr + 1 & 0xFFFF);
+
+					return {
+						addr : addr,
+						isDifferent : false,
+					};
+				},
+
+			},
+            abx: {
+				name : "absolute x",
+				id : 1,
+
+				getResult : function(opaddr) {
+					var val = cpu.mmu.readWord(opaddr + 1);
+					var addr = val + cpu.registers.x.get();
+					addr &= 0xFFFF;
+					var isDifferent = cpu.instructions.isPageDifferent(val, addr);
+
+					return {
+						addr : addr,
+						isDifferent : isDifferent,
+					};
+				},
+
+			},
+            aby: {
+				name : "absolute y",
+				id : 2,
+
+				getResult : function(opaddr) {
+					var val = cpu.mmu.readWord(opaddr + 1);
+					var addr = val + cpu.registers.y.get();
+					addr &= 0xFFFF;
+					var isDifferent = cpu.instructions.isPageDifferent(val, addr);
+
+					return {
+						addr : addr,
+						isDifferent : isDifferent,
+					};
+				}
+			},
+            acc: {
+				name : "accumulator",
+				id : 3,
+
+				getResult : function(opaddr) {
+					var addr = cpu.registers.a.get();
+
+					return {
+						addr : addr,
+						isDifferent : false,
+					};
+				}
+			},
+            imm: {
+				name : "immediate",
+				id : 4,
+
+				getResult : function(opaddr) {
+					var addr = opaddr + 1 & 0xFFFF;
+
+					return {
+						addr : addr,
+						isDifferent : false,
+					};
+				}
+			},
+            imp: {
+				name : "implied",
+				id : 5,
+
+				getResult : function(opaddr) {
+					var addr = 0;
+
+					return {
+						addr : addr,
+						isDifferent : false,
+					};
+				}
+			},
+            ini: {
+				name : "indexed indirect",  //indirect X
+				id : 6,
+
+				getResult : function(opaddr) {
+					var addr = cpu.mmu.readByte(opaddr + 1 & 0xFFFF);
+					addr += cpu.registers.x.get();
+					addr &= 0xFF;
+					addr = cpu.mmu.readWordBug(addr);
+
+					return {
+						addr : addr,
+						isDifferent : false,
+					};
+				}
+			},
+            ind: {
+				name : "indirect", //indirect
+				id : 7,
+
+				getResult : function(opaddr) {
+					var addr = cpu.mmu.readWord(opaddr + 1 & 0xFFFF);
+					addr = cpu.mmu.readWordBug(addr);
+
+					return {
+						addr : addr,
+						isDifferent : false,
+					};
+				}
+			},
+            inr: {
+				name : "indirect indexed", //indirect y
+				id : 8,
+
+				getResult : function(opaddr) {
+					var val = cpu.mmu.readByte(opaddr + 1 & 0xFFFF);
+					val = cpu.mmu.readWordBug(val);
+					var addr = val;
+					addr += cpu.registers.y.get();
+					addr &= 0xFFFF;
+					var isDifferent = cpu.instructions.isPageDifferent(val, addr);
+
+					return {
+						addr : addr,
+						isDifferent : isDifferent,
+					};
+				},
+
+			},
+            rel: {
+				name : "relative",
+				id : 9,
+
+				getResult : function(opaddr) {
+					var addr = cpu.mmu.readByte(opaddr + 1 & 0xFFFF) & 0xFF;
+					if (addr < 0x80) {
+						addr += cpu.registers.pc.get() ;
+					} else {
+						addr += cpu.registers.pc.get() - 0x100;
+					}
+
+					return {
+						addr : addr,
+						isDifferent : false,
+					};
+				}
+			},
+            zer: {
+				name : "zeropage",
+				id : 10,
+
+				getResult : function(opaddr) {
+					var addr = cpu.mmu.readByte(opaddr + 1 & 0xFFFF);
+
+					return {
+						addr : addr,
+						isDifferent : false,
+					};
+				}
+			},
+            zex: {
+				name : "zeropage x",
+				id : 11,
+
+				getResult : function(opaddr) {
+					var addr = cpu.mmu.readByte(opaddr + 1 & 0xFFFF);
+					addr += cpu.registers.x.get();
+					addr &= 0xFF;
+
+					return {
+						addr : addr,
+						isDifferent : false,
+					};
+				},
+			},
+            zey: {
+				name : "zeropage y",
+				id : 12,
+
+				getResult : function(opaddr) {
+					var addr = cpu.mmu.readByte(opaddr + 1 & 0xFFFF);
+					addr += cpu.registers.y.get();
+					addr &= 0xFF;
+
+					return {
+						addr : addr,
+						isDifferent : false,
+					};
+				},
+			},
+			err: {
+				name : "Not Implemented",
+				id : 13,
+
+				getResult : function(opaddr) {
+					asdasdasdasdasd;
+					console.log("error");
+				},
+			},
 
 			equals : function(a, b) {
-				var result = a.localeCompare(b);
-				if (result == 0) {
+				var result = (a.id == b.id);
+				if (result) {
 					return true;
 				}
 				return false;
 			}
+
 		},
 
 		/**
@@ -1029,7 +1130,7 @@ var cpu = {
 
 			//Jump to subroutine
 			jsr: function(info) {
-				cpu.mmu.stack.pushWord(cpu.registers.pc.get() - 1);
+				cpu.mmu.stack.pushWord((cpu.registers.pc.get() - 1) & 0xFFFF);
 				cpu.registers.pc.set(info.address);
 			},
 
