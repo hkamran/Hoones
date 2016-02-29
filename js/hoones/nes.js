@@ -4,6 +4,8 @@
 
 var nes = {
 
+    interval : 1000 / 60, //FPS
+    rate : 29829,         //Tick Rate per frame
 
     load : function(file) {
         cartridge.load(file);
@@ -31,6 +33,14 @@ var nes = {
         for (var i = 0; i < val; i++) {
             this.tick();
         }
+    },
+
+    start : function() {
+        setTimeout(function() {
+            window.requestAnimationFrame(nes.start);
+            nes.tickFor(29829);
+        }, this.interval);
+
     }
 
 };

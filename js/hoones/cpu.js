@@ -4,6 +4,7 @@ var cpu = {
 	ticks : 0,
 	stall : 0,
 	op : null,
+	log : "",
 
 	setCartidge : function(cartridge) {
 		this.mmu.prgrom.setLowerBank(cartridge.prgrom.getLowerBank());
@@ -601,6 +602,10 @@ var cpu = {
 		var opcode = this.mmu.readByte(this.registers.pc.get());
 		var op = this.instructions.get(opcode);
 		var cycles = this.cycles;
+
+		debug.log(this.registers.pc.get().toString(16).toUpperCase() + " " + opcode.toString(16) + " " + op.name + "  A:" + cpu.registers.a.get().toString(16).toUpperCase() + " X:" + cpu.registers.x.get().toString(16).toUpperCase() + " Y:"
+			+ cpu.registers.y.get().toString(16).toUpperCase() + " P:" + cpu.registers.p.get().toString(16).toUpperCase() + " SP:" + cpu.registers.sp.get().toString(16).toUpperCase()
+			+ " CYC:" + ppu.cycle + " SL:" + ppu.scanline);
 
 		//Increment PC
 		var opaddr = this.registers.pc.get();

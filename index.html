@@ -105,6 +105,9 @@
 		</style>
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 		<script src="js/bigSlide/bigSlide.min.js"></script>
+
+
+
 	</head>
 	<body>
 
@@ -246,199 +249,62 @@
 	<div style="background: #333; color: #fff" id="log" rows="500" cols="50">
 
 	</div>
+
 	<script type="text/javascript" src="js/hoones/lib/BinFileReader.js"></script>
 	<script type="text/javascript" src="js/hoones/cartridge.js"></script>
+	<script type="text/javascript" src="js/hoones/controller.js"></script>
 	<script type="text/javascript" src="js/hoones/cpu.js"></script>
 	<script type="text/javascript" src="js/hoones/ppu.js"></script>
 	<script type="text/javascript" src="js/hoones/nes.js"></script>
+	<script type="text/javascript" src="js/hoones/debugger.js"></script>
 	<script type="text/javascript">
 
-		nes.load("./roms/dkong.nes");
+		nes.load("./roms/SuperMarioBros.nes");
 		nes.reset();
-		
 	</script>
 
 	<script type="text/javascript">
-
-		function regStatus() {
-
-
-			document.getElementById("carryFlag").innerHTML = cpu.registers.p.c == 1;
-			document.getElementById("zeroFlag").innerHTML = cpu.registers.p.z == 1;
-			document.getElementById("interruptFlag").innerHTML = cpu.registers.p.i == 1;
-			document.getElementById("decimalFlag").innerHTML = cpu.registers.p.d == 1;
-			document.getElementById("breakFlag").innerHTML = cpu.registers.p.b == 1;
-			document.getElementById("overflowFlag").innerHTML = cpu.registers.p.v == 1;
-			document.getElementById("negativeFlag").innerHTML = cpu.registers.p.n == 1;
-
-			document.getElementById("pc").innerHTML = "0x" + cpu.registers.pc.get().toString(16).toUpperCase();
-			document.getElementById("acc").innerHTML = "0x" + cpu.registers.a.get().toString(16).toUpperCase();
-			document.getElementById("x").innerHTML = "0x" + cpu.registers.x.get().toString(16).toUpperCase();
-			document.getElementById("y").innerHTML = "0x" + cpu.registers.y.get().toString(16).toUpperCase();
-			document.getElementById("sp").innerHTML = "0x" + cpu.registers.sp.get().toString(16).toUpperCase();
-			document.getElementById("pflags").innerHTML = "0x" + cpu.registers.p.get().toString(16).toUpperCase();
-
-			document.getElementById("nametable").innerHTML = "0x" + ppu.registers.cntrl.nametable;
-			document.getElementById("increment").innerHTML = "0x" + ppu.registers.cntrl.increment;
-			document.getElementById("spritetable").innerHTML = "0x" + ppu.registers.cntrl.spritetable;
-			document.getElementById("backgroundtable").innerHTML = "0x" + ppu.registers.cntrl.backgroundtable;
-			document.getElementById("spritesize").innerHTML = "0x" + ppu.registers.cntrl.spritesize;
-			document.getElementById("masterslave").innerHTML = "0x" + ppu.registers.cntrl.masterslave;
-			document.getElementById("nmi").innerHTML = "0x" + ppu.registers.cntrl.nmi;
-
-			document.getElementById("grayscale").innerHTML = "0x" + ppu.registers.mask.greyscale;
-			document.getElementById("showbgleft").innerHTML = "0x" + ppu.registers.mask.showbgleft;
-			document.getElementById("showspleft").innerHTML = "0x" + ppu.registers.mask.showspleft;
-			document.getElementById("showbg").innerHTML = "0x" + ppu.registers.mask.showbg;
-			document.getElementById("showsprites").innerHTML = "0x" + ppu.registers.mask.showsprites;
-			document.getElementById("increds").innerHTML = "0x" + ppu.registers.mask.increds;
-			document.getElementById("incgreens").innerHTML = "0x" + ppu.registers.mask.incgreens;
-			document.getElementById("incblues").innerHTML = "0x" + ppu.registers.mask.incblues;
-
-			document.getElementById("spriteoverflow").innerHTML = "0x" + ppu.registers.status.spriteoverflow;
-			document.getElementById("spritehit").innerHTML = "0x" + ppu.registers.status.spritehit;
-			document.getElementById("vblank").innerHTML = "0x" + ppu.registers.status.vblank;
-			document.getElementById("nmiOccurred").innerHTML = "0x" + ppu.nmi.occurred ? 1:0 ;
-			document.getElementById("writable").innerHTML = "0x" + ppu.vars.w;
-
-			//document.getElementById("val").innerHTML = "0x" + ppu.registers.scroll.data.toString(16).toUpperCase();
-
-			document.getElementById("vram").innerHTML = "0x" + ppu.vars.v.toString(16).toUpperCase();
-			document.getElementById("temp").innerHTML = "0x" + ppu.vars.t.toString(16).toUpperCase();
-			//document.getElementById("xpos").innerHTML = "0x" + ppu.background.xpos.toString(16).toUpperCase();
-			//document.getElementById("ypos").innerHTML = "0x" + ppu.background.ypos.toString(16).toUpperCase();
-			//document.getElementById("nameaddr").innerHTML = "0x" + ppu.background.nameTableAddr.toString(16).toUpperCase();
-			//document.getElementById("tileaddr").innerHTML = "0x" + ppu.background.fetchTileAddr().toString(16).toUpperCase();
-			//document.getElementById("namebyte").innerHTML = "0x" + ppu.background.nameTableByte.toString(16).toUpperCase();
-			//document.getElementById("tilebyte").innerHTML = "0x" + ppu.mmu.readByte(ppu.background.fetchTileAddr()).toString(16).toUpperCase();
-			//document.getElementById("lowbyte").innerHTML = "0x" + ppu.background.lowTileByte.toString(16).toUpperCase();
-			//document.getElementById("highbyte").innerHTML = "0x" + ppu.background.highTileByte.toString(16).toUpperCase();
-				 
-			 
-			var st = "";
-			var comma = " ,";
-			for (var i = cpu.mmu.stack.data.length - 1; i >= cpu.registers.sp.get() + 1; i--) {
-
-				if (i == 0) {
-					comma = "";
-				}
-				var result = cpu.mmu.stack.data[i];
-				if (typeof result == 'undefined') {
-					st += "0xERR" + comma;
-				} else {
-					st += "0x" + cpu.mmu.stack.data[i].toString(16).toUpperCase() + comma;
-				}
+		(function() {
+			var lastTime = 0;
+			var vendors = ['ms', 'moz', 'webkit', 'o'];
+			for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+				window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
+				window.cancelAnimationFrame = window[vendors[x]+'CancelAnimationFrame']
+										   || window[vendors[x]+'CancelRequestAnimationFrame'];
 			}
 
-			document.getElementById("stack").innerHTML = st;
+			if (!window.requestAnimationFrame)
+				window.requestAnimationFrame = function(callback, element) {
+					var currTime = new Date().getTime();
+					var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+					var id = window.setTimeout(function() { callback(currTime + timeToCall); },
+					  timeToCall);
+					lastTime = currTime + timeToCall;
+					return id;
+				};
 
-			var op = cpu.op;
-			if (op) {
-				document.getElementById("opcode").innerHTML = "0x" + cpu.op.opcode.toString(16).toUpperCase();
-				document.getElementById("opname").innerHTML = cpu.op.op.name;
-				document.getElementById("mode").innerHTML = cpu.op.op.mode.name.toUpperCase();
-				document.getElementById("opaddr").innerHTML = "0x" + cpu.op.address.toString(16).toUpperCase();
-			} else {
-				document.getElementById("opcode").innerHTML = "NULL";
-				document.getElementById("opname").innerHTML = "NULL";
-				document.getElementById("mode").innerHTML = "NULL";
-				document.getElementById("opaddr").innerHTML = "NULL";
+			if (!window.cancelAnimationFrame)
+				window.cancelAnimationFrame = function(id) {
+					clearTimeout(id);
+				};
+		}());
+	</script>
+
+
+	<script>
+		var log = function(val) {
+			if (debug.output) {
+				console.log(val);
 			}
-
-			document.getElementById("cpucycles").innerHTML = cpu.cycles;
-			document.getElementById("ppucycles").innerHTML = ppu.cycle;
-			document.getElementById("scanline").innerHTML = ppu.scanline;
-			document.getElementById("ticks").innerHTML = cpu.ticks;
-
-		};
-
-		function opCodeUpdate(val) {
-			if (val && val.opcode) {
-				document.getElementById("opcode").innerHTML = val.opcode.name;
-				document.getElementById("opaddr").innerHTML = val.address.toString(16).toUpperCase();
-			}
-		};
-
-		function tick() {
-			nes.tick();
-			regStatus();
-		};
-
-		function tickFor(val) {
-			nes.tickFor(val);
-			regStatus();
-		};
-
-		var counter = 1;
-
-		function output(val) {
-			document.getElementById("log").innerHTML = document.getElementById("log").innerHTML + "</br>" + counter + " " + val;
-			counter++;
 		};
 
 		$(window).keypress(function (e) {
 			if (e.keyCode === 0 || e.keyCode === 32) {
 				e.preventDefault();
-				tick();
+				debug.tick();
 			}
 		});
 
-		
-	(function() {
-		var lastTime = 0;
-		var vendors = ['ms', 'moz', 'webkit', 'o'];
-		for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
-			window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
-			window.cancelAnimationFrame = window[vendors[x]+'CancelAnimationFrame'] 
-									   || window[vendors[x]+'CancelRequestAnimationFrame'];
-		}
-	 
-		if (!window.requestAnimationFrame)
-			window.requestAnimationFrame = function(callback, element) {
-				var currTime = new Date().getTime();
-				var timeToCall = Math.max(0, 16 - (currTime - lastTime));
-				var id = window.setTimeout(function() { callback(currTime + timeToCall); }, 
-				  timeToCall);
-				lastTime = currTime + timeToCall;
-				return id;
-			};
-	 
-		if (!window.cancelAnimationFrame)
-			window.cancelAnimationFrame = function(id) {
-				clearTimeout(id);
-			};
-	}());	
-
-	var fps = 60;
-	var startEmulation = false;
-	var interval = 1000 / fps;
-		ppu.screen.reset();
-	function draw() {
-		setTimeout(function() {
-			window.requestAnimationFrame(draw);
-
-			nes.tickFor(29829);
-			ppu.renderer.tick();
-
-
-		}, interval);
-	}
-
-	
-		
-
-
-
-
-	</script>	
-	
-
-	<script type="text/javascript">
-
-		//nametable.init();
-		//nametable.draw([[],[],[],[]]);
-	</script>
-	<script>
 		$(document).ready(function() {
 			$('.menu-link').bigSlide(
 					{side: "right",
@@ -448,7 +314,5 @@
 					});
 		});
 	</script>
-
-
 	</body>
 </html>
