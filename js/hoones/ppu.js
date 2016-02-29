@@ -310,7 +310,9 @@ var ppu = {
 				addr = (addr - 0x2000) % 0x1000;
 				var table = Math.floor(addr / 0x0400);
 				var offset = addr % 0x0400;
-				return 0x2000 + this.mirror[table]*0x0400 + offset;
+				var nametableByte = 0x2000 + this.mirror[table]*0x0400 + offset;
+				log("GET NAME " + nametableByte.toString(16) + ":" + table + ":" + offset + ":" + addr);
+				return nametableByte;
 			},
 
 			readByte : function(addr) {
@@ -896,6 +898,7 @@ var ppu = {
 				var table = ppu.registers.cntrl.backgroundtable;
 				var tile = this.nameTableByte;
 				var address = (0x1000*table) + (tile*16) + fineY;
+				log("TILE " + address.toString(16));
 				return address;
 			},
 
@@ -1263,17 +1266,21 @@ var ppu = {
 				//log("REAL AFTER: " + ppu.background.tileData.toString(2));
                 var remainder = this.cycle % 8;
 				//log("Remainder " + remainder);
-
+				ppu.renderer.background.fetchNameTableByte();
+				ppu.renderer.background.fetchAttributeTableByte();
+				ppu.renderer.background.fetchLowTileByte();
+				ppu.renderer.background.fetchHighTyleByte();
+				ppu.renderer.background.storeTileData();
 				if (remainder == 1) {
-					ppu.renderer.background.fetchNameTableByte();
+
 				} else if (remainder == 3) {
-					ppu.renderer.background.fetchAttributeTableByte();
+
 				} else if (remainder == 5) {
-					ppu.renderer.background.fetchLowTileByte();
+
 				} else if (remainder == 7) {
-					ppu.renderer.background.fetchHighTyleByte();
+
 				} else if (remainder == 0) {
-					ppu.renderer.background.storeTileData();
+
 				}
 
 
