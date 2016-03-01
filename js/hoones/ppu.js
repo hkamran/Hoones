@@ -306,14 +306,6 @@ var ppu = {
 				this.mirror = val;
 			},
 
-			getAddress: function(addr) {
-				addr = (addr - 0x2000) % 0x1000;
-				var table = Math.floor(addr / 0x0400);
-				var offset = addr % 0x0400;
-				var nametableByte = 0x2000 + this.mirror[table]*0x0400 + offset;
-				log("GET NAME " + nametableByte.toString(16) + ":" + table + ":" + offset + ":" + addr);
-				return nametableByte;
-			},
 
 			readByte : function(addr) {
 
@@ -322,7 +314,6 @@ var ppu = {
 					asdasdasd.asdasdasdasd;
 				}
 
-				addr = this.getAddress(addr);
 				addr = ((addr - 0x2000) % 0x1000); //Mimic mirrors from 0x3000 to 0x3f00
 
 				var index = Math.floor(addr / 0x400); //Segment
@@ -1183,10 +1174,10 @@ var ppu = {
 
 			var palette = ppu.mmu.palette.readByte(color);
 
-			var hex = ppu.screen.getColorHex(palette & 0xFF);
-			ppu.screen.setPixel(x, y, hex)
-			//var hex = ppu.screen.getColorRBG(palette & 0xFF);
-			//this.buffer.setPixel(x, y, hex);
+			//var hex = ppu.screen.getColorHex(palette & 0xFF);
+			//ppu.screen.setPixel(x, y, hex)
+			var hex = ppu.screen.getColorRBG(palette & 0xFF);
+			this.buffer.setPixel(x, y, hex);
 		},
 
 
@@ -1206,7 +1197,9 @@ var ppu = {
 		var fetchCycle = preCycle || visibleCycle;
 		
 		var renderingEnabled  = ppu.registers.mask.showbg != 0 || ppu.registers.mask.showsprites != 0;
-		
+
+		var cycle = this.cycle % 8;
+
 		//Trigger NMI
 		if (ppu.nmi.delay  > 0) {
 			ppu.nmi.delay--;
@@ -1239,6 +1232,7 @@ var ppu = {
 			}
 		}
 
+
 		//Print Pixel
 		if (renderingEnabled) {
 			if (visibleLine && visibleCycle) {
@@ -1256,7 +1250,7 @@ var ppu = {
 				var transfer = (ppu.renderer.background.lowTileData >> 28) & 0xF;
 
                 ppu.renderer.background.lowTileData &= 0xFFFFFFF;
-				ppu.renderer.background.lowTileData *= 16;
+				ppu.renderer.background.lowTileData <<= 4;
 				ppu.renderer.background.highTileData &= 0xFFFFFFF;
 				ppu.renderer.background.highTileData <<= 4;
 				ppu.renderer.background.highTileData |= transfer;
@@ -1266,21 +1260,17 @@ var ppu = {
 				//log("REAL AFTER: " + ppu.background.tileData.toString(2));
                 var remainder = this.cycle % 8;
 				//log("Remainder " + remainder);
-				ppu.renderer.background.fetchNameTableByte();
-				ppu.renderer.background.fetchAttributeTableByte();
-				ppu.renderer.background.fetchLowTileByte();
-				ppu.renderer.background.fetchHighTyleByte();
-				ppu.renderer.background.storeTileData();
+
 				if (remainder == 1) {
-
+					ppu.renderer.background.fetchNameTableByte();
 				} else if (remainder == 3) {
-
+					ppu.renderer.background.fetchAttributeTableByte();
 				} else if (remainder == 5) {
-
+					ppu.renderer.background.fetchLowTileByte();
 				} else if (remainder == 7) {
-
+					ppu.renderer.background.fetchHighTyleByte();
 				} else if (remainder == 0) {
-
+					ppu.renderer.background.storeTileData();
 				}
 
 
@@ -1313,9 +1303,6 @@ var ppu = {
 		}
 
 		if ((ppu.scanline == 241) && (ppu.cycle == 1)) {
-			if (debug.output) {
-				console.log("ASDASDASDASD");
-			}
 			ppu.nmi.setVerticalBlank();
 		}
 		if (preLine && ppu.cycle == 1) {
