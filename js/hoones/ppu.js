@@ -118,7 +118,7 @@ var ppu = {
 			var randomPixel = function() {
 				//return (Math.floor(Math.random() * (0xffffff - 0x000000) + 0x000000)).toString(16);
 				//return 0xffffff.toString(16);
-				return ppu.screen.rbgs[(Math.floor(Math.random() * (63 - 0) + 0))];
+				return ppu.screen.rbgs[(Math.floor(Math.random() * (0) + 0))];
 			};
 			for (var x = 0; x < this.width; x++) {
 				for (var y = 0; y < this.height; y++) {
@@ -520,7 +520,7 @@ var ppu = {
 				this.spritesize =      (val >> 5) & 1;
 				this.masterslave =     (val >> 6) & 1;
 				this.nmi =             (val >> 7) & 1;
-				
+
 				//NMI Setup
 				ppu.nmi.output = (this.nmi == 1);
 				ppu.nmi.change();
@@ -725,12 +725,6 @@ var ppu = {
 					addr++;
 				}
 
-				//cpu.stall += 513
-				//if cpu.Cycles%2 == 1 {
-				//	cpu.stall++
-				//}
-				
-				//TODO Stall?
 			},
 			
 			read: function(val) {
@@ -814,7 +808,7 @@ var ppu = {
 				var screen = ppu.screen;
 				var pixelSize = screen.pixelSize;
 				var pixelWidth = (screen.pixelSize + screen.spacer);
-				var height  = (screen.width * pixelWidth) * 4 ;
+				var height  = ((screen.width) * pixelWidth) * 4 ;
 				var width = (x * pixelWidth * 4);
 
 				var index = (y * height * pixelWidth) + width;
@@ -1070,6 +1064,10 @@ var ppu = {
 				}
 				return [0,0];
 			},
+
+			tick : function() {
+
+			},
 		},
 
 
@@ -1127,14 +1125,12 @@ var ppu = {
 		},
 
 
-		tick : function() {
-			var x = ppu.cycle - 2;
+		renderPixel : function() {
+			var x = ppu.cycle - 1;
 			var y = ppu.scanline;
 
 			var result = this.sprites.getPixelByte();
-
 			var background = this.background.getPixelByte();
-
 			var sprite = result[1];
 
 			var i = result[0];
@@ -1157,10 +1153,10 @@ var ppu = {
 			} else if (b && !s) {
 				color = background;
 			} else {
-				if ((ppu.renderer.sprites.spriteIndexes[i] == 0) && (x < 255)) {
+				if ((this.sprites.spriteIndexes[i] == 0) && (x < 255)) {
 					ppu.registers.status.spritehit = 1;
 				}
-				if (ppu.renderer.sprites.spritePriorities[i] == 0) {
+				if (this.sprites.spritePriorities[i] == 0) {
 					color = sprite | 0x10;
 				} else {
 					color = background;
@@ -1175,28 +1171,85 @@ var ppu = {
 			this.buffer.setPixel(x, y, hex);
 		},
 
+		tick : function() {
 
+			var curCycle = ppu.cycle;
+
+			var preLine = ppu.scanline == 261;
+			var visibleLine = ppu.scanline < 240;
+			var renderLine = preLine || visibleLine;
+
+			var preCycle = curCycle >= 321 && curCycle <= 336;
+			var visibleCycle = curCycle >= 1 && curCycle <= 256;
+			var fetchCycle = preCycle || visibleCycle;
+
+			if (visibleLine && visibleCycle) {
+				this.renderPixel();
+			}
+			if (renderLine && fetchCycle) {
+				var transfer = (this.background.lowTileData >> 28) & 0xF;
+
+				this.background.lowTileData &= 0xFFFFFFF;
+				this.background.lowTileData <<= 4;
+				this.background.highTileData &= 0xFFFFFFF;
+				this.background.highTileData <<= 4;
+				this.background.highTileData |= transfer;
+
+				//log("AFTER LOW: "  + ppu.background.lowTileData.toString(2));
+				//log("AFTER HIGH: " + ppu.background.highTileData.toString(2));
+				//log("REAL AFTER: " + ppu.background.tileData.toString(2));
+				var remainder = curCycle % 8;
+				//log("Remainder " + remainder);
+
+				if (remainder == 2) {
+					this.background.fetchNameTableByte();
+				} else if (remainder == 3) {
+					this.background.fetchAttributeTableByte();
+				} else if (remainder == 5) {
+					this.background.fetchLowTileByte();
+				} else if (remainder == 7) {
+					this.background.fetchHighTyleByte();
+				} else if (remainder == 0) {
+					this.background.storeTileData();
+				}
+			}
+			if (curCycle == 257) {
+				if (visibleLine) {
+					this.sprites.storeSpriteData();
+				} else {
+					this.sprites.spriteCount = 0;
+				}
+			}
+
+			if (preLine && (curCycle >= 280) && (curCycle <= 304)) {
+				this.setY();
+			}
+			if (renderLine) {
+				if (fetchCycle && ((curCycle % 8) == 0)) {
+					this.incrementX();
+				}
+				if (ppu.cycle == 256) {
+					this.incrementY();
+				}
+				if (ppu.cycle == 257) {
+					this.setX();
+				}
+			}
+
+
+		}
 
 	},
 	
 	tick : function() {
-		
-		//Note: [0-261], 0-239 visible, 240 post, 241-260 vblank, 261 preLine
-		
-		var preLine = this.scanline == 261;
-		var visibleLine = this.scanline < 240;
-		var renderLine = preLine || visibleLine;
-		
-		var preCycle = this.cycle >= 321 && this.cycle <= 336;
-		var visibleCycle = this.cycle >= 1 && this.cycle <= 256;
-		var fetchCycle = preCycle || visibleCycle;
-		
-		var renderingEnabled  = ppu.registers.mask.showbg != 0 || ppu.registers.mask.showsprites != 0;
 
-		var cycle = this.cycle % 8;
+		//Note: [0-261], 0-239 visible, 240 post, 241-260 vblank, 261 preLine
+
+
+		var renderingEnabled = ppu.registers.mask.showbg != 0 || ppu.registers.mask.showsprites != 0;
 
 		//Trigger NMI
-		if (ppu.nmi.delay  > 0) {
+		if (ppu.nmi.delay > 0) {
 			ppu.nmi.delay--;
 			if (ppu.nmi.delay == 0 && ppu.nmi.output && ppu.nmi.occurred) {
 				cpu.interrupts.triggerNMI();
@@ -1206,12 +1259,12 @@ var ppu = {
 		//Update Cycle/Scanlines/Frame information
 		if (renderingEnabled &&
 			((ppu.vars.f == 1) && (ppu.scanline == 261) && (ppu.cycle == 340))) {
-				ppu.cycle = 0;
-				ppu.scanline = 0;
-				ppu.frame++;
+			ppu.cycle = 0;
+			ppu.scanline = 0;
+			ppu.frame++;
 
-				ppu.renderer.buffer.print();
-				ppu.vars.f ^= 1;
+			ppu.renderer.buffer.print();
+			ppu.vars.f ^= 1;
 
 		} else {
 			ppu.cycle++;
@@ -1227,84 +1280,20 @@ var ppu = {
 			}
 		}
 
-
-		//Print Pixel
-		if (renderingEnabled) {
-			if (visibleLine && visibleCycle) {
-				ppu.renderer.tick();
-			}
-		}
-
 		//Prepare Background Pixel
 		if (renderingEnabled) {
-			if (renderLine && fetchCycle) {
-				//log("BEFORE LOW: "  + ppu.background.lowTileData.toString(2));
-				//log("BEFORE HIGH: " + ppu.background.highTileData.toString(2));
-				//log("REAL BEFORE " + ppu.background.tileData.toString(2));s
-
-				var transfer = (ppu.renderer.background.lowTileData >> 28) & 0xF;
-
-                ppu.renderer.background.lowTileData &= 0xFFFFFFF;
-				ppu.renderer.background.lowTileData <<= 4;
-				ppu.renderer.background.highTileData &= 0xFFFFFFF;
-				ppu.renderer.background.highTileData <<= 4;
-				ppu.renderer.background.highTileData |= transfer;
-
-				//log("AFTER LOW: "  + ppu.background.lowTileData.toString(2));
-				//log("AFTER HIGH: " + ppu.background.highTileData.toString(2));
-				//log("REAL AFTER: " + ppu.background.tileData.toString(2));
-                var remainder = this.cycle % 8;
-				//log("Remainder " + remainder);
-
-				if (remainder == 2) {
-					ppu.renderer.background.fetchNameTableByte();
-				} else if (remainder == 3) {
-					ppu.renderer.background.fetchAttributeTableByte();
-				} else if (remainder == 5) {
-					ppu.renderer.background.fetchLowTileByte();
-				} else if (remainder == 7) {
-					ppu.renderer.background.fetchHighTyleByte();
-				} else if (remainder == 0) {
-					ppu.renderer.background.storeTileData();
-
-				}
-
-
-			}
-			if (preLine && (ppu.cycle >= 280) && (ppu.cycle <= 304)) {
-				ppu.renderer.setY();
-			}
-			if (renderLine) {
-				if (fetchCycle && ((ppu.cycle % 8) == 0)) {
-					ppu.renderer.incrementX();
-				}
-				if (ppu.cycle == 256) {
-					ppu.renderer.incrementY();
-				}
-				if (ppu.cycle == 257) {
-					ppu.renderer.setX();
-				}
-			}
+			ppu.renderer.tick();
 		}
 
-
-		if (renderingEnabled) {
-			if (ppu.cycle == 257) {
-				if (visibleLine) {
-					ppu.renderer.sprites.storeSpriteData();
-				} else {
-					ppu.renderer.sprites.spriteCount = 0;
-				}
+		if (ppu.cycle == 1) {
+			if (ppu.scanline == 241) {
+				ppu.nmi.setVerticalBlank();
 			}
-		}
-
-		if ((ppu.scanline == 241) && (ppu.cycle == 1)) {
-			ppu.nmi.setVerticalBlank();
-		}
-		if (preLine && ppu.cycle == 1) {
-			ppu.nmi.clearVerticalBlank();
-            ppu.registers.status.spriteoverflow = 0;
-			ppu.registers.status.spritehit = 0;
+			if (this.scanline == 261) {
+				ppu.nmi.clearVerticalBlank();
+				ppu.registers.status.spriteoverflow = 0;
+				ppu.registers.status.spritehit = 0;
+			}
 		}
 	},
 	
