@@ -421,42 +421,54 @@ var cpu = {
 				} else {
 					asdasdasdasdasd;
 				}
-			} else if (addr < 0x4000) {
-				log("WRITING TO PPU " + addr.toString(16));
-				return ppu.registers.readByte(addr);
-			} else if (addr < 0x4014) {
-				//TODO APU
-				log("READING TO APU " + addr.toString(16));
-				return 0x0;
-			} else if (addr == 0x4014) {
-				return ppu.registers.readByte(addr);
-			} else if (addr == 0x4015) {
-				//TODO APU
-				log("READING TO APU " + addr.toString(16));
-				return 0x0;
-			} else if (addr == 0x4016) {
-				//TODO Controller 1
-				var result = player1.readByte()
 
-				return result;
-			} else if (addr == 0x4017) {
-				//TODO Controller 2
-				return 0x0;
-			} else if (addr < 0x4020) {
-				//TODO APU
-				log("READING TO APU " + addr.toString(16));
-				return 0x0;
-			} else if (addr < 0x6000) {
-				return this.erom.readByte(addr);
+			} else if (addr < 0x4000) {
+
+				return ppu.registers.readByte(addr);
+
+			} else if (addr < 0x4021) {
+
+				if (addr < 0x4014) {
+					//TODO APU
+					return 0x0;
+				} else if (addr == 0x4014) {
+					return ppu.registers.readByte(addr);
+				} else if (addr == 0x4015) {
+					//TODO APU
+					return 0x0;
+				} else if (addr == 0x4016) {
+					return player1.readByte();
+				} else if (addr == 0x4017) {
+					//TODO Controller 2
+					return 0x0;
+				} else if (addr < 0x4020) {
+					//TODO APU
+					return 0x0;
+				} else {
+					return 0x0;
+				}
+
 			} else if (addr < 0x8000) {
-				return this.sram.readByte(addr);
+
+
+				if (addr < 0x6000) {
+					return this.erom.readByte(addr);
+				} else if (addr < 0x8000) {
+					return this.sram.readByte(addr);
+				} else {
+					asdasdasdasd;
+				}
+
 			} else if (addr < 0x10000) {
+
+
 				return this.prgrom.readByte(addr);
+
 			} else {
-				asdasdasdasd;
+
+				console.log(addr.toString(16));
+				asdasdasasdasd;
 			}
-			console.log(addr.toString(16));
-			asdasdasasdasd;
 		},
 
 		writeByte : function(addr, val) {
@@ -478,35 +490,41 @@ var cpu = {
 				} else {
 					asdasdasdasdasd;
 				}
+
 			} else if (addr < 0x4000) {
+
 				return ppu.registers.writeByte(addr, val);
-			} else if (addr < 0x4014) {
-				//TODO APU
-				log("WRITING TO APU " + addr.toString(16));
-				return 0x0;
-			} else if (addr == 0x4014) {
-				return ppu.registers.writeByte(addr, val);
-			} else if (addr == 0x4015) {
-				//TODO APU
-				log("WRITING TO APU " + addr.toString(16));
-				return 0x0;
-			} else if (addr == 0x4016) {
-				//TODO Controller
-				return player1.writeByte(val);
-			} else if (addr == 0x4017) {
-				//TODO Controller
-				log("WRITING TO CONTROLLER 2" + addr.toString(16));
-				return 0x0;
-			} else if (addr < 0x4020) {
-				//TODO APU
-				log("WRITING TO APU " + addr.toString(16));
-				return 0x0;
-			} else if (addr < 0x6000) {
-				this.erom.writeByte(addr, val);
-				return;
+
+			} else if (addr < 0x4021) {
+
+				if (addr < 0x4014) {
+					//TODO APU
+					return 0x0;
+				} else if (addr == 0x4014) {
+					return ppu.registers.writeByte(addr, val);
+				} else if (addr == 0x4015) {
+					//TODO APU
+					return 0x0;
+				} else if (addr == 0x4016) {
+					//TODO Controller
+					return player1.writeByte(val);
+				} else if (addr == 0x4017) {
+					//TODO Controller
+					return 0x0;
+				} else if (addr < 0x4020) {
+					//TODO APU
+					return 0x0;
+				} else {
+					return 0;
+				}
 			} else if (addr < 0x8000) {
-				this.sram.writeByte(addr, val);
-				return;
+				if (addr < 0x6000) {
+					this.erom.writeByte(addr, val);
+					return;
+				} else if (addr < 0x8000) {
+					this.sram.writeByte(addr, val);
+					return;
+				}
 			} else if (addr < 0x10000) {
 				//this.prgrom.writeByte(addr, val);
 				return;
@@ -595,6 +613,11 @@ var cpu = {
 	
 	tick : function() {
 
+		if (this.stall > 0) {
+			this.stall--;
+			return 1;
+		}
+
 		//Handle Interrupts first
 		this.interrupts.tick();
 
@@ -603,9 +626,6 @@ var cpu = {
 		var op = this.instructions.get(opcode);
 		var cycles = this.cycles;
 
-		debug.log(this.registers.pc.get().toString(16).toUpperCase() + " " + opcode.toString(16) + " " + op.name + "  A:" + cpu.registers.a.get().toString(16).toUpperCase() + " X:" + cpu.registers.x.get().toString(16).toUpperCase() + " Y:"
-			+ cpu.registers.y.get().toString(16).toUpperCase() + " P:" + cpu.registers.p.get().toString(16).toUpperCase() + " SP:" + cpu.registers.sp.get().toString(16).toUpperCase()
-			+ " CYC:" + ppu.cycle + " SL:" + ppu.scanline);
 
 		//Increment PC
 		var opaddr = this.registers.pc.get();
@@ -908,7 +928,6 @@ var cpu = {
 			},
 
 			and : function(info) {
-				log( cpu.registers.a.get().toString(16) + " & " + cpu.mmu.readByte(info.address).toString(16));
 				var temp = cpu.registers.a.get() & cpu.mmu.readByte(info.address);
 				cpu.registers.p.n = (temp>>7)&1;
 				cpu.registers.p.z = ((temp&0xFF) == 0)? 1:0;
@@ -1150,7 +1169,6 @@ var cpu = {
 			//Load Accumulator with m
 			lda: function(info) {
 				var temp = cpu.mmu.readByte(info.address);
-				log("LDA: " + temp.toString(16));
 				cpu.registers.p.n = (temp>>7)&1;
 				cpu.registers.p.z = ((temp&0xFF) == 0)? 1:0;
 
@@ -1221,7 +1239,6 @@ var cpu = {
 
 			pla : function(info) {
 				var temp = cpu.mmu.stack.popByte();
-				log("PLA " + temp.toString(16));
 				cpu.registers.p.n = (temp>>7)&1;
 				cpu.registers.p.z = ((temp&0xFF) == 0)? 1:0;
 

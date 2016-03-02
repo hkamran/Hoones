@@ -11,7 +11,7 @@ var ppu = {
 		pixelSize : 2,
 		spacer: 0,
 		height : 240,
-		width : 255,
+		width : 256,
 
 
 		colors:[
@@ -601,7 +601,6 @@ var ppu = {
 		oamaddr : {
 			
 			write : function(val) {
-				log("Setting OAM Addr " + val.toString(16));
 				ppu.mmu.oam.setAddr(val);
 			},
 			
@@ -615,7 +614,6 @@ var ppu = {
 		oamdata : {
 			
 			write : function(val) {
-				log("Writing to OAM " + val.toString(16) + ":" + ppu.mmu.oam.addr.toString(16));
 				ppu.mmu.oam.writeByte(val);
 			},
 			
@@ -639,7 +637,6 @@ var ppu = {
 					ppu.vars.t = (ppu.vars.t & 0xFC1F) | ((val >> 0xF8) << 2); 					
 					ppu.vars.w = 0;
 				}
-				log("SCROLL " + ppu.vars.w);
 			},
 			
 			read: function(val) {
@@ -656,10 +653,9 @@ var ppu = {
 				if (ppu.vars.w == 0) {
 
 					ppu.vars.t = (ppu.vars.t & 0x80FF) | ((val & 0x3F) << 8);
-					log("W=0 " + val.toString(16) + " " + ppu.vars.t.toString(16));
+
 					ppu.vars.w = 1;
 				} else {
-					log("W=1 " + val.toString(16) + " " + ((ppu.vars.t & 0xFF00) | val).toString(16) + " " + ppu.vars.t.toString(16));
 					ppu.vars.t = (ppu.vars.t & 0xFF00) | val;
 					ppu.vars.v = ppu.vars.t;
 
@@ -678,7 +674,6 @@ var ppu = {
 			buffer : 0x0,
 			
 			write : function(val) {
-				log("WRITING: " + val.toString(16) + " at " + ppu.vars.v.toString(16));
 				ppu.mmu.writeByte(ppu.vars.v, val);
 				
 				//Increment vram addr
@@ -690,7 +685,7 @@ var ppu = {
 			},
 			
 			read: function(val) {
-				log(ppu.vars.v);
+
 				var result;
 				
 				//Before palette
@@ -706,7 +701,7 @@ var ppu = {
 						this.buffer = ppu.mmu.readByte(ppu.vars.v);
 						result = this.buffer;	
 				}
-				log("READING 2007: " + result.toString(16) + " AT " + ppu.vars.v.toString(16));
+
 				//Increment vram addr
 				if (ppu.registers.cntrl.increment == 0) {
 					ppu.vars.v += 1;
@@ -723,7 +718,7 @@ var ppu = {
 		dma : {
 			write : function(val) {
 				var addr = val << 8;
-				log("DMA " + ppu.mmu.oam.addr.toString(16) + ":" + addr.toString(16));
+
 				//Copy from PROG
 				for (var i = 0; i < 256; i++) {
 					ppu.mmu.oam.writeByte(cpu.mmu.readByte(addr));
@@ -889,7 +884,7 @@ var ppu = {
 				var table = ppu.registers.cntrl.backgroundtable;
 				var tile = this.nameTableByte;
 				var address = (0x1000*table) + (tile*16) + fineY;
-				log("TILE " + address.toString(16));
+
 				return address;
 			},
 
@@ -921,7 +916,7 @@ var ppu = {
 				}
 				var shift = (((7 - ppu.vars.x))  * 4);
 				var result = this.fetchTileData() >>> shift;
-				log("X: " + ppu.vars.x + ":" + result.toString(2) + ":" + shift);
+
 				return result & 0xF;
 			}
 		},
@@ -1261,7 +1256,7 @@ var ppu = {
                 var remainder = this.cycle % 8;
 				//log("Remainder " + remainder);
 
-				if (remainder == 1) {
+				if (remainder == 2) {
 					ppu.renderer.background.fetchNameTableByte();
 				} else if (remainder == 3) {
 					ppu.renderer.background.fetchAttributeTableByte();
@@ -1271,6 +1266,7 @@ var ppu = {
 					ppu.renderer.background.fetchHighTyleByte();
 				} else if (remainder == 0) {
 					ppu.renderer.background.storeTileData();
+
 				}
 
 

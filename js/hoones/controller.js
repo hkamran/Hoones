@@ -21,7 +21,7 @@ var Controller = function() {
     return {
         readByte : function() {
             var result = data[index];
-            data[index] = 0;
+
 
             index++;
 
@@ -41,6 +41,18 @@ var Controller = function() {
             }
 
             data[keyIndex] = 1;
+        },
+
+        releaseKey : function(keyIndex) {
+            if (typeof keyIndex === 'undefined') {
+                return;
+            }
+
+            if (keyIndex > 7) {
+                return;
+            }
+
+            data[keyIndex] = 0;
         },
 
         writeByte : function(val) {
