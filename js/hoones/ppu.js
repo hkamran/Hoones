@@ -118,7 +118,7 @@ var ppu = {
 			var randomPixel = function() {
 				//return (Math.floor(Math.random() * (0xffffff - 0x000000) + 0x000000)).toString(16);
 				//return 0xffffff.toString(16);
-				return ppu.screen.rbgs[(Math.floor(Math.random() * (0) + 0))];
+				return ppu.screen.rbgs[(Math.floor(Math.random() * (64) + 0))];
 			};
 			for (var x = 0; x < this.width; x++) {
 				for (var y = 0; y < this.height; y++) {
@@ -807,7 +807,7 @@ var ppu = {
 
 				var screen = ppu.screen;
 				var pixelSize = screen.pixelSize;
-				var pixelWidth = (screen.pixelSize + screen.spacer);
+				var pixelWidth = (pixelSize + screen.spacer);
 				var height  = ((screen.width) * pixelWidth) * 4 ;
 				var width = (x * pixelWidth * 4);
 
@@ -816,17 +816,34 @@ var ppu = {
 				var startInter = pixelSize;
 				var heightSub = height - ((4 * startInter) + 4) + (pixelSize * pixelSize);
 
+				var cy = startInter;
+				var cx = startInter;
+				while (cy != 0) {
 
-				for (var cy = startInter; cy != 0; cy--) {
-					for (var cx = startInter; cx != 0; cx--) {
+					while (cx != 0) {
 						this.frame.data[index + 0] = color[0];
 						this.frame.data[index + 1] = color[1];
 						this.frame.data[index + 2] = color[2];
 						this.frame.data[index + 3] = 255;
 						index += 4;
+
+						cx--;
 					}
 					index += heightSub;
+					cx = startInter;
+					cy--;
 				}
+
+				//for (var cy = startInter; cy != 0; cy--) {
+				//	for (var cx = startInter; cx != 0; cx--) {
+				//		this.frame.data[index + 0] = color[0];
+				//		this.frame.data[index + 1] = color[1];
+				//		this.frame.data[index + 2] = color[2];
+				//		this.frame.data[index + 3] = 255;
+				//		index += 4;
+				//	}
+				//	index += heightSub;
+				//}
 
 			},
 
@@ -1252,7 +1269,7 @@ var ppu = {
 		if (ppu.nmi.delay > 0) {
 			ppu.nmi.delay--;
 			if (ppu.nmi.delay == 0 && ppu.nmi.output && ppu.nmi.occurred) {
-				cpu.interrupts.triggerNMI();
+				cpu.interrupts.setNMI();
 			}
 		}
 

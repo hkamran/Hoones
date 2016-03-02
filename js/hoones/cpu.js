@@ -580,7 +580,7 @@ var cpu = {
 		
 		tick : function() {
 			if (this.val == this.types.nmi) {
-				this._triggerNMI();
+				this.doNMI();
 			} else if (this.val == this.types.irq) {
 				if (this.registers.p.i == 0) {
 					this._triggerIRQ();
@@ -589,11 +589,11 @@ var cpu = {
 			this.val = this.types.none;
 		},
 
-		triggerNMI : function() {
+		setNMI : function() {
 			this.val = this.types.nmi;
 		},
 
-		_triggerNMI : function() {
+		doNMI : function() {
 			cpu.mmu.stack.pushWord(cpu.registers.pc.get());
 			cpu.instructions.ops.php({});
 			cpu.registers.pc.set(cpu.mmu.readWord(0xFFFA));
