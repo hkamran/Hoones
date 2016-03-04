@@ -2,11 +2,17 @@
 	<head>
 		<title>test</title>
 		<link href="./css/foundation.css" rel="stylesheet">
+		<link href="./css/foundation-icons.css" rel="stylesheet">
 		<style>
 			body {
-				background-color: #272825;
+				background-color: #222222;
 				-webkit-font-smoothing: none;
 
+			}
+
+			@font-face {
+				font-family: nes;
+				src: url('./fonts/NES-Logo.ttf');
 			}
 
 			li div, label {
@@ -26,6 +32,13 @@
 				color: #fff;
 				padding: 10px;
 				margin: 10px;
+
+			}
+
+			.logo {
+				font-family: nes;
+
+				font-size: 2em;
 
 			}
 
@@ -113,19 +126,27 @@
 	<body>
 
 
-	<div class="row " style="height: 100%; position: relative;">
-		<div class="small-6 large-6 columns pushy" style="top: 50%; left: 50%; top: 50%;transform: translate(-70%, -50%);
-		">
+
+		<div  style="width: auto; left: 50%; position: absolute;  top: 50%;  transform: translate(-50%,-50%); ">
+
+					<div style="width: auto; height: 40px;">
+						<div class="logo" style="float: left; color: #f6382b">HOONES.</div>
+
+						<div style="float: right; margin-top: 10px; background: #424242; padding: 4px; border-radius: 4px">
+							<a style="float: right; color: #D2D6D1; margin-left: 10px;" class="fi-plus large" onclick="doHigherRes()"></a>
+							<a style="float: right; color: #D2D6D1" class="fi-minus large" onclick="doSmallerRes()"></a>
+						</div>
+					</div>
 
 					<canvas id="screen" height="100" style="display: block; padding: 3px; border-radius: 4px 4px 4px 4px;
 
-					border: 2px solid #5c5d59;box-shadow: 0px 0px 25px 5px rgba(0,0,0,0.75); background: #000;"></canvas>
-			<div class="row " style="padding-left: 10px; margin-top: 20px; position: relative;">
-				<img style="float: left; margin: 5px;" src="http://www.retrogamingtimes.com/icons2/nescade.png" />
+					border: 2px solid #5c5d59;background: #000; box-shadow: 0px 0px 25px 5px rgba(0,0,0,0.75);"></canvas>
+			<div style="clear:both;">
+
 			</div>
 		</div>
 
-	</div>
+
 
 
 	<!--<div style=" position: fixed;-->
@@ -313,14 +334,7 @@
 		}());
 	</script>
 
-
 	<script>
-		var log = function(val) {
-			if (debug.output) {
-				console.log(val);
-			}
-		};
-
 		var canvas = document.getElementById('screen');;
 		canvas.tabIndex = 0;
 
@@ -380,6 +394,15 @@
 				player1.releaseKey(keys.select);
 			}
 		};
+	</script>
+
+	<script>
+		var log = function(val) {
+			if (debug.output) {
+				console.log(val);
+			}
+		};
+
 
 		$(document).ready(function() {
 			$('.menu-link').bigSlide(
@@ -389,6 +412,29 @@
 						push: '.pushy'
 					});
 		});
+
+		var doHigherRes = function() {
+			if (ppu.screen.pixelSize == 2) {
+				ppu.screen.spacer = 1;
+			} else {
+				ppu.screen.pixelSize++;
+				ppu.screen.pixelSize = Math.min(2, ppu.screen.pixelSize);
+			}
+
+			ppu.screen.reset();
+		};
+
+		var doSmallerRes = function() {
+			if (ppu.screen.pixelSize == 2 && ppu.screen.spacer != 0) {
+				ppu.screen.spacer = 0;
+				ppu.screen.reset();
+				return;
+			}
+
+			ppu.screen.pixelSize--;
+			ppu.screen.pixelSize = Math.max(1, ppu.screen.pixelSize);
+			ppu.screen.reset();
+		};
 	</script>
 	</body>
 </html>
