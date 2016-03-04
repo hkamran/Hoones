@@ -3,8 +3,22 @@ var ppu = {
 	cycle : 340,
 	scanline : 241,
 	frame : 0,
-		
-	//NTSC 
+
+    /**
+     * Represents the screen of the NES, and is responsible of its functions.
+     *
+     * Source:
+     *      http://wiki.nesdev.com/w/index.php/NTSC_video
+     *
+     * Notes:
+     *      Scanline Timings
+     *          Rendering           [000-239]
+     *          Post-Render         [240-241]
+     *          Post-Render blank   [242-244]
+     *          Vertical Sync       [245-247]
+     *          Pre-render blank    [248-261]
+     *
+     */
 	screen: {
 	
 		canvas : null,
@@ -12,7 +26,6 @@ var ppu = {
 		spacer: 0,
 		height : 240,
 		width : 256,
-
 
 		colors:[
 			"#666666", "#002A88", "#1412A7", "#3B00A4", "#5C007E", "#6E0040", "#6C0600", "#561D00",
@@ -100,7 +113,10 @@ var ppu = {
 
 		],
 
-		
+
+        /**
+         * Resets and clears the screen to the specified width/height.
+         */
 		reset : function() {
 			var c = document.getElementById('screen');	
 			c.width  = this.width * (this.pixelSize + this.spacer);
@@ -111,9 +127,10 @@ var ppu = {
 			ppu.renderer.buffer.reset();
 		},
 
-
-
-		clear : function() {
+        /**
+         * Clears the screen (Apply a static image)
+         */
+        clear : function() {
 			ppu.renderer.buffer.reset();
 			var randomPixel = function() {
 				//return (Math.floor(Math.random() * (0xffffff - 0x000000) + 0x000000)).toString(16);
@@ -129,7 +146,14 @@ var ppu = {
 			}
 			ppu.renderer.buffer.print();
 		},
-		
+
+        /**
+         * Given a input byte (0-64) which represents the index of the screen color palette.
+         * @param val
+         *          An input byte (0-64).
+         * @returns {*}
+         *          A list containing Red, Green, Blue (RGB) values.
+         */
 		getColorRBG : function(val) {
 			if (val > 0x40) {
 				console.log("ERROR COLOR " + val.toString(16));
@@ -143,6 +167,9 @@ var ppu = {
 			return result;
 		},
 
+        /**
+         * Used only for debugging
+         */
 		getColorHex : function(val) {
 			if (val > 0x40) {
 				console.log("ERROR COLOR " + val.toString(16));
@@ -155,7 +182,10 @@ var ppu = {
 			}
 			return result;
 		},
-		
+
+        /**
+         * Used only for debugging
+         */
 		setPixel : function(x, y, hex) {
 			var padHex = function(num) {
 				var color = num.toString(16);
@@ -182,19 +212,72 @@ var ppu = {
 		},
 	},
 
+    /**
+     * The memory unit for the PPU
+     *
+     * Source:
+     *      http://wiki.nesdev.com/w/index.php/PPU_memory_map
+     *
+     * Notes:
+     *      Address range 	Size 	Description
+     *      --------------------------------------------
+     *        $0000-$0FFF 	$1000 	Pattern table 0                 Sprites  (Holds Tiles)
+     *        $1000-$1FFF 	$1000 	Pattern Table 1                 Sprites  (Holds Tiles)
+     *        $2000-$23FF 	$0400 	Nametable 0                     Background (Holds mapping of Tiles/Palette Colors)
+     *        $2400-$27FF 	$0400 	Nametable 1                     Background (Holds mapping of Tiles/Palette Colors)
+     *        $2800-$2BFF 	$0400 	Nametable 2                     Background (Holds mapping of Tiles/Palette Colors)
+     *        $2C00-$2FFF 	$0400 	Nametable 3                     Background (Holds mapping of Tiles/Palette Colors)
+     *        $3000-$3EFF 	$0F00 	Mirrors of $2000-$2EFF
+     *        $3F00-$3F1F 	$0020 	Palette RAM indexes             Coloring Scheme for the game
+     *        $3F20-$3FFF 	$00E0 	Mirrors of $3F00-$3F1F
+     *
+     *       OAM Memory
+     *
+     *       Address range 	Size 	Description
+     *       ----------------------------------------------
+     *        $00-$0C (0 of 4) 	$40 	Sprite Y coordinate
+     *        $01-$0D (1 of 4) 	$40 	Sprite tile #
+     *        $02-$0E (2 of 4) 	$40 	Sprite attribute
+     *        $03-$0F (3 of 4) 	$40 	Sprite X coordinate
+     *
+     */
 	mmu : {
 
-		//-----------------
-		//Pattern 0x2000
-		//----------------
-		//Nametables 0x3F00
-		//----------------
-		//Patette 0x4000
-		//------------------
-
+        /**
+         * Implements the palette memory.
+         *
+         * Source:
+         *      http://wiki.nesdev.com/w/index.php/PPU_palettes
+         *
+         * Notes:
+         *
+         *        Address 	Purpose
+         *        $3F00 	Universal background color
+         *        $3F01-$3F03 	Background palette 0
+         *        $3F05-$3F07 	Background palette 1
+         *        $3F09-$3F0B 	Background palette 2
+         *        $3F0D-$3F0F 	Background palette 3
+         *        $3F11-$3F13 	Sprite palette 0
+         *        $3F15-$3F17 	Sprite palette 1
+         *        $3F19-$3F1B 	Sprite palette 2
+         *        $3F1D-$3F1F 	Sprite palette 3
+         *
+         * Summary:
+         *
+         *      Each palette has three colors. Each 16x16 pixel area of the background can use the backdrop
+         *      color and the three colors from one of the four background palettes.
+         *      The choice of palette for each 16x16 pixel area is controlled by bits in the attribute table
+         *      at the end of each nametable. Each sprite can use the three colors from one of the sprite palettes.
+         *
+         */
 		palette : {
 
-			//Background colours
+            /**
+             * Background Palette
+             *
+             * Note:
+             *      Size is 0xF, holds bytes.
+             */
 			image : {
 				data: [],
 
@@ -214,7 +297,12 @@ var ppu = {
 				},
 			},
 
-			//Sprite colours
+            /**
+             * Sprite Palette
+             *
+             * Note:
+             *      Size is 0xF, holds bytes.
+             */
 			sprite : {
 				data: [],
 
@@ -235,19 +323,38 @@ var ppu = {
 
 			},
 
+            /**
+             * Clears the palette.
+             */
 			reset : function() {
 				this.image.reset();
 				this.sprite.reset();
 			},
 
+            /**
+             * Write to the palette ram
+             *
+             * @param addr
+             *          Address to the ram.
+             * @param val
+             *          Byte value of the color selection.
+             */
 			writeByte : function(addr, val) {
 				addr = addr % 0x20;
 				if (addr > 0x10) {
-					return this.sprite.write(addr % 0x10, val % 0x40);
+                    this.sprite.write(addr % 0x10, val % 0x40);
 				}
-				return this.image.write(addr % 0x10, val % 0x40);
+                this.image.write(addr % 0x10, val % 0x40);
 			},
 
+            /**
+             * Read a byte from the palette ram.
+             *
+             * @param addr
+             *          Address to read from
+             * @returns {*}
+             *          Byte value of the color selection.
+             */
 			readByte : function(addr) {
 				addr = addr % 0x20;
 				if (addr > 0x10) {
@@ -257,6 +364,19 @@ var ppu = {
 			},
 		},
 
+        /**
+         * Implements the pattern ram of the ppu
+         *
+         * Source:
+         *      http://wiki.nesdev.com/w/index.php/PPU_pattern_tables
+         *
+         * Summary:
+         *      The Pattern table holds tiles, and each tile is 16 bytes long. A tile is contains two
+         *      planes (16 bytes / 2 is a plane) that when combine will determine if the pixel color
+         *      is transparent or the color selection in the palette (2 bits -> able to select 4 colors).
+         *      All sprite/image data are stores as 8x8 pixels which translate to 16 byte * 16 bytes tiles.
+         *
+         */
 		pattern : {
 			data : [],
 
@@ -290,6 +410,11 @@ var ppu = {
 
 		},
 
+        /**
+         * Implements the nametable ram of the PPU
+         *
+         *
+         */
 		nametables : {
 			table : 	[[],[],[],[]],
 			attribute : [[],[],[],[]],
