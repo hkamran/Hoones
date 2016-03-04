@@ -309,6 +309,8 @@ var ppu = {
 
 			readByte : function(addr) {
 
+				//TODO Implement Mirrors
+
 				if (addr > 0x3f00 || addr < 0x2000) {
 					console.log("error " + addr.toString(16));
 					asdasdasd.asdasdasdasd;
@@ -856,7 +858,6 @@ var ppu = {
 		background : {
 
 			attributeTableByte : 0x00,
-			nameTableAddr : 0x0,
 			nameTableByte : 0x00,
 
 			lowTileByte   : 0x0,
@@ -869,7 +870,6 @@ var ppu = {
 				var v = ppu.vars.v;
 				var address = 0x2000 | (v & 0x0FFF);
 
-				this.nameTableAddr = address;
 				this.nameTableByte = ppu.mmu.readByte(address);
 			},
 
@@ -880,23 +880,14 @@ var ppu = {
 				this.attributeTableByte = ((ppu.mmu.readByte(addr) >> shift) & 3) << 2;
 			},
 
-			fetchLowTileByte : function() {
-				var addr = this.fetchTileAddr();
-				this.lowTileByte  = ppu.mmu.readByte(addr);
-			},
-
-			fetchHighTyleByte : function() {
-				var addr = this.fetchTileAddr() + 8;
-				this.highTileByte = ppu.mmu.readByte(addr);
-			},
-
-			fetchTileAddr : function() {
+			fetchTileByte : function() {
 				var fineY = (ppu.vars.v >> 12) & 7;
 				var table = ppu.registers.cntrl.backgroundtable;
 				var tile = this.nameTableByte;
-				var address = (0x1000*table) + (tile*16) + fineY;
+				var addr = (0x1000*table) + (tile*16) + fineY;
 
-				return address;
+				this.lowTileByte  = ppu.mmu.readByte(addr);
+				this.highTileByte = ppu.mmu.readByte(addr + 8);
 			},
 
 			storeTileData : function() {
@@ -917,16 +908,12 @@ var ppu = {
 				this.lowTileData |= data;
 			},
 
-			fetchTileData : function() {
-				return this.highTileData;
-			},
-
 			getPixelByte: function() {
 				if (ppu.registers.mask.showbg == 0) {
 					return 0x0;
 				}
 				var shift = (((7 - ppu.vars.x))  * 4);
-				var result = this.fetchTileData() >>> shift;
+				var result = this.highTileData >>> shift;
 
 				return result & 0xF;
 			}
@@ -934,11 +921,11 @@ var ppu = {
 
 		sprites : {
 
-			spriteCount : 0x0,
-			spritePatterns: [],
-			spritePositions: [],
-			spritePriorities: [],
-			spriteIndexes: [],
+			count : 0x0,
+			patterns: [],
+			positions: [],
+			priorities: [],
+			indexes: [],
 
 			// OAM 4 Bytes per sprite
 			//-------------------------------------------------------------------
@@ -1046,10 +1033,10 @@ var ppu = {
 						continue;
 					}
 					if (count < 8) {
-						this.spritePatterns[count] = this.fetchSpriteData(i, row);
-						this.spritePositions[count] = xpos;
-						this.spritePriorities[count] = ((attr >> 5) & 1);
-						this.spriteIndexes[count] = i;
+						this.patterns[count] = this.fetchSpriteData(i, row);
+						this.positions[count] = xpos;
+						this.priorities[count] = ((attr >> 5) & 1);
+						this.indexes[count] = i;
 					}
 					count++;
 				}
@@ -1057,20 +1044,20 @@ var ppu = {
 					count = 8;
 					ppu.registers.status.spriteoverflow = 1;
 				}
-				this.spriteCount = count;
+				this.count = count;
 			},
 
 			getPixelByte : function() {
 				if (ppu.registers.mask.showsprites == 0) {
 					return [0,0];
 				}
-				for (var i = 0; i < this.spriteCount; i++) {
-					var offset = (ppu.cycle - 1) - this.spritePositions[i];
+				for (var i = 0; i < this.count; i++) {
+					var offset = (ppu.cycle - 1) - this.positions[i];
 					if (offset < 0 || offset > 7) {
 						continue;
 					}
 					offset = 7 - offset;
-					var color = (this.spritePatterns[i] >>> (offset * 4)) & 0xFF;
+					var color = (this.patterns[i] >>> (offset * 4)) & 0xFF;
 					//console.log(this.spritePatterns[i].toString(16)  + " FETCH " + this.spritePatterns[i].toString(2) + ":" + (offset * 4)
 					//	+ ":OFFSET" + offset + ":" + (color % 4 == 0) + ":" + color.toString(16));
 					if ((color % 4) == 0) {
@@ -1082,9 +1069,7 @@ var ppu = {
 				return [0,0];
 			},
 
-			tick : function() {
 
-			},
 		},
 
 
@@ -1170,10 +1155,10 @@ var ppu = {
 			} else if (b && !s) {
 				color = background;
 			} else {
-				if ((this.sprites.spriteIndexes[i] == 0) && (x < 255)) {
+				if ((this.sprites.indexes[i] == 0) && (x < 255)) {
 					ppu.registers.status.spritehit = 1;
 				}
-				if (this.sprites.spritePriorities[i] == 0) {
+				if (this.sprites.priorities[i] == 0) {
 					color = sprite | 0x10;
 				} else {
 					color = background;
@@ -1218,15 +1203,11 @@ var ppu = {
 				var remainder = curCycle % 8;
 				//log("Remainder " + remainder);
 
-				if (remainder == 2) {
+				if (remainder == 0) {
 					this.background.fetchNameTableByte();
-				} else if (remainder == 3) {
 					this.background.fetchAttributeTableByte();
-				} else if (remainder == 5) {
-					this.background.fetchLowTileByte();
-				} else if (remainder == 7) {
-					this.background.fetchHighTyleByte();
-				} else if (remainder == 0) {
+					this.background.fetchTileByte();
+
 					this.background.storeTileData();
 				}
 			}
@@ -1260,53 +1241,53 @@ var ppu = {
 	
 	tick : function() {
 
-		//Note: [0-261], 0-239 visible, 240 post, 241-260 vblank, 261 preLine
-
-
 		var renderingEnabled = ppu.registers.mask.showbg != 0 || ppu.registers.mask.showsprites != 0;
+		var cycle = this.cycle;
+		var scanline = this.scanline;
+		var nmi = ppu.nmi;
 
 		//Trigger NMI
-		if (ppu.nmi.delay > 0) {
-			ppu.nmi.delay--;
-			if (ppu.nmi.delay == 0 && ppu.nmi.output && ppu.nmi.occurred) {
+		if (nmi.delay > 0) {
+			nmi.delay--;
+			if (nmi.delay == 0 && nmi.output && nmi.occurred) {
 				cpu.interrupts.setNMI();
 			}
 		}
 
 		//Update Cycle/Scanlines/Frame information
 		if (renderingEnabled &&
-			((ppu.vars.f == 1) && (ppu.scanline == 261) && (ppu.cycle == 340))) {
-			ppu.cycle = 0;
-			ppu.scanline = 0;
-			ppu.frame++;
+			((ppu.vars.f == 1) && (scanline == 261) && (cycle == 340))) {
+			this.cycle = 0;
+			this.scanline = 0;
+			this.frame++;
 
-			ppu.renderer.buffer.print();
-			ppu.vars.f ^= 1;
+			this.renderer.buffer.print();
+			this.vars.f ^= 1;
 
 		} else {
-			ppu.cycle++;
-			if (ppu.cycle > 340) {
-				ppu.cycle = 0;
-				ppu.scanline++;
-				if (ppu.scanline > 261) {
-					ppu.scanline = 0;
-					ppu.renderer.buffer.print();
-					ppu.frame++;
-					ppu.vars.f ^= 1;
+			this.cycle++;
+			if (cycle > 340) {
+				this.cycle = 0;
+				this.scanline++;
+				if (scanline > 261) {
+					this.scanline = 0;
+					this.renderer.buffer.print();
+					this.frame++;
+					this.vars.f ^= 1;
 				}
 			}
 		}
 
-		//Prepare Background Pixel
+		//Renderer Cycle
 		if (renderingEnabled) {
-			ppu.renderer.tick();
+			this.renderer.tick();
 		}
 
-		if (ppu.cycle == 1) {
-			if (ppu.scanline == 241) {
-				ppu.nmi.setVerticalBlank();
+		if (cycle == 1) {
+			if (scanline == 241) {
+				this.nmi.setVerticalBlank();
 			}
-			if (this.scanline == 261) {
+			if (scanline == 261) {
 				ppu.nmi.clearVerticalBlank();
 				ppu.registers.status.spriteoverflow = 0;
 				ppu.registers.status.spritehit = 0;
@@ -1315,12 +1296,10 @@ var ppu = {
 	},
 	
 	tickFor : function(cycles) {
-		var start = 0;
-		var end = cycles;
-
-		for (var i = 0; i <= end; i++) {
+		var i = cycles;
+		while (i != 0) {
 			this.tick();
-
+			i--;
 		}
 	},
 }
