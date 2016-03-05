@@ -1,3 +1,9 @@
+/**
+ * This object handles and represents the catridge of the NES.
+ * Its responsibilities is to handle reading the byte data of the roms.
+ *
+ * Created by Hooman Kamran on 1/01/2016.
+ */
 var cartridge = {
         rawrom : '',
 

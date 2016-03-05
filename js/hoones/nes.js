@@ -1,7 +1,9 @@
 /**
- * Created by HK on 1/26/2016.
+ * This object handles and represents the the NES.
+ * Its responsibilities is to handle CPU and the PPU of the NES.
+ *
+ * Created by Hooman Kamran on 1/01/2016.
  */
-
 var nes = {
 
     interval : 1000 / 60, //FPS

@@ -1,8 +1,13 @@
+/**
+ * This object handles and represents the CPU (central processing unit).
+ * Its responsibilities is to handle all the calculations done in the NES.
+ *
+ * Created by Hooman Kamran on 1/01/2016.
+ */
 var cpu = {
 
 	cycles : 0,
 	ticks : 0,
-	stall : 0,
 	op : null,
 	log : "",
 
@@ -613,11 +618,6 @@ var cpu = {
 	
 	tick : function() {
 
-		if (this.stall > 0) {
-			this.stall--;
-			return 1;
-		}
-
 		//Handle Interrupts first
 		this.interrupts.tick();
 
@@ -625,7 +625,6 @@ var cpu = {
 		var opcode = this.mmu.readByte(this.registers.pc.get());
 		var op = this.instructions.get(opcode);
 		var cycles = this.cycles;
-
 
 		//Increment PC
 		var opaddr = this.registers.pc.get();
@@ -642,7 +641,7 @@ var cpu = {
 			this.cycles += op.cross;
 		}
 		
-		//Execute operation
+		//Prepare argument
 		var info = {
 			address : addr,
 			pc : this.registers.pc.get(),
@@ -651,6 +650,7 @@ var cpu = {
 		};
 		this.op = info;
 
+		//Execute operation
 		op.func(info);
 		
 		//Update cpu information

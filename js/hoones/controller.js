@@ -1,5 +1,8 @@
 /**
- * Created by hkamran on 2/26/2016.
+ * This object handles and represents the controller of the NES.
+ * Its responsibilities is to ensure the player key presses are send to the NES.
+ *
+ * Created by Hooman Kamran on 1/01/2016.
  */
 var Controller = function() {
 
@@ -21,8 +24,6 @@ var Controller = function() {
     return {
         readByte : function() {
             var result = data[index];
-
-
             index++;
 
             if (index >= 7) {
