@@ -1148,24 +1148,42 @@ var ppu = {
 			attributeTableByte : 0x00,
 			nameTableByte : 0x00,
 
+			tileAddr : 0x0,
+
 			lowTileByte   : 0x0,
 			highTileByte  : 0x0,
 
 			lowTileData : 0x0, 				//16-bit shift register 1
 			highTileData : 0x0,				//16-bit shift register 2
 
-
 			/**
-			 * Save the tile byte stored in the name table.
+			 * Save the low/high tile bytes
 			 *
 			 * Source:
-			 * 		http://wiki.nesdev.com/w/index.php/PPU_scrolling#Tile_and_attribute_fetching
+			 * 		http://wiki.nesdev.com/w/index.php/PPU_pattern_tables#Addressing
 			 */
-			storeNameTableByte : function() {
-				var v = ppu.vars.v;
-				var address = 0x2000 | (v & 0x0FFF);
+			fetchTileAddr : function() {
+				var fineY = (ppu.vars.v >> 12) & 7;
+				var table = ppu.registers.cntrl.backgroundtable;
+				var tile = this.nameTableByte;
+				var addr = (0x1000*table) + (tile*16) + fineY;
 
-				this.nameTableByte = ppu.mmu.readByte(address);
+				this.tileAddr = addr;
+			},
+
+			/**
+			 * Fetch the low tile byte of the bitmap.
+			 *
+             */
+			fetchLowTileByte : function() {
+				this.lowTileByte  = ppu.mmu.readByte(this.tileAddr);
+			},
+
+			/**
+			 * Fetch the high tile byte of the bitmap.
+			 */
+			fetchHighTileByte : function() {
+				this.highTileByte = ppu.mmu.readByte(this.tileAddr + 8);
 			},
 
 			/**
@@ -1174,7 +1192,7 @@ var ppu = {
 			 * Source:
 			 * 		http://wiki.nesdev.com/w/index.php/PPU_attribute_tables
 			 */
-			storeAttributeTableByte : function() {
+			fetchAttributeTableByte : function() {
 				var v = ppu.vars.v;
 				var addr = 0x23C0 | (v & 0x0C00) | ((v >> 4) & 0x38) | ((v >> 2) & 0x07);
 				var shift = ((v >> 4) & 4) | (v & 2);
@@ -1182,19 +1200,16 @@ var ppu = {
 			},
 
 			/**
-			 * Save the low/high tile bytes
+			 * Save the tile byte stored in the name table.
 			 *
 			 * Source:
-			 * 		http://wiki.nesdev.com/w/index.php/PPU_pattern_tables#Addressing
+			 * 		http://wiki.nesdev.com/w/index.php/PPU_scrolling#Tile_and_attribute_fetching
 			 */
-			storeTileByte : function() {
-				var fineY = (ppu.vars.v >> 12) & 7;
-				var table = ppu.registers.cntrl.backgroundtable;
-				var tile = this.nameTableByte;
-				var addr = (0x1000*table) + (tile*16) + fineY;
+			fetchNameTableByte : function() {
+				var v = ppu.vars.v;
+				var address = 0x2000 | (v & 0x0FFF);
 
-				this.lowTileByte  = ppu.mmu.readByte(addr);
-				this.highTileByte = ppu.mmu.readByte(addr + 8);
+				this.nameTableByte = ppu.mmu.readByte(address);
 			},
 
 			/**
@@ -1243,35 +1258,36 @@ var ppu = {
 		/**
 		 * Sprite rendering logic.
 		 *
-		 * 
+		 * Source:
+		 *		http://wiki.nesdev.com/w/index.php/PPU_sprite_evaluation
+		 *
+		 * Function:
+		 * 		Maintain a list of 8 sprites to draw. First, we read through the OAM checking
+		 * 		which sprites to be drawn on the scanline (up to 8 sprites). If there are more than
+		 * 		8 sprites to be rendered then set the sprite overflow flag. To determine if a sprite is
+		 * 		going to be displayed check if the y row of the sprite is within the 8/16 pixel height range.
+		 * 		During printing, we grab a pixel from the background and a pixel the sprite and determine by priority
+		 * 		which one to display.
+		 *
 		 */
 		sprites : {
 
 			count : 0x0,
-			patterns: [],
-			positions: [],
-			priorities: [],
-			indexes: [],
+			patterns: [],			//Holds the bitmap of the sprites
+			positions: [],			//Holds the position of the sprites
+			priorities: [],			//Holds the priorities of the sprites
+			indexes: [],			//Holds the indexes of each sprite
 
-			// OAM 4 Bytes per sprite
-			//-------------------------------------------------------------------
-			// +-Byte 0 - Y Positions of top of sprite (delay by 1 scanline)
-			// +-Byte 1 - Tile Index Number
-			// |
-			// |  $00: $0000-$001F
-			// |  $01: $1000-$101F
-			// |  $02: $0020-$003F
-			// |  $03: $1020-$103F
-			// |  $04: $0040-$005F
-			// |	   [...]
-			// +-Byte 2 - Attribute
-			// |  76543210
-			// |  ||||||||
-			// |  |||||||+- Bank ($0000 or $1000) of tiles
-			// |  +++++++-- Tile number of top of sprite (0 to 254; bottom half gets the next tile)
-			// |
-			// +-Byte 3 - X position of the left side of sprite
-
+			/**
+			 * Return the tile address of a sprite.
+			 *
+			 * @param spriteIndex
+			 * 			The index of the sprite to grab the bitmap sliver from
+			 * @param row
+			 * 			The specific row in the bitmap to grab
+             * @returns {*}
+			 * 			An address (word) that points to the specified row of a sprite.
+             */
 			fetchTileAddr : function(spriteIndex, row) {
 				var table = ppu.registers.cntrl.spritetable;
 				var attr = ppu.mmu.oam.getAttr(spriteIndex);
@@ -1297,19 +1313,52 @@ var ppu = {
 				return addr;
 			},
 
-
+			/**
+			 * Return the low tile byte of the sprite bitmap.
+			 *
+			 * @param addr
+			 * 			The address pointing to the low byte of the tile.
+             * @returns {*}
+			 * 			A byte of the tile
+             */
 			fetchLowTileByte : function(addr) {
 				return ppu.mmu.readByte(addr);
 			},
 
+			/**
+			 * Return the high tile byte of the sprite bitmap.
+			 *
+			 * @param addr
+			 * 			The address pointing to the high byte of the tile.
+             * @returns {*}
+			 * 			A byte of the tile
+             */
 			fetchHighTileByte : function(addr) {
 				return ppu.mmu.readByte(addr + 8);
 			},
 
+			/**
+			 * Return the attribute byte of the sprite
+			 *
+			 * @param spriteIndex
+			 * 			The index of the sprite to get the attribute byte from
+             * @returns {*}
+			 * 			A byte that is the attribute value of the sprite
+             */
 			fetchAttributeByte : function(spriteIndex) {
 				return ppu.mmu.oam.getAttr(spriteIndex);
 			},
 
+			/**
+			 * Return the sprite bitmap data from combining the low/high and attribute byte.
+			 *
+			 * @param spriteIndex
+			 * 			The index of the sprite to get data from.
+			 * @param row
+			 * 			The row of the sprite to get from
+             * @returns {number}
+			 * 		a 32 bit data where each 4 bit value represents a pixel's color palette.
+             */
 			fetchSpriteData : function(spriteIndex, row) {
 				var tile = this.fetchTileAddr(spriteIndex, row)
 				var lowTileByte = this.fetchLowTileByte(tile);
@@ -1341,6 +1390,9 @@ var ppu = {
 				return data;
 			},
 
+			/**
+			 * Store the sprite data
+			 */
 			storeSpriteData : function() {
 				var height = 0;
 				if (ppu.registers.cntrl.spritesize == 0) {
@@ -1373,6 +1425,14 @@ var ppu = {
 				this.count = count;
 			},
 
+			/**
+			 * Return the pixel byte thats going to be displayed.
+			 * We determine which sprite to display by iterating through the 8 sprites
+			 * if the bottom 2 bits of the byte is zero then we ignore the pixel.
+			 *
+			 * @returns {*}
+			 * 		a byte that represents the palette selection.
+             */
 			getPixelByte : function() {
 				if (ppu.registers.mask.showsprites == 0) {
 					return [0,0];
@@ -1384,8 +1444,6 @@ var ppu = {
 					}
 					offset = 7 - offset;
 					var color = (this.patterns[i] >>> (offset * 4)) & 0xFF;
-					//console.log(this.spritePatterns[i].toString(16)  + " FETCH " + this.spritePatterns[i].toString(2) + ":" + (offset * 4)
-					//	+ ":OFFSET" + offset + ":" + (color % 4 == 0) + ":" + color.toString(16));
 					if ((color % 4) == 0) {
 						continue;
 					}
@@ -1405,7 +1463,12 @@ var ppu = {
 		// ||| ++-------------- nametable select
 		// +++----------------- fine Y scroll
 
-		//Increment coarse X scroll
+		/**
+		 * Increment the X scroll position.
+		 *
+		 * Source:
+		 * 		http://wiki.nesdev.com/w/index.php/PPU_scrolling#Coarse_X_increment
+		 */
 		incrementX :  function() {
 			if ((ppu.vars.v & 0x001F) == 31) {
 				ppu.vars.v &= 0xFFE0; //Set X=0
@@ -1415,7 +1478,12 @@ var ppu = {
 			}
 		},
 
-		//Increment fine Y scroll
+		/**
+		 * Increment the Y scroll position.
+		 *
+		 * Source:
+		 * 		wiki.nesdev.com/w/index.php/PPU_scrolling#Y_increment
+		 */
 		incrementY : function() {
 			if ((ppu.vars.v & 0x7000) != 0x7000) {
 				ppu.vars.v += 0x1000;
@@ -1440,17 +1508,24 @@ var ppu = {
 			}
 		},
 
-		//Copy T to V (X pos)
+		/**
+		 * Copy T to V (X pos)
+		 */
 		setX : function() {
 			ppu.vars.v = (ppu.vars.v & 0xFBE0) | (ppu.vars.t & 0x041F);
 		},
 
-		//Copy T to V (Y pos)
+		/**
+		 * Copy T to V (Y pos)
+		 */
 		setY : function() {
 			ppu.vars.v = (ppu.vars.v & 0x841F) | (ppu.vars.t & 0x7BE0);
 		},
 
-
+		/**
+		 * Prints a single pixel to the frame buffer.
+		 *
+		 */
 		renderPixel : function() {
 			var x = ppu.cycle - 1;
 			var y = ppu.scanline;
@@ -1461,24 +1536,20 @@ var ppu = {
 
 			var i = result[0];
 
-
-			if (x < 8 && ppu.registers.mask.showbg == 0) {
-				background = 0;
-			}
-			if (x < 8 && ppu.registers.mask.showspleft == 0) {
-				sprite = 0;
+			if (x < 8) {
+				if (ppu.registers.mask.showbg == 0) {
+					background = 0;
+				}
+				if (ppu.registers.mask.showspleft == 0) {
+					sprite = 0;
+				}
 			}
 
 			var b = background % 4 != 0;
 			var s = sprite % 4 != 0;
-			var color;
-			if (!b && !s) {
-				color = 0;
-			} else if (!b && s) {
-				color = sprite | 0x10;
-			} else if (b && !s) {
-				color = background;
-			} else {
+
+			var color = 0;
+			if (b && s) {
 				if ((this.sprites.indexes[i] == 0) && (x < 255)) {
 					ppu.registers.status.spritehit = 1;
 				}
@@ -1487,16 +1558,25 @@ var ppu = {
 				} else {
 					color = background;
 				}
+			} else if (!b && s) {
+				color = sprite | 0x10;
+			} else if (b && !s) {
+				color = background;
 			}
 
 			var palette = ppu.mmu.palette.readByte(color);
-
 			//var hex = ppu.screen.getColorHex(palette & 0xFF);
 			//ppu.screen.setPixel(x, y, hex)
 			var hex = ppu.screen.getColorRBG(palette & 0xFF);
 			this.buffer.setPixel(x, y, hex);
 		},
 
+		/**
+		 * Execute a single rendering step of the PPU
+		 *
+		 * Source:
+		 * 		http://wiki.nesdev.com/w/index.php/PPU_rendering
+		 */
 		tick : function() {
 
 			var curCycle = ppu.cycle;
@@ -1512,6 +1592,7 @@ var ppu = {
 			if (visibleLine && visibleCycle) {
 				this.renderPixel();
 			}
+
 			if (renderLine && fetchCycle) {
 				var transfer = (this.background.lowTileData >> 28) & 0xF;
 
@@ -1528,9 +1609,11 @@ var ppu = {
 				//log("Remainder " + remainder);
 
 				if (remainder == 0) {
-					this.background.storeNameTableByte();
-					this.background.storeAttributeTableByte();
-					this.background.storeTileByte();
+					this.background.fetchNameTableByte();
+					this.background.fetchAttributeTableByte();
+					this.background.fetchTileAddr();
+					this.background.fetchLowTileByte();
+					this.background.fetchHighTileByte();
 					this.background.storeTileData();
 				}
 			}
@@ -1562,8 +1645,10 @@ var ppu = {
 
 	},
 
+	/**
+	 * Executes a single PPU step.
+	 */
 	tick : function() {
-
 		var renderingEnabled = ppu.registers.mask.showbg != 0 || ppu.registers.mask.showsprites != 0;
 		var cycle = this.cycle;
 		var scanline = this.scanline;
