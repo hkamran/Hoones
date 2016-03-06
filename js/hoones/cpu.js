@@ -12,8 +12,7 @@ var cpu = {
 	log : "",
 
 	setCartidge : function(cartridge) {
-		this.mmu.prgrom.setLowerBank(cartridge.prgrom.getLowerBank());
-		this.mmu.prgrom.setUpperBank(cartridge.prgrom.getUpperBank());
+		this.mmu.prgrom.mapper = cartridge.mapper.prgs;
 	},
 
 	registers : {
@@ -364,32 +363,14 @@ var cpu = {
 
 		//Game Code
 		prgrom : {
-			bank : [[], []],
-
-			setLowerBank : function(val) {
-				this.bank[0] = val;
-			},
-
-			setUpperBank : function(val) {
-				this.bank[1] = val;
-			},
+			mapper : {},
 
 			readByte : function(addr) {
 				if (addr < 0x8000 || addr >= 0x10000) {
 					asdasdasda
 				}
 
-				addr -= 0x8000;
-				var offset = addr % 0x4000;
-
-				var bank;
-				if (addr < 0x4000) {
-					bank = this.bank[0];
-				} else {
-					bank = this.bank[1];
-				}
-
-				return bank.charCodeAt(offset);
+				return this.mapper.readByte(addr);
 			},
 
 			writeByte : function(addr, val) {
@@ -397,14 +378,7 @@ var cpu = {
 					asdasdasda
 				}
 
-				addr -= 0x8000;
-				var offset = addr % 0x4000;
-
-				if (addr < 0x4000) {
-					this.bank[0][offset] = val;
-				} else {
-					this.bank[1][offset] = val;
-				}
+				return this.mapper.writeByte(addr, val);
 			},
 		},
 
@@ -531,7 +505,7 @@ var cpu = {
 					return;
 				}
 			} else if (addr < 0x10000) {
-				//this.prgrom.writeByte(addr, val);
+				this.prgrom.writeByte(addr, val);
 				return;
 			} else {
 				console.log("ERROR: " + addr.toString(16) + ":" + val.toString(16));

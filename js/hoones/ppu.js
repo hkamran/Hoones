@@ -9,6 +9,7 @@ var ppu = {
 	cycle : 340,
 	scanline : 241,
 	frame : 0,
+	cartridge : {},
 
 	/**
 	 * Represents the screen of the NES, and is responsible of its functions.
@@ -385,7 +386,7 @@ var ppu = {
 		 *
 		 */
 		pattern : {
-			data : [],
+			mapper : {},
 
 			set : function(val) {
 				this.data = val;
@@ -393,17 +394,11 @@ var ppu = {
 
 			readByte : function(addr) {
 				if (addr >= 0x2000) {
-					console.log("Error " + addr.toString(16));
 					asdadasdsad.asdasdsa;
 					return 0x0;
 				}
 
-				var result = this.data.charCodeAt(addr);
-				if (typeof result === 'undefined') {
-					result = 0x0;
-				}
-
-				return result;
+				return this.mapper.readByte(addr);
 			},
 
 			writeByte : function(addr, val) {
@@ -412,7 +407,7 @@ var ppu = {
 					return;
 				}
 
-				this.data[addr] = String.fromCharCode(val);
+				this.mapper.writeByte(addr, val);
 			},
 
 		},
@@ -466,7 +461,7 @@ var ppu = {
 		nametables : {
 			table : 	[[],[],[],[]],
 			attribute : [[],[],[],[]],
-			mirror : [0, 0, 0, 0],
+			mirror : {},
 
 			reset : function() {
 				for (var i = 0; i < 4; i++) {
@@ -475,12 +470,7 @@ var ppu = {
 				}
 			},
 
-			setMirrorType : function(val) {
-				this.mirror = val;
-			},
-
 			readByte : function(addr) {
-
 				//TODO Implement Mirrors
 
 				if (addr > 0x3f00 || addr < 0x2000) {
@@ -490,7 +480,7 @@ var ppu = {
 
 				addr = ((addr - 0x2000) % 0x1000); //Mimic mirrors from 0x3000 to 0x3f00
 
-				var index = Math.floor(addr / 0x400); //Segment
+				var index = this.mirror.indexes[Math.floor(addr / 0x400)]; //Segment
 				var offset = addr % 0x400; //offset inside the segment
 
 				var result;
@@ -503,6 +493,7 @@ var ppu = {
 				}
 
 				if(typeof result === 'undefined') {
+
 					result = 0x0;
 				}
 				return result;
@@ -516,7 +507,7 @@ var ppu = {
 				}
 
 				var addr = ((addr - 0x2000) % 0x1000); //Mimic mirrors from 0x3000 to 0x3f00
-				var index = Math.floor(addr / 0x400); //Segment
+				var index = this.mirror.indexes[Math.floor(addr / 0x400)]; //Segment
 				var offset = addr % 0x400; //offset inside the segment
 
 
@@ -647,8 +638,9 @@ var ppu = {
 	},
 
 	setCartidge : function(cartridge) {
-		this.mmu.nametables.setMirrorType(cartridge.mirroring.getType());
-		this.mmu.pattern.set(cartridge.chrrom.getBank());
+		//this.mmu.nametables.setMirrorType(cartridge.mirroring.getType());
+		this.mmu.pattern.mapper = cartridge.mapper.chrs;
+		this.mmu.nametables.mirror = cartridge.mapper.prgs.mirror;
 	},
 
 	reset : function () {
@@ -815,10 +807,6 @@ var ppu = {
 					result |= 1 << 7;
 				}
 
-				//Clear NMI
-				if (debug.output && ppu.nmi.occurred) {
-					console.log("WEREWR");
-				}
 				ppu.nmi.occurred = false;
 				ppu.nmi.change();
 
@@ -1305,6 +1293,7 @@ var ppu = {
 					table = tile & 1;
 					tile &= 0xFE;
 					if (row > 7) {
+						tile++;
 						row -= 8;
 					}
 				}
@@ -1361,21 +1350,23 @@ var ppu = {
              */
 			fetchSpriteData : function(spriteIndex, row) {
 				var tile = this.fetchTileAddr(spriteIndex, row)
+				//console.log("TILE ADDR " + tile.toString(16));
 				var lowTileByte = this.fetchLowTileByte(tile);
 				var highTileByte = this.fetchHighTileByte(tile);
 				var attr = this.fetchAttributeByte(spriteIndex);
 
 				var a = (attr & 3) << 2;
+				var flagged = (attr & 0x40) == 0x40;
 
 				var data = 0;
 				for (var i = 0; i < 8; i++) {
 					var p1;
 					var p2;
-					if ((attr & 0x40) == 0x40) {
+					if (flagged) {
 						p1 = (lowTileByte & 1) << 0;
 						p2 = (highTileByte & 1) << 1;
-						lowTileByte >>= 1;
-						highTileByte >>= 1;
+						lowTileByte >>>= 1;
+						highTileByte >>>= 1;
 					} else {
 						p1 = (lowTileByte & 0x80) >> 7;
 						p2 = (highTileByte & 0x80) >> 6;
@@ -1401,13 +1392,15 @@ var ppu = {
 					height = 16;
 				}
 				var count = 0;
-				for (var i = 0; i < 64; i++) {
+				var i = 0;
+				while (i < 64) {
 					var ypos = ppu.mmu.oam.getYpos(i);
 					var attr = ppu.mmu.oam.getAttr(i);
 					var xpos = ppu.mmu.oam.getXpos(i);
 
 					var row = ppu.scanline - ypos;
 					if (row < 0 || row >= height) {
+						i++;
 						continue;
 					}
 					if (count < 8) {
@@ -1417,6 +1410,7 @@ var ppu = {
 						this.indexes[count] = i;
 					}
 					count++;
+					i++;
 				}
 				if (count > 8) {
 					count = 8;
@@ -1607,7 +1601,6 @@ var ppu = {
 				//log("REAL AFTER: " + ppu.background.tileData.toString(2));
 				var remainder = curCycle % 8;
 				//log("Remainder " + remainder);
-
 				if (remainder == 0) {
 					this.background.fetchNameTableByte();
 					this.background.fetchAttributeTableByte();

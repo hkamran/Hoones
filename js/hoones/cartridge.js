@@ -5,109 +5,282 @@
  * Created by Hooman Kamran on 1/01/2016.
  */
 var cartridge = {
-        rawrom : '',
 
-        //Game code
-        prgrom: {
-            _size: 0x4000,
-            _upperIndex: 1,
-            _lowerIndex: 0,
+        rom : '',
+        prgs : [],
+        chrs : [],
+        mapper : {},
+        mirror : {},
 
-            banks : [],
+        vars : {
+            control1 : 0x0,
+            control1 : 0x0,
+            battery : 0x0,
+            trainer : 0x0,
+            mapper : 0x0,
+            numprgs : 0,
+            numchrs : 0,
+        },
 
-            getUpperBank: function() {
-                return this.banks[this._upperIndex];
+        mirrors : [
+            {
+                name : "Vertical",
+                indexes : [0, 0, 1, 1],
             },
-
-            getLowerBank: function() {
-                return this.banks[this._lowerIndex];
-            }
-        },
-
-        //PPU Code
-        chrrom: {
-            _size: 0x2000,
-            _index: 0,
-
-            banks: [],
-
-            getBank: function() {
-                return this.banks[this._index];
-            }
-        },
-
-        meta: {
-            numprgs: 0,
-            numchrs: 0,
-            control1: 0x00,
-            control2: 0x00,
-            mirror: 0,
-            hasTrainer: 0,
-            battery: 0,
-        },
-
-        mirroring: {
-            getType : function() {
-                var types = [
-                    [0,0,1,1], //Horizontal
-                    [0,1,0,1], //Vertical
-                    [0,0,0,0], //No Screen
-                    [1,1,1,1], //Single Screen
-                    [0,1,2,3], //Four Screen
-                ];
-
-                return types[cartridge.meta.mirror];
+            {
+                name : "Horizontal",
+                indexes : [0, 1, 0, 1],
             },
-        },
+            {
+                name : "No Screen",
+                indexes : [0, 0, 0, 0],
+            },
+            {
+                name : "Single",
+                indexes : [0, 0, 0, 0],
+            },
+            {
+                name : "Four Screen",
+                indexes : [0, 1, 2, 3],
+            }
+        ],
 
         reset : function() {
-
+            this.rom = '';
+            this.prgs = [];
+            this.chrs = [];
+            this.mapper = {};
         },
 
         load: function(file) {
+            this.reset();
+
             var b  = new BinFileReader(file);
             var rom = b.readString(b.getFileSize(), 0);
-            this.rawrom = rom;
+            this.rom = rom;
 
-            this.meta.numprgs = rom.charCodeAt(4);
-            this.meta.numchrs = rom.charCodeAt(5);
-            this.meta.control1 = rom.charCodeAt(6);
-            this.meta.control2 = rom.charCodeAt(7);
+            this.vars.numprgs = rom.charCodeAt(4);
+            this.vars.numchrs = rom.charCodeAt(5);
+            this.vars.control1 = rom.charCodeAt(6);
+            this.vars.control2 = rom.charCodeAt(7);
 
-            this.battery = (this.meta.control1 >> 1) & 1;
-            this.hasTrainer = this.meta.control1 & 0x100;
+            this.battery = (this.vars.control1 >> 1) & 1;
+            this.trainer = this.vars.control1 & 0x100;
 
-            var mirror1 = this.meta.control1 & 1;
-            var mirror2 = (this.meta.control1 >> 3) & 1;
-            this.mirror = mirror1 | mirror2<<1;
+            //Get Mirror Type
+            var mirror1 = this.vars.control1 & 1;
+            var mirror2 = (this.vars.control1 >> 3) & 1;
+            this.mirror = this.mirrors[mirror1 | mirror2 << 1];
+            console.log(this.mirror);
+
+            //Get Mapper Type
+            var mapper1 = this.vars.control1 >> 4;
+            var mapper2 = this.vars.control2 >> 4;
+            this.vars.mapper =  mapper1 | mapper2 << 3;
+
+            console.log("Mapper: " + this.vars.mapper);
+            console.log("PRGS: " + this.vars.numprgs);
+            console.log("CHRS: " + this.vars.numchrs);
 
 
-            var initial = 15;
+            this.setPrgs();
+            this.setChrs();
+            this.setMapper();
+        },
 
-            if (this.meta.hasTrainer == 1) {
-                initial += 512;
+        setPrgs : function() {
+            var index = 16;
+            if (this.vars.trainer == 1) {
+                index += 512;
             }
 
-            var start = initial + 1;
-            for (var i = 0; i < this.meta.numprgs; i++) {
-                this.prgrom.banks.push(rom.substr(start, 0x4000));
-                start += 0x4000;
+            for (var i = 0; i < this.vars.numprgs; i++) {
+                this.prgs.push(this.rom.substr(index, 0x4000));
+                index += 0x4000;
             }
 
-            if (this.meta.numprgs == 1) {
-                this.prgrom.banks.push(this.prgrom.banks[0]);
+            if (this.vars.numprgs == 1) {
+                this.prgs.push(this.prgs[0]);
             }
 
-            start = initial + 1 + (0x4000 * this.meta.numprgs);
-            for (var i = 0; i < this.meta.numchrs; i++) {
-                this.chrrom.banks.push(rom.substr(start, 0x2000));
-                start += 0x2000;
+        },
+
+        setChrs : function() {
+            var index = 16;
+            if (this.vars.trainer == 1) {
+                index += 512;
             }
 
-            if (this.meta.numchrs == 0) {
-                this.chrrom.banks.push([]);
+            index += 0x4000 * this.vars.numprgs;
+            for (var i = 0; i < this.vars.numchrs; i++) {
+                this.chrs.push(this.rom.substr(index, 0x2000).split(''));
+                index += 0x2000;
             }
 
-        }
+            if (this.vars.numchrs == 0) {
+                this.chrs.push([]);
+            }
+
+        },
+
+        setMapper : function() {
+            var mapperNum = this.vars.mapper;
+
+            var mapper = this.mappers[mapperNum]
+
+            if (typeof mapper === 'undefined') {
+                asdasdasdad.asdasdasd;
+            }
+
+            console.log(mapper);
+
+            mapper.prgs.data = this.prgs;
+            mapper.chrs.data = this.chrs;
+
+            this.mapper = mapper;
+            this.mapper.init();
+        },
+
+        mappers : [
+            {
+                name : 'NROM',
+                sram : '',
+                mirror : {},
+                prgs : {
+                    data : [],
+
+                    readByte : function(addr) {
+                        addr -= 0x8000;
+                        var index = Math.floor(addr / 0x4000);
+                        var offset = addr % 0x4000;
+
+                        var bank = this.data[index];
+
+                        return bank.charCodeAt(offset);
+                    },
+
+                    writeByte : function(addr, val) {
+                        addr -= 0x8000;
+                        var index = Math.floor(addr / 0x4000);
+                        var offset = addr % 0x4000;
+
+                        var bank = this.data[index];
+                        bank[offset] = String.fromCharCode(val);
+                    },
+
+                    init : function() {
+                        this.mirror = cartridge.mirror;
+                    },
+                },
+                chrs : {
+                    data : [],
+
+                    readByte : function(addr) {
+                        var bank = this.data[0];
+                        return bank[addr].charCodeAt(0);
+                    },
+
+                    writeByte : function(addr, val) {
+                        this.data[0][addr] = String.fromCharCode(val);
+                    },
+
+                },
+
+                init : function() {
+                    this.prgs.init();
+                }
+            },
+            {
+                name : "MMC1",
+                sram : '',
+                mirror : {},
+
+                prgs : {
+                    data : [],
+
+
+                    readByte : function(addr) {
+
+                    },
+
+                    writeByte : function(addr, val) {
+
+                    },
+
+                    init : function() {
+                        this.mirror = cartridge.mirror;
+                    }
+                },
+                chrs : {
+                    data : [],
+
+                    readByte : function(addr) {
+
+                    },
+
+                    writeByte : function(addr, val) {
+
+                    },
+                },
+
+                init : function() {
+                    this.prgs.init();
+
+                }
+            },
+            {
+                name : "UxROM",
+                sram : '',
+                prgs : {
+                    data : [],
+                    mirror : {},
+                    index1 : 0,
+                    index2 : 0,
+
+                    readByte : function(addr) {
+                        addr -= 0x8000;
+                        var index = Math.floor(addr / 0x4000);
+                        var offset = addr % 0x4000;
+
+                        var bank;
+                        if (index == 0) {
+                            bank = this.data[this.index1];
+                        } else {
+                            bank = this.data[this.index2];
+                        }
+
+                        return bank.charCodeAt(offset);
+                    },
+
+                    writeByte : function(addr, val) {
+                        this.index1 = val % (this.data.length - 1);
+                    },
+
+                    init : function() {
+                        this.index1 = 0;
+                        this.index2 = this.data.length - 1;
+                        this.mirror = cartridge.mirror;
+                    }
+                },
+                chrs : {
+                    data : [],
+
+                    readByte : function(addr) {
+                        var bank = this.data[0];
+                        var result = bank[addr].charCodeAt(0);
+
+                        return result;
+                    },
+
+                    writeByte : function(addr, val) {
+                        this.data[0][addr] = String.fromCharCode(val);
+                    },
+                },
+
+                init : function() {
+                    this.prgs.init();
+                }
+            }
+        ],
 
 }
