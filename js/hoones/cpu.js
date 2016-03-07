@@ -10,6 +10,7 @@ var cpu = {
 	ticks : 0,
 	op : null,
 	log : "",
+	stall : 0,
 
 	setCartidge : function(cartridge) {
 		this.mmu.prgrom.mapper = cartridge.mapper.prgs;
@@ -383,10 +384,6 @@ var cpu = {
 		},
 
 		readByte : function(addr) {
-			if (typeof addr != 'number') {
-				asdasdasdasddas;
-			}
-
 			if (addr < 0x2000) {
 				//Mimic mirrors 0000-07FF
 				addr  = addr % 0x800;
@@ -602,6 +599,9 @@ var cpu = {
 
 		//Increment PC
 		var opaddr = this.registers.pc.get();
+		//debug.log(this.registers.pc.get().toString(16).toUpperCase() + " " + opcode.toString(16) + " " + op.name + "  A:" + cpu.registers.a.get().toString(16).toUpperCase() + " X:" + cpu.registers.x.get().toString(16).toUpperCase() + " Y:"
+		//	+ cpu.registers.y.get().toString(16).toUpperCase() + " P:" + cpu.registers.p.get().toString(16).toUpperCase() + " SP:" + cpu.registers.sp.get().toString(16).toUpperCase()
+		//	+ " CYC:" + ppu.cycle + " SL:" + ppu.scanline);
 		this.registers.pc.set(opaddr + op.size);
 
 		//Get Execution Address
@@ -1767,6 +1767,8 @@ var cpu = {
 				{name: 'INC', cycles : 7, cross : 0, size: 3, mode: this.modes.abx, func: this.ops.inc},
 				{name: 'ISC', cycles : 7, cross : 0, size: 0, mode: this.modes.err, func: this.ops.isc},
 			];
+
+
 		},
 		
 		get : function(id) {

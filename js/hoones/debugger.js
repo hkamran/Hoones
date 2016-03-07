@@ -15,6 +15,12 @@ var debug = {
         }
     },
 
+    console : function(log) {
+        if (this.output) {
+            console.log(log);
+        }
+    },
+
     tick :  function() {
 
         //CPU

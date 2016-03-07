@@ -177,7 +177,12 @@ var cartridge = {
 
                     readByte : function(addr) {
                         var bank = this.data[0];
-                        return bank[addr].charCodeAt(0);
+                        var result = bank[addr];
+                        if (typeof result === 'undefined') {
+                            return 0x0;
+                        }
+
+                        return result.charCodeAt(0);
                     },
 
                     writeByte : function(addr, val) {
@@ -266,8 +271,12 @@ var cartridge = {
                     data : [],
 
                     readByte : function(addr) {
-                        var bank = this.data[0];
-                        var result = bank[addr].charCodeAt(0);
+                        var bank = this.data[0][addr];
+                        if (typeof bank === 'undefined') {
+                            return 0x0;
+                        }
+
+                        var result = bank.charCodeAt(0);
 
                         return result;
                     },

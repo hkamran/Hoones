@@ -853,6 +853,8 @@ var ppu = {
 			data : 0,
 
 			write : function(val) {
+
+
 				if (ppu.vars.w == 0) {
 					ppu.vars.t = (ppu.vars.t & 0xFFE0) | (val >> 3);
 					ppu.vars.x = val & 0x07;
@@ -918,6 +920,7 @@ var ppu = {
 
 				var result;
 
+
 				//Before palette
 				if ((ppu.vars.v % 0x4000) < 0x3F00) {
 					//Delay the read
@@ -957,6 +960,10 @@ var ppu = {
 					addr++;
 				}
 
+				cpu.stall += 513;
+				if ((cpu.cycles % 2) == 1) {
+					cpu.stall++;
+				}
 			},
 
 			read: function(val) {
@@ -1610,13 +1617,6 @@ var ppu = {
 					this.background.storeTileData();
 				}
 			}
-			if (curCycle == 257) {
-				if (visibleLine) {
-					this.sprites.storeSpriteData();
-				} else {
-					this.sprites.spriteCount = 0;
-				}
-			}
 
 			if (preLine && (curCycle >= 280) && (curCycle <= 304)) {
 				this.setY();
@@ -1633,6 +1633,13 @@ var ppu = {
 				}
 			}
 
+			if (curCycle == 257) {
+				if (visibleLine) {
+					this.sprites.storeSpriteData();
+				} else {
+					this.sprites.spriteCount = 0;
+				}
+			}
 
 		}
 
