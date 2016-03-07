@@ -393,6 +393,15 @@
 				player1.releaseKey(keys.select);
 			}
 		};
+
+		document.onkeydown = function(e) {
+			var code = e.keyCode;
+
+			if (code == 32) {
+				debug.output = true;
+				debug.tick();
+			}
+		}
 	</script>
 
 	<script>
