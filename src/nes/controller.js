@@ -68,5 +68,5 @@ var Controller = function() {
     }
 };
 
-var player1 = new Controller();
+
 

@@ -5,9 +5,10 @@
     <link href="./assets/css/foundation/foundation-icons.css" rel="stylesheet">
 
 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-    <script src="./assets/js/bigSlide/bigSlide.min.js"></script>
-    <script src="./assets/js/foundation/foundation.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script type="text/javascript" src="./assets/js/bigSlide/bigSlide.min.js"></script>
+    <script type="text/javascript" src="./assets/js/foundation/foundation.js"></script>
+    <script type="text/javascript" src="./assets/js/binFileReader/BinFileReader.js"></script>
 
     <link href="./assets/css/main.css" rel="stylesheet">
 </head>
@@ -263,57 +264,24 @@
 
 </div>
 
-<script type="text/javascript" src="./assets/js/binFileReader/BinFileReader.js"></script>
-<script type="text/javascript" src="./src/cartridge.js"></script>
-<script type="text/javascript" src="./src/controller.js"></script>
-<script type="text/javascript" src="./src/cpu.js"></script>
-<script type="text/javascript" src="./src/ppu.js"></script>
-<script type="text/javascript" src="./src/nes.js"></script>
+
+
+<!-- NES IMPORT -->
+<script type="text/javascript" src="./src/nes/cartridge.js"></script>
+<script type="text/javascript" src="./src/nes/controller.js"></script>
+<script type="text/javascript" src="./src/nes/cpu.js"></script>
+<script type="text/javascript" src="./src/nes/ppu.js"></script>
+<script type="text/javascript" src="./src/nes/nes.js"></script>
+
 <script type="text/javascript" src="./src/keyboard.js"></script>
 <script type="text/javascript" src="./src/debugger.js"></script>
-<script type="text/javascript">
+<script type="text/javascript" src="./src/main.js"></script>
 
-    nes.load("./roms/SuperMarioBros.nes");
-    nes.reset();
-    nes.start();
-</script>
 
 <script type="text/javascript">
     $(document).foundation();
 </script>
 
-<script type="text/javascript">
-    (function () {
-        var lastTime = 0;
-        var vendors = ['ms', 'moz', 'webkit', 'o'];
-        for (var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
-            window.requestAnimationFrame = window[vendors[x] + 'RequestAnimationFrame'];
-            window.cancelAnimationFrame = window[vendors[x] + 'CancelAnimationFrame']
-                    || window[vendors[x] + 'CancelRequestAnimationFrame'];
-        }
-
-        if (!window.requestAnimationFrame)
-            window.requestAnimationFrame = function (callback, element) {
-                var currTime = new Date().getTime();
-                var timeToCall = Math.max(0, 16 - (currTime - lastTime));
-                var id = window.setTimeout(function () {
-                            callback(currTime + timeToCall);
-                        },
-                        timeToCall);
-                lastTime = currTime + timeToCall;
-                return id;
-            };
-
-        if (!window.cancelAnimationFrame)
-            window.cancelAnimationFrame = function (id) {
-                clearTimeout(id);
-            };
-    }());
-</script>
-
-<script>
-
-</script>
 
 <script>
     var log = function (val) {

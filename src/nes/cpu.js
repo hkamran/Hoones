@@ -640,8 +640,16 @@ var cpu = {
 	//operations
 	instructions : {
 		map : [],
-		
-		//Addressing Modes
+
+		/**
+		 * OP Codes
+		 *
+		 * Source:
+		 * 		/docs/NESDoc.pdf
+		 *
+		 * Summary:
+		 * 		Implements the addressing modes for each op codes.
+		 */
 		modes : {
             abs: {
 				name : "absolute",
@@ -878,6 +886,13 @@ var cpu = {
 
 		/**
 		 * OP Codes
+		 *
+		 * Source:
+		 * 		http://obelisk.me.uk/6502/reference.html
+		 * 		/docs/NESDoc.pdf
+		 *
+		 * Summary:
+		 * 		Implements the operational codes of the NES CPU.
 		 */
 		
 		ops : {

@@ -18,7 +18,7 @@ var keyboard = {
 
     init : function() {
         console.log("Interfacing keyboard..");
-        
+
         var keymap = this.keymap;
 
         document.onkeyup = function (e) {
@@ -70,5 +70,5 @@ var keyboard = {
 }
 
 
-keyboard.init();
+
 
