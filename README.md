@@ -22,15 +22,16 @@ A Javascript implementation of Nintendo Entertainment Systems (NES).
 
 ## Requirements
 	
-	Plays NROM, and some UxROM cartidges.
-	Modern Browsers ONLY (Preference to Firefox)
-	There is no speed limit on the emulation so games can appear to run really really fast. Be careful!
+- Plays NROM, and some UxROM cartidges.
+- Modern Browsers ONLY (Preference to Firefox)
+- There is no speed limit on the emulation so games can appear to run really really fast. Be careful!
 
 ## Notes
 
 	Always wanted to try emulation, so I began my journey by implementing what I thought was a simple console.
 	After about a month and some odd days, I have come to realize the ridiculousness of what needs to be done to 
-	emulate consoles. It was an interesting project but I will never agian try this. Never agian.
+	emulate consoles. It was an interesting project, learned alot about optimizing javascript code. Though
+	I don't think I will never try this agian. :confounded:
 	
 ## Special Thanks
 
