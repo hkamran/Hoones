@@ -637,18 +637,20 @@ var cpu = {
 		this.cycles += 7;
 	},
 
-	//operations
+	/**
+	 * Instructions used by the CPU
+	 *
+	 * Source:
+	 * 		/docs/NESDoc.pdf
+	 */
 	instructions : {
 		map : [],
 
 		/**
-		 * OP Codes
+		 * Addressing used by the OP codes
 		 *
 		 * Source:
 		 * 		/docs/NESDoc.pdf
-		 *
-		 * Summary:
-		 * 		Implements the addressing modes for each op codes.
 		 */
 		modes : {
             abs: {
