@@ -1,5 +1,5 @@
 # HOONES
-A Javascript implementation of an NES. Currently only plays NROM games.
+A Javascript implementation of Nintendo Entertainment Systems (NES).
 
 ## Screenshots
 <div align="center">
@@ -7,7 +7,7 @@ A Javascript implementation of an NES. Currently only plays NROM games.
 </div>
 
 ## Demo
-[http://104.236.89.192/Hoones/](url)
+<a href="http://104.236.89.192/Hoones">Demo Page</a>
 
 | Input  | Key |
 | ----   |:---:|
@@ -24,7 +24,14 @@ A Javascript implementation of an NES. Currently only plays NROM games.
 	
 	Plays NROM, and some UxROM cartidges.
 	Modern Browsers ONLY (Preference to Firefox)
+	There is no speed limit on the emulation so games can appear to run really really fast. Be careful!
 
+## Notes
+
+	Always wanted to try emulation, so I began my journey by implementing what I thought was a simple console.
+	After about a month and some odd days, I have come to realize the ridiculousness of what needs to be done to 
+	emulate consoles. It was an interesting project but I will never agian try this. Never agian.
+	
 ## Special Thanks
 
 - People at http://nesdev.com/ for creating and maintaining a great wiki
