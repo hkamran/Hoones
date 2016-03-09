@@ -30,7 +30,7 @@ A Javascript implementation of Nintendo Entertainment Systems (NES).
 
 Always wanted to try emulation, so I began my journey by implementing what I thought was a simple console.
 After about a month and some odd days, I have come to realize the ridiculousness of what needs to be done to emulate consoles. 
-It was an interesting project, learned alot about optimizing javascript code. Though I don't think I will never try this agian.  :confounded:
+It was an interesting project, learned alot about optimizing javascript code. Though, I don't think I will ever try this agian.  :confounded:
 
 
 	
