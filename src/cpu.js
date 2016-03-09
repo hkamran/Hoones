@@ -576,15 +576,7 @@ var cpu = {
 			cpu.registers.p.i = 1;
 			cpu.cycles += 7;
 		},
-		
-		_triggerIRQ : function() {
-			cpu.mmu.stack.pushWord(cpu.registers.pc.get());
-			cpu.instructions.ops.php({});
-			cpu.registers.pc.set(cpu.mmu.readWord(0xFFFE));
-			cpu.registers.p.i = 1;
-			cpu.cycles += 7;
-		},
-		
+
 	},
 	
 	tick : function() {
@@ -883,6 +875,10 @@ var cpu = {
 		isPageDifferent : function(a, b) {
 			return (a & 0xFF00) != (b & 0xFF00);
 		},
+
+		/**
+		 * OP Codes
+		 */
 		
 		ops : {
 

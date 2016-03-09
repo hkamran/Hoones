@@ -1,0 +1,174 @@
+
+body {
+    background-color: #222222;
+    -webkit-font-smoothing: none;
+
+}
+
+@font-face {
+    font-family: nes;
+    src: url('../../assets/fonts/NES-Logo.ttf');
+}
+
+a {
+    color: #9a969a;
+}
+
+
+a:hover, a:focus {
+    color: #bab5ba;
+}
+
+
+#screen {
+    display: block;
+    padding: 3px;
+    border-radius: 4px 4px 4px 4px;
+    border: 2px solid #5c5d59;
+    background: #000;
+    box-shadow: 0px 0px 25px 5px rgba(0,0,0,0.75);
+}
+
+#footer {
+    width : 150px;
+    padding: 5px;
+    background: #1c1c1c;
+    margin:0 auto;
+    margin-top: 30px;
+    border-radius: 2px;
+    color: #5e5e5e;
+}
+
+.menu {
+    width: auto;
+    height: 40px;
+}
+
+.logo {
+    float: left;
+    color: #f6382b
+}
+
+.menu-item {
+    float: right;
+    margin-top: 5px;
+    margin-left: 5px;
+    background: #424242;
+    padding: 5px;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #e1e5e0;
+}
+
+a:hover, a:focus {
+    color: #e3e7e2;
+}
+
+.middle {
+    width: auto;
+    left: 50%;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+li div, label {
+    min-width: 120px;
+!important;
+    font-weight: bold;
+    color: #ffffff;
+    display: inline-block;
+    margin: 0px;
+}
+
+ul {
+    margin: 0px;
+    padding: 0px;
+}
+
+fieldset {
+    color: #fff;
+    padding: 10px;
+    margin: 10px;
+
+}
+
+.logo {
+    font-family: nes;
+
+    font-size: 2em;
+
+}
+
+canvas {
+    image-rendering: optimizeSpeed; /* Older versions of FF          */
+    image-rendering: -moz-crisp-edges; /* FF 6.0+                       */
+    image-rendering: -webkit-optimize-contrast; /* Safari                        */
+    image-rendering: -o-crisp-edges; /* OS X & Windows Opera (12.02+) */
+    image-rendering: pixelated; /* Awesome future-browsers       */
+    -ms-interpolation-mode: nearest-neighbor; /* IE                            */
+}
+
+#Tabs {
+    position: absolute;
+    white-space: nowrap;
+    top: 0;
+    right: 100%;
+    text-align: right;
+    -webkit-transform-origin: 100% 100%;
+    -webkit-transform: rotate(-90deg);
+    transform-origin: 100% 100%;
+    transform: rotate(-90deg);
+    list-style: none;
+    background: #4b4b4b;
+    color: #fff;
+    padding: 10px;
+
+    border-color: #5b5b5b;
+    border-style: solid;
+    border-width: 2px 2px 0px 2px;
+
+    -webkit-border-top-left-radius: 5px;
+    -webkit-border-top-right-radius: 5px;
+    -moz-border-radius-topleft: 5px;
+    -moz-border-radius-topright: 5px;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+
+    -webkit-box-shadow: -18px 0px 16px -13px rgba(0, 0, 0, 0.85);
+    -moz-box-shadow: -18px 0px 16px -13px rgba(0, 0, 0, 0.85);
+    box-shadow: -18px 0px 16px -13px rgba(0, 0, 0, 0.85);
+
+}
+
+#Tabs .menu-link:active {
+    color: #fff;
+!important
+}
+
+#Tabs .menu-link:link {
+    color: #fff;
+}
+
+#Tabs .menu-link:visited {
+    color: #fff;
+}
+
+.panel {
+    position: fixed;
+    right: -30.625em;
+    width: 30.625em;
+
+}
+
+#menu .content span, div {
+    color: #fff;
+    font-size: 12px;
+}
+
+#menu {
+    -webkit-box-shadow: -14px 0px 28px -13px rgba(0, 0, 0, 0.75);
+    -moz-box-shadow: -14px 0px 28px -13px rgba(0, 0, 0, 0.75);
+    box-shadow: -14px 0px 28px -13px rgba(0, 0, 0, 0.75);
+}
+

@@ -195,44 +195,7 @@ var cartridge = {
                     this.prgs.init();
                 }
             },
-            {
-                name : "MMC1",
-                sram : '',
-                mirror : {},
-
-                prgs : {
-                    data : [],
-
-
-                    readByte : function(addr) {
-
-                    },
-
-                    writeByte : function(addr, val) {
-
-                    },
-
-                    init : function() {
-                        this.mirror = cartridge.mirror;
-                    }
-                },
-                chrs : {
-                    data : [],
-
-                    readByte : function(addr) {
-
-                    },
-
-                    writeByte : function(addr, val) {
-
-                    },
-                },
-
-                init : function() {
-                    this.prgs.init();
-
-                }
-            },
+            null,
             {
                 name : "UxROM",
                 sram : '',

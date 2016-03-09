@@ -1,448 +1,360 @@
 <html>
-	<head>
-		<title>test</title>
-		<link href="./css/foundation.css" rel="stylesheet">
-		<link href="./css/foundation-icons.css" rel="stylesheet">
-		<style>
-			body {
-				background-color: #222222;
-				-webkit-font-smoothing: none;
-
-			}
-
-			@font-face {
-				font-family: nes;
-				src: url('./fonts/NES-Logo.ttf');
-			}
-
-			li div, label {
-				min-width: 120px; !important;
-				font-weight: bold;
-				color: #ffffff;
-				display: inline-block;
-				margin: 0px;
-			}
-
-			ul {
-				margin: 0px;
-				padding: 0px;
-			}
-
-			fieldset {
-				color: #fff;
-				padding: 10px;
-				margin: 10px;
-
-			}
-
-			.logo {
-				font-family: nes;
-
-				font-size: 2em;
-
-			}
-
-			canvas {
-				image-rendering: optimizeSpeed;             /* Older versions of FF          */
-				image-rendering: -moz-crisp-edges;          /* FF 6.0+                       */
-				image-rendering: -webkit-optimize-contrast; /* Safari                        */
-				image-rendering: -o-crisp-edges;            /* OS X & Windows Opera (12.02+) */
-				image-rendering: pixelated;                 /* Awesome future-browsers       */
-				-ms-interpolation-mode: nearest-neighbor;   /* IE                            */
-			}
-
-			#Tabs {
-				position: absolute;
-				white-space: nowrap;
-				top: 0;
-				right: 100%;
-				text-align: right;
-				-webkit-transform-origin: 100% 100%;
-				-webkit-transform: rotate(-90deg);
-				transform-origin: 100% 100%;
-				transform: rotate(-90deg);
-				list-style: none;
-				background: #4b4b4b;
-				color: #fff;
-				padding: 10px;
-
-
-				border-color: #5b5b5b;
-				border-style: solid;
-				border-width: 2px 2px 0px 2px;
-
-				-webkit-border-top-left-radius: 5px;
-				-webkit-border-top-right-radius: 5px;
-				-moz-border-radius-topleft: 5px;
-				-moz-border-radius-topright: 5px;
-				border-top-left-radius: 5px;
-				border-top-right-radius: 5px;
-
-				-webkit-box-shadow: -18px 0px 16px -13px rgba(0,0,0,0.85);
-				-moz-box-shadow: -18px 0px 16px -13px rgba(0,0,0,0.85);
-				box-shadow: -18px 0px 16px -13px rgba(0,0,0,0.85);
-
-
-			}
-
-			#Tabs .menu-link:active  {
-				color: #fff; !important
-			}
-
-
-			#Tabs .menu-link:link {
-				color: #fff;
-			}
-
-			#Tabs .menu-link:visited {
-				color: #fff;
-			}
-
-
-			.panel {
-				position: fixed;
-				right: -30.625em;
-				width: 30.625em;
-
-			}
-
-			#menu .content span, div {
-				color: #fff;
-				font-size: 12px;
-			}
-
-			#menu {
-				-webkit-box-shadow: -14px 0px 28px -13px rgba(0,0,0,0.75);
-				-moz-box-shadow: -14px 0px 28px -13px rgba(0,0,0,0.75);
-				box-shadow: -14px 0px 28px -13px rgba(0,0,0,0.75);
-			}
-		</style>
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-		<script src="js/bigSlide/bigSlide.min.js"></script>
-
-
-
-	</head>
-	<body>
-
-
-
-		<div  style="width: auto; left: 50%; position: absolute;  top: 50%;  transform: translate(-50%,-50%); ">
-
-					<div style="width: auto; height: 40px;">
-						<div class="logo" style="float: left; color: #f6382b">HOONES</div>
-						<div style="float: right; margin-top: 5px; background: #424242; padding: 5px; border-radius: 4px">
-							<a style="float: right; color: #D2D6D1; margin-left: 10px;" class="fi-plus large" onclick="doHigherRes()"></a>
-							<a style="float: right; color: #D2D6D1;" class="fi-minus large" onclick="doSmallerRes()"></a>
-						</div>
-					</div>
-
-					<canvas id="screen" height="100" style="display: block; padding: 3px; border-radius: 4px 4px 4px 4px;
-
-					border: 2px solid #5c5d59;background: #000; box-shadow: 0px 0px 25px 5px rgba(0,0,0,0.75);"></canvas>
-			<div style="clear:both;">
-
-			</div>
-		</div>
-
-
-
-
-	<!--<div style=" position: fixed;-->
-    <!--right: 0; bottom: 0; height:  100%; z-index: -1;-->
-    <!--width: 100%;-->
-
-
- 	<!--background-image: url('./images/mario_bg.png');-->
- 	<!--background: linear-gradient( rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.25) ), url('./images/mario_bg.png');-->
-
-    <!--background-position: center top 0px ;-->
-    <!--background-repeat: no-repeat;-->
-    <!--background-size: cover;-->
-
-    <!--">-->
-
-	</div>
-
-	<nav id="menu" class="panel" role="navigation" style="border: 2px solid #434343; background: #323232" >
-		<ul id="Tabs">
-			<li><a class="menu-link" href="#">Debugger</a></li>
-		</ul>
-		<div class="content">
-
-			<div class="row">
-				<div class="small-6 large-6 columns">
-					<fieldset>
-						<legend>Console</legend>
-						<div style="color: #bebebe; display: inline-block">
-							<ul style="list-style: none;">
-								<li><div>CPU Cycles: </div><span id="cpucycles"></span></li>
-								<li><div>PPU Cycles: </div><span id="ppucycles"></span></li>
-								<li><div>Scanline: </div><span id="scanline"></span></li>
-								<li><div>Ticks: </div><span id="ticks"></span></li>
-							</ul>
-						</div>
-					</fieldset>
-				</div>
-				<div class="small-6 large-6 columns">
-					<fieldset>
-						<legend>Operation</legend>
-						<div style="color: #bebebe; display: inline-block">
-							<ul style="list-style: none;">
-								<li><div>Opcode: </div><span id="opcode"></span></li>
-								<li><div>Op: </div><span id="opname"></span></li>
-								<li><div>Mode: </div><span id="mode"></span></li>
-								<li><div>Address: </div><span id="opaddr"></span></li>
-							</ul>
-						</div>
-					</fieldset>
-				</div>
-			</div>
-
-			<div class="small-6 large-6 columns">
-				<fieldset class="border">
-					<legend>CPU</legend>
-					<div style="color: #bebebe;">
-						<ul style="list-style: none;">
-							<li><div>PC: </div><span id="pc"></span></li>
-							<li><div>Accumulator: </div><span id="acc"></span></li>
-							<li><div>X: </div><span id="x"></span></li>
-							<li><div>Y: </div><span id="y"></span></li>
-							<li><div>SP: </div><span id="sp"></span></li>
-							<li><div>P: </div><span id="pflags"></span></li>
-							<ul style="list-style: none;margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
-								<li><div>carry flag:</div><span id="carryFlag"></span></li>
-								<li><div>zero flag:</div><span id="zeroFlag"></span></li>
-								<li><div>interrupt flag:</div><span id="interruptFlag"></span></li>
-								<li><div>decimal </div><span id="decimalFlag"></span></li>
-								<li><div>break flag:</div><span id="breakFlag"></span></li>
-								<li><div>overflow flag:</div><span id="overflowFlag"></span></li>
-								<li><div>negative flag:</div><span id="negativeFlag"></span></li>
-							</ul>
-						</ul>
-					</div>
-				</fieldset>
-				<fieldset class="border">
-					<legend>Stack</legend>
-					<div style="color: #bebebe; min-height: 18px;">
-						<span id="stack"> </span>
-					</div>
-				</fieldset>
-			</div>
-
-
-			<div class="small-6 large-6 columns" >
-				<fieldset>
-					<legend>PPU</legend>
-					<div style="color: #bebebe; display: inline-block">
-						<ul style="list-style: none;">
-							<li>
-								<div>VRAM Address: </div><span id="vram"></span>
-							</li>
-							<li>
-								<div>Temp Address: </div><span id="temp"></span>
-							</li>
-							<li>
-								<div>Control:</div>
-								<ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
-									<li><div>nametable:</div><span id="nametable"></span></li>
-									<li><div>increment:</div><span id="increment"></span></li>
-									<li><div>sprite table:</div><span id="spritetable"></span></li>
-									<li><div>background table:</div><span id="backgroundtable"></span></li>
-									<li><div>sprite size:</div><span id="spritesize"></span></li>
-									<li><div>masterslave:</div><span id="masterslave"></span></li>
-									<li><div>nmi:</div><span id="nmi"></span></li>
-								</ul>
-							</li>
-
-
-
-							<li><div>Mask:</div>
-								<ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
-									<li><div>greyscale:</div><span id="grayscale"></span></li>
-									<li><div>showbgleft:</div><span id="showbgleft"></span></li>
-									<li><div>showspleft:</div><span id="showspleft"></span></li>
-									<li><div>showbg:</div><span id="showbg"></span></li>
-									<li><div>showsprites:</div><span id="showsprites"></span></li>
-									<li><div>increds:</div><span id="increds"></span></li>
-									<li><div>incgreens:</div><span id="incgreens"></span></li>
-									<li><div>incblues:</div><span id="incblues"></span></li>
-								</ul>
-							</li>
-							<li>
-								<div>Status:</div>
-								<ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
-									<li><div>spriteoverflow:</div><span id="spriteoverflow"></span></li>
-									<li><div>spritehit:</div><span id="spritehit"></span></li>
-									<li><div>vblank:</div><span id="vblank"></span></li>
-									<li><div>nmiOccurred:</div><span id="nmiOccurred"></span></li>
-									<li><div>writable:</div><span id="writable"></span></li>
-								</ul>
-							</li>
-						</ul>
-					</div>
-				</fieldset>
-			</div>
-
-
-		</div>
-	</nav>
-
-
-	<div style="background: #333; color: #fff" id="log" rows="500" cols="50">
-
-	</div>
-
-	<script type="text/javascript" src="js/hoones/lib/BinFileReader.js"></script>
-	<script type="text/javascript" src="js/hoones/cartridge.js"></script>
-	<script type="text/javascript" src="js/hoones/controller.js"></script>
-	<script type="text/javascript" src="js/hoones/cpu.js"></script>
-	<script type="text/javascript" src="js/hoones/ppu.js"></script>
-	<script type="text/javascript" src="js/hoones/nes.js"></script>
-	<script type="text/javascript" src="js/hoones/debugger.js"></script>
-	<script type="text/javascript">
-
-		nes.load("./roms/SuperMarioBros.nes");
-		nes.reset();
-	</script>
-
-	<script type="text/javascript">
-		(function() {
-			var lastTime = 0;
-			var vendors = ['ms', 'moz', 'webkit', 'o'];
-			for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
-				window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
-				window.cancelAnimationFrame = window[vendors[x]+'CancelAnimationFrame']
-										   || window[vendors[x]+'CancelRequestAnimationFrame'];
-			}
-
-			if (!window.requestAnimationFrame)
-				window.requestAnimationFrame = function(callback, element) {
-					var currTime = new Date().getTime();
-					var timeToCall = Math.max(0, 16 - (currTime - lastTime));
-					var id = window.setTimeout(function() { callback(currTime + timeToCall); },
-					  timeToCall);
-					lastTime = currTime + timeToCall;
-					return id;
-				};
-
-			if (!window.cancelAnimationFrame)
-				window.cancelAnimationFrame = function(id) {
-					clearTimeout(id);
-				};
-		}());
-	</script>
-
-	<script>
-		var canvas = document.getElementById('screen');;
-		canvas.tabIndex = 0;
-
-		var map = {
-			up : 87,
-			down : 83,
-			left : 65,
-			right : 68,
-			a : 71,
-			b : 72,
-			start : 84,
-			select : 89
-		}
-
-		canvas.onkeydown = function(e) {
-			var code = e.keyCode;
-			var keys = player1.keys;
-
-			if (code == map.up) {
-				player1.pressKey(keys.up);
-			} else if (code == map.down) {
-				player1.pressKey(keys.down);
-			} else if (code == map.left) {
-				player1.pressKey(keys.left);
-			} else if (code == map.right) {
-				player1.pressKey(keys.right);
-			} else if (code == map.a) {
-				player1.pressKey(keys.a);
-			} else if (code == map.b) {
-				player1.pressKey(keys.b);
-			} else if (code == map.start) {
-				player1.pressKey(keys.start);
-			} else if (code == map.select) {
-				player1.pressKey(keys.select);
-			}
-		};
-
-		canvas.onkeyup = function (e) {
-			var code = e.keyCode;
-			var keys = player1.keys;
-
-			if (code == map.up) {
-				player1.releaseKey(keys.up);
-			} else if (code == map.down) {
-				player1.releaseKey(keys.down);
-			} else if (code == map.left) {
-				player1.releaseKey(keys.left);
-			} else if (code == map.right) {
-				player1.releaseKey(keys.right);
-			} else if (code == map.a) {
-				player1.releaseKey(keys.a);
-			} else if (code == map.b) {
-				player1.releaseKey(keys.b);
-			} else if (code == map.start) {
-				player1.releaseKey(keys.start);
-			} else if (code == map.select) {
-				player1.releaseKey(keys.select);
-			}
-		};
-
-		document.onkeydown = function(e) {
-			var code = e.keyCode;
-
-			if (code == 32) {
-				debug.output = true;
-				debug.tick();
-			}
-		}
-	</script>
-
-	<script>
-		var log = function(val) {
-			if (debug.output) {
-				console.log(val);
-			}
-		};
-
-
-		$(document).ready(function() {
-			$('.menu-link').bigSlide(
-					{side: "right",
-						push: '.drawer-push',
-						menuWidth: '35.625em',
-						push: '.pushy'
-					});
-		});
-
-		var doHigherRes = function() {
-			if (ppu.screen.pixelSize == 2) {
-				ppu.screen.spacer = 1;
-			} else {
-				ppu.screen.pixelSize++;
-				ppu.screen.pixelSize = Math.min(2, ppu.screen.pixelSize);
-			}
-
-			ppu.screen.reset();
-		};
-
-		var doSmallerRes = function() {
-			if (ppu.screen.pixelSize == 2 && ppu.screen.spacer != 0) {
-				ppu.screen.spacer = 0;
-				ppu.screen.reset();
-				return;
-			}
-
-			ppu.screen.pixelSize--;
-			ppu.screen.pixelSize = Math.max(1, ppu.screen.pixelSize);
-			ppu.screen.reset();
-		};
-	</script>
-	</body>
+<head>
+    <title>Hoones | Javascript NES Emulator</title>
+    <link href="./assets/css/foundation/foundation.css" rel="stylesheet">
+    <link href="./assets/css/foundation/foundation-icons.css" rel="stylesheet">
+
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src="./assets/js/bigSlide/bigSlide.min.js"></script>
+    <script src="./assets/js/foundation/foundation.js"></script>
+
+    <link href="./assets/css/main.css" rel="stylesheet">
+</head>
+<body>
+
+
+<div class="middle">
+    <div class="menu">
+        <div class="logo">HOONES</div>
+        <div class="menu-item">
+            <a style="float: left;" class="fi-plus large" title="Zoom in" onclick="doHigherRes()"></a>
+            <div style="float: left; width: 8px; height: 1px"></div>
+            <a style="float: left;" class="fi-minus large" title="Zoom out" onclick="doSmallerRes()"></a>
+        </div>
+        <div class="menu-item">
+            <a class="fi-widget large" title="Settings"></a>
+        </div>
+        <div class="menu-item">
+            <a class="fi-download large" title="Load Game" ></a>
+        </div>
+    </div>
+    <canvas id="screen" height="100"></canvas>
+    <div id="footer">
+        Author: <a href="https://github.com/hkamran">Hooman Kamran</a>
+    </div>
+</div>
+
+
+<!--<div style=" position: fixed;-->
+<!--right: 0; bottom: 0; height:  100%; z-index: -1;-->
+<!--width: 100%;-->
+
+
+<!--background-image: url('./images/mario_bg.png');-->
+<!--background: linear-gradient( rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.25) ), url('./images/mario_bg.png');-->
+
+<!--background-position: center top 0px ;-->
+<!--background-repeat: no-repeat;-->
+<!--background-size: cover;-->
+
+<!--">-->
+
+<nav id="menu" class="panel" role="navigation" style="border: 2px solid #434343; background: #323232">
+    <ul id="Tabs">
+        <li><a class="menu-link" href="#">Debugger</a></li>
+    </ul>
+    <div class="content">
+
+        <div class="row">
+            <div class="small-6 large-6 columns">
+                <fieldset>
+                    <legend>Console</legend>
+                    <div style="color: #bebebe; display: inline-block">
+                        <ul style="list-style: none;">
+                            <li>
+                                <div>CPU Cycles:</div>
+                                <span id="cpucycles"></span></li>
+                            <li>
+                                <div>PPU Cycles:</div>
+                                <span id="ppucycles"></span></li>
+                            <li>
+                                <div>Scanline:</div>
+                                <span id="scanline"></span></li>
+                            <li>
+                                <div>Ticks:</div>
+                                <span id="ticks"></span></li>
+                        </ul>
+                    </div>
+                </fieldset>
+            </div>
+            <div class="small-6 large-6 columns">
+                <fieldset>
+                    <legend>Operation</legend>
+                    <div style="color: #bebebe; display: inline-block">
+                        <ul style="list-style: none;">
+                            <li>
+                                <div>Opcode:</div>
+                                <span id="opcode"></span></li>
+                            <li>
+                                <div>Op:</div>
+                                <span id="opname"></span></li>
+                            <li>
+                                <div>Mode:</div>
+                                <span id="mode"></span></li>
+                            <li>
+                                <div>Address:</div>
+                                <span id="opaddr"></span></li>
+                        </ul>
+                    </div>
+                </fieldset>
+            </div>
+        </div>
+
+        <div class="small-6 large-6 columns">
+            <fieldset class="border">
+                <legend>CPU</legend>
+                <div style="color: #bebebe;">
+                    <ul style="list-style: none;">
+                        <li>
+                            <div>PC:</div>
+                            <span id="pc"></span></li>
+                        <li>
+                            <div>Accumulator:</div>
+                            <span id="acc"></span></li>
+                        <li>
+                            <div>X:</div>
+                            <span id="x"></span></li>
+                        <li>
+                            <div>Y:</div>
+                            <span id="y"></span></li>
+                        <li>
+                            <div>SP:</div>
+                            <span id="sp"></span></li>
+                        <li>
+                            <div>P:</div>
+                            <span id="pflags"></span></li>
+                        <ul style="list-style: none;margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
+                            <li>
+                                <div>carry flag:</div>
+                                <span id="carryFlag"></span></li>
+                            <li>
+                                <div>zero flag:</div>
+                                <span id="zeroFlag"></span></li>
+                            <li>
+                                <div>interrupt flag:</div>
+                                <span id="interruptFlag"></span></li>
+                            <li>
+                                <div>decimal</div>
+                                <span id="decimalFlag"></span></li>
+                            <li>
+                                <div>break flag:</div>
+                                <span id="breakFlag"></span></li>
+                            <li>
+                                <div>overflow flag:</div>
+                                <span id="overflowFlag"></span></li>
+                            <li>
+                                <div>negative flag:</div>
+                                <span id="negativeFlag"></span></li>
+                        </ul>
+                    </ul>
+                </div>
+            </fieldset>
+            <fieldset class="border">
+                <legend>Stack</legend>
+                <div style="color: #bebebe; min-height: 18px;">
+                    <span id="stack"> </span>
+                </div>
+            </fieldset>
+        </div>
+
+
+        <div class="small-6 large-6 columns">
+            <fieldset>
+                <legend>PPU</legend>
+                <div style="color: #bebebe; display: inline-block">
+                    <ul style="list-style: none;">
+                        <li>
+                            <div>VRAM Address:</div>
+                            <span id="vram"></span>
+                        </li>
+                        <li>
+                            <div>Temp Address:</div>
+                            <span id="temp"></span>
+                        </li>
+                        <li>
+                            <div>Control:</div>
+                            <ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
+                                <li>
+                                    <div>nametable:</div>
+                                    <span id="nametable"></span></li>
+                                <li>
+                                    <div>increment:</div>
+                                    <span id="increment"></span></li>
+                                <li>
+                                    <div>sprite table:</div>
+                                    <span id="spritetable"></span></li>
+                                <li>
+                                    <div>background table:</div>
+                                    <span id="backgroundtable"></span></li>
+                                <li>
+                                    <div>sprite size:</div>
+                                    <span id="spritesize"></span></li>
+                                <li>
+                                    <div>masterslave:</div>
+                                    <span id="masterslave"></span></li>
+                                <li>
+                                    <div>nmi:</div>
+                                    <span id="nmi"></span></li>
+                            </ul>
+                        </li>
+
+
+                        <li>
+                            <div>Mask:</div>
+                            <ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
+                                <li>
+                                    <div>greyscale:</div>
+                                    <span id="grayscale"></span></li>
+                                <li>
+                                    <div>showbgleft:</div>
+                                    <span id="showbgleft"></span></li>
+                                <li>
+                                    <div>showspleft:</div>
+                                    <span id="showspleft"></span></li>
+                                <li>
+                                    <div>showbg:</div>
+                                    <span id="showbg"></span></li>
+                                <li>
+                                    <div>showsprites:</div>
+                                    <span id="showsprites"></span></li>
+                                <li>
+                                    <div>increds:</div>
+                                    <span id="increds"></span></li>
+                                <li>
+                                    <div>incgreens:</div>
+                                    <span id="incgreens"></span></li>
+                                <li>
+                                    <div>incblues:</div>
+                                    <span id="incblues"></span></li>
+                            </ul>
+                        </li>
+                        <li>
+                            <div>Status:</div>
+                            <ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
+                                <li>
+                                    <div>spriteoverflow:</div>
+                                    <span id="spriteoverflow"></span></li>
+                                <li>
+                                    <div>spritehit:</div>
+                                    <span id="spritehit"></span></li>
+                                <li>
+                                    <div>vblank:</div>
+                                    <span id="vblank"></span></li>
+                                <li>
+                                    <div>nmiOccurred:</div>
+                                    <span id="nmiOccurred"></span></li>
+                                <li>
+                                    <div>writable:</div>
+                                    <span id="writable"></span></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </fieldset>
+        </div>
+
+
+    </div>
+</nav>
+
+
+<div style="background: #333; color: #fff" id="log" rows="500" cols="50">
+
+</div>
+
+<script type="text/javascript" src="./assets/js/binFileReader/BinFileReader.js"></script>
+<script type="text/javascript" src="./src/cartridge.js"></script>
+<script type="text/javascript" src="./src/controller.js"></script>
+<script type="text/javascript" src="./src/cpu.js"></script>
+<script type="text/javascript" src="./src/ppu.js"></script>
+<script type="text/javascript" src="./src/nes.js"></script>
+<script type="text/javascript" src="./src/keyboard.js"></script>
+<script type="text/javascript" src="./src/debugger.js"></script>
+<script type="text/javascript">
+
+    nes.load("./roms/SuperMarioBros.nes");
+    nes.reset();
+    nes.start();
+</script>
+
+<script type="text/javascript">
+    $(document).foundation();
+</script>
+
+<script type="text/javascript">
+    (function () {
+        var lastTime = 0;
+        var vendors = ['ms', 'moz', 'webkit', 'o'];
+        for (var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+            window.requestAnimationFrame = window[vendors[x] + 'RequestAnimationFrame'];
+            window.cancelAnimationFrame = window[vendors[x] + 'CancelAnimationFrame']
+                    || window[vendors[x] + 'CancelRequestAnimationFrame'];
+        }
+
+        if (!window.requestAnimationFrame)
+            window.requestAnimationFrame = function (callback, element) {
+                var currTime = new Date().getTime();
+                var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+                var id = window.setTimeout(function () {
+                            callback(currTime + timeToCall);
+                        },
+                        timeToCall);
+                lastTime = currTime + timeToCall;
+                return id;
+            };
+
+        if (!window.cancelAnimationFrame)
+            window.cancelAnimationFrame = function (id) {
+                clearTimeout(id);
+            };
+    }());
+</script>
+
+<script>
+
+</script>
+
+<script>
+    var log = function (val) {
+        if (debug.output) {
+            console.log(val);
+        }
+    };
+
+
+    $(document).ready(function () {
+        $('.menu-link').bigSlide(
+                {
+                    side: "right",
+                    push: '.drawer-push',
+                    menuWidth: '35.625em',
+                    push: '.pushy'
+                });
+    });
+
+    var doHigherRes = function () {
+        if (ppu.screen.pixelSize == 2) {
+            ppu.screen.spacer = 1;
+        } else {
+            ppu.screen.pixelSize++;
+            ppu.screen.pixelSize = Math.min(2, ppu.screen.pixelSize);
+        }
+
+        ppu.screen.reset();
+    };
+
+    var doSmallerRes = function () {
+        if (ppu.screen.pixelSize == 2 && ppu.screen.spacer != 0) {
+            ppu.screen.spacer = 0;
+            ppu.screen.reset();
+            return;
+        }
+
+        ppu.screen.pixelSize--;
+        ppu.screen.pixelSize = Math.max(1, ppu.screen.pixelSize);
+        ppu.screen.reset();
+    };
+</script>
+</body>
 </html>
