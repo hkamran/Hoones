@@ -29,5 +29,4 @@
 var player1 = new Controller();
 keyboard.init();
 nes.load("./roms/SuperMarioBros.nes");
-nes.reset();
 nes.start();

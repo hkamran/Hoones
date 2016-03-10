@@ -26,7 +26,7 @@
             <a class="fi-widget large" title="Settings"></a>
         </div>
         <div class="menu-item">
-            <a class="fi-download large" title="Load Game" ></a>
+            <a class="fi-download large" data-open="romModal" title="Load Game" ></a>
         </div>
     </div>
     <canvas id="screen" height="100"></canvas>
@@ -35,6 +35,19 @@
     </div>
 </div>
 
+
+<div class="reveal" id="romModal" data-reveal style="background: #323232; border-radius: 4px; box-shadow: 0px 0px 14px 4px rgba(0,0,0,0.75); border: 2px solid #1a1b18">
+    <div style="padding: 10px; padding-left: 20px;">
+        <ul>
+            <li><a href="#" onclick="nes.load('./roms/dkong.nes'); $('#romModal').foundation('close');">Donkey Kong</a></li>
+            <li><a href="#" onclick="nes.load('./roms/Contra (USA).nes'); $('#romModal').foundation('close');">Contra</a></li>
+            <li><a href="#" onclick="nes.load('./roms/SuperMarioBros.nes'); $('#romModal').foundation('close');">Super Mario Bros</a></li>
+        </ul>
+    </div>
+    <button class="close-button" data-close aria-label="Close modal" type="button" style="background: #424242; padding: 2px; border-radius: 4px">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
 
 <!--<div style=" position: fixed;-->
 <!--right: 0; bottom: 0; height:  100%; z-index: -1;-->

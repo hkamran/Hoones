@@ -14,6 +14,8 @@ var nes = {
 
         cpu.setCartidge(cartridge);
         ppu.setCartidge(cartridge);
+
+        this.reset();
     },
 
     reset : function() {
