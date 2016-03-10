@@ -36,14 +36,18 @@
 </div>
 
 
-<div class="reveal" id="romModal" data-reveal style="background: #323232; border-radius: 4px; box-shadow: 0px 0px 14px 4px rgba(0,0,0,0.75); border: 2px solid #1a1b18">
-    <div style="padding: 10px; padding-left: 20px;">
+<div class="reveal" id="romModal" data-reveal style="padding: 0px; background: #323232; width: 400px; border-radius: 4px; box-shadow: 0px 0px 14px 4px rgba(0,0,0,0.75); border: 2px solid #1a1b18">
+    <div style="min-height: 55px; padding: 10px; padding-left: 20px; width: auto; background: #2d2d2d; border-bottom: 2px solid #3d3d3d">
+        <div class="logo">ROMS</div>
+    </div>
+    <div style="padding: 10px; padding-left: 40px; background: #313131">
         <ul>
             <li><a href="#" onclick="nes.load('./roms/dkong.nes'); $('#romModal').foundation('close');">Donkey Kong</a></li>
             <li><a href="#" onclick="nes.load('./roms/Contra (USA).nes'); $('#romModal').foundation('close');">Contra</a></li>
             <li><a href="#" onclick="nes.load('./roms/SuperMarioBros.nes'); $('#romModal').foundation('close');">Super Mario Bros</a></li>
         </ul>
     </div>
+
     <button class="close-button" data-close aria-label="Close modal" type="button" style="background: #424242; padding: 2px; border-radius: 4px">
         <span aria-hidden="true">&times;</span>
     </button>
