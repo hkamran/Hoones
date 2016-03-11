@@ -37,21 +37,82 @@
 
 
 <div class="reveal" id="romModal" data-reveal style="padding: 0px; background: #323232; width: 400px; border-radius: 4px; box-shadow: 0px 0px 14px 4px rgba(0,0,0,0.75); border: 2px solid #1a1b18">
-    <div style="min-height: 55px; padding: 10px; padding-left: 20px; width: auto; background: #2d2d2d; border-bottom: 2px solid #3d3d3d">
-        <div class="logo">ROMS</div>
+    <div style="min-height: 55px; padding: 10px; padding-left: 20px; width: auto; background: #2d2d2d; border-bottom: 2px solid #3d3d3d; ">
+        <div class="logo">ROM</div>
     </div>
-    <div style="padding: 10px; padding-left: 40px; background: #313131">
-        <ul>
-            <li><a href="#" onclick="nes.load('./roms/dkong.nes'); $('#romModal').foundation('close');">Donkey Kong</a></li>
-            <li><a href="#" onclick="nes.load('./roms/Contra (USA).nes'); $('#romModal').foundation('close');">Contra</a></li>
-            <li><a href="#" onclick="nes.load('./roms/SuperMarioBros.nes'); $('#romModal').foundation('close');">Super Mario Bros</a></li>
-        </ul>
-    </div>
+    <div style="padding: 10px; background: #313131">
 
-    <button class="close-button" data-close aria-label="Close modal" type="button" style="background: #424242; padding: 2px; border-radius: 4px">
+        <div style="width: 80%; float: left; padding: 5px;">
+            <div id="romOptionDiv">
+                <select id="romOption" style="height: 43px; padding: 5px; margin: 0px; background: #444; border: 2px solid #4b4b4b; color: #9a969a; border-radius: 4px" onclick="romSelector.onchange()">
+                    <option selected value="select" selected="selected" >Select</option>
+                    <option value=""></option>
+                    <option value="./roms/dkong.nes">Donkey Kong</option>
+                    <option value="./roms/Contra (USA).nes">Contra</option>
+                    <option value="./roms/SuperMarioBros.nes">Super Mario Bros</option>
+                    <option value="./roms/Pac-Man (USA) (Namco).nes">Pacman</option>
+                    <option value=""></option>
+                    <option value="other">URL</option>
+
+                </select>
+            </div>
+            <div id="romInputDiv" style="display:none;">
+                <input id="romInput" type="text" pattern="url" placeholder="URL" style="height: 44px; margin: 0px; background: #444; border: 2px solid #484848; border-radius: 4px">
+            </div>
+        </div>
+        <div style="width: 20%; float: left; padding: 5px;">
+            <button class="button" value="Submit" onclick="romSelector.click()" type="submit" style="margin: 0px; border-radius: 4px; background: #444; border: 2px solid #484848; color: #9a969a;">Load</button>
+        </div>
+        <div style="clear: both"></div>
+    </div>
+    <div style="clear: both;"></div>
+
+    <button onclick="romSelector.reset();" class="close-button" data-close aria-label="Close modal" type="button" style="background: #424242; padding: 2px; border-radius: 4px; ">
         <span aria-hidden="true">&times;</span>
     </button>
+    <div style="clear: both"></div>
 </div>
+
+<script type="text/javascript">
+
+    var romSelector = {
+        showDropDown : function () {
+            document.getElementById("romOptionDiv").style.display = 'initial';
+            document.getElementById("romInputDiv").style.display = 'none';
+            document.getElementById("romInput").style.value = "";
+        },
+        showInput : function() {
+            document.getElementById("romOptionDiv").style.display = 'none';
+            document.getElementById("romInputDiv").style.display = 'initial';
+            document.getElementById("romInput").style.value = "";
+        },
+        onchange : function() {
+            var e = document.getElementById("romOption");
+            var option = e.options[e.selectedIndex].value;
+
+            if (option.localeCompare("other") == 0) {
+                this.showInput();
+            } else {
+                document.getElementById("romInput").style.value = option;
+            }
+        },
+        reset : function() {
+            this.showDropDown();
+            $('#romOption option').each(function(){
+                $(this).prop('selected', false);
+            });
+        },
+        close : function() {
+            this.reset();
+        },
+        click : function() {
+            nes.load(document.getElementById("romInput").style.value);
+            $('#romModal').foundation('close');
+            this.reset();
+        }
+
+    }
+</script>
 
 <!--<div style=" position: fixed;-->
 <!--right: 0; bottom: 0; height:  100%; z-index: -1;-->
