@@ -853,16 +853,18 @@ var ppu = {
 			data : 0,
 
 			write : function(val) {
-
+				//Set the starting position to read from (eg. Name table positioning)
 
 				if (ppu.vars.w == 0) {
+					//Set the Horizontal Position
 					ppu.vars.t = (ppu.vars.t & 0xFFE0) | (val >> 3);
 					ppu.vars.x = val & 0x07;
 
 					ppu.vars.w = 1;
 				} else {
-					ppu.vars.t = (ppu.vars.t & 0x8FFF) | ((val >> 0x07) << 12);
-					ppu.vars.t = (ppu.vars.t & 0xFC1F) | ((val >> 0xF8) << 2);
+					//Set the Vertical Position
+					ppu.vars.t &= 0xC1F;
+					ppu.vars.t |= (((val & 0xF8) << 2) | ((val & 0x07) << 12));
 					ppu.vars.w = 0;
 				}
 			},
