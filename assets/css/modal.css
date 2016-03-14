@@ -1,0 +1,68 @@
+.modal {
+    padding: 0px;
+    background: #323232;
+    width: 400px;
+    border-radius: 4px;
+    box-shadow: 0px 0px 14px 4px rgba(0,0,0,0.75);
+    border: 2px solid #1a1b18;
+
+}
+
+.modal .title {
+    min-height: 55px;
+    padding: 10px;
+    padding-left: 20px;
+    width: auto;
+    background: #2d2d2d;
+    border-bottom: 2px solid #3d3d3d;
+}
+
+.modal .content {
+    padding: 10px;
+    background: #313131;
+    width: auto;
+}
+
+.modal button {
+    margin: 0px;
+    border-radius: 4px;
+    background: #444;
+    border: 2px solid #484848;
+    color: #9a969a;
+}
+
+.modal select, .modal input {
+    height: 43px;
+    padding: 5px;
+    margin: 0px;
+    background: #444;
+    border: 2px solid #484848;
+    color: #9a969a;
+    border-radius: 4px;
+
+}
+
+.modal input {
+    box-shadow: inset 0px 0px 5px 0px rgba(0,0,0,0.35); !important;
+}
+
+.modal input:focus {
+    border: 2px solid #484848;
+    background-color: #444;
+    outline: none;
+    box-shadow: inset 0px 0px 5px 0px rgba(0,0,0,0.35); !important;
+}
+
+.modal .button:focus, .button:hover {
+    background: #444;
+}
+
+.modal .close-button {
+    background: #424242;
+    padding: 2px;
+    border-radius: 4px;
+}
+
+.modal .close-button:hover {
+    color: #e3e7e2;
+}

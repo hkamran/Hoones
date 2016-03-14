@@ -10,6 +10,7 @@
     <script type="text/javascript" src="./assets/js/binFileReader/BinFileReader.js"></script>
 
     <link href="./assets/css/main.css" rel="stylesheet">
+    <link href="./assets/css/modal.css" rel="stylesheet">
 </head>
 <body>
 
@@ -35,16 +36,17 @@
     </div>
 </div>
 
-
-<div class="reveal" id="romModal" data-reveal style="padding: 0px; background: #323232; width: 400px; border-radius: 4px; box-shadow: 0px 0px 14px 4px rgba(0,0,0,0.75); border: 2px solid #1a1b18">
-    <div style="min-height: 55px; padding: 10px; padding-left: 20px; width: auto; background: #2d2d2d; border-bottom: 2px solid #3d3d3d; ">
+<!-- ------------------------ -->
+<!-- Rom Selector Modal Start -->
+<!-- ------------------------ -->
+<div class="reveal modal" id="romModal" data-reveal>
+    <div class="title">
         <div class="logo">ROM</div>
     </div>
-    <div style="padding: 10px; background: #313131">
-
+    <div class="content" style="">
         <div style="width: 80%; float: left; padding: 5px;">
             <div id="romOptionDiv">
-                <select id="romOption" style="height: 43px; padding: 5px; margin: 0px; background: #444; border: 2px solid #4b4b4b; color: #9a969a; border-radius: 4px" onclick="romSelector.onchange()">
+                <select id="romOption" onclick="romSelector.onchange()">
                     <option selected value="select" selected="selected" >Select</option>
                     <option value=""></option>
                     <option value="./roms/dkong.nes">Donkey Kong</option>
@@ -54,28 +56,24 @@
                     <option value="./roms/Pac-Man (USA) (Namco).nes">Pacman</option>
                     <option value=""></option>
                     <option value="other">Enter URL to ROM...</option>
-
                 </select>
             </div>
             <div id="romInputDiv" style="display:none;">
-                <input id="romInput" type="text" pattern="url" placeholder="URL" style="height: 44px; margin: 0px; background: #444; border: 2px solid #484848; border-radius: 4px">
+                <input id="romInput" type="text" pattern="url" placeholder="Enter URL to ROM">
             </div>
+            <div style="clear: both"></div>
         </div>
         <div style="width: 20%; float: left; padding: 5px;">
-            <button class="button" value="Submit" onclick="romSelector.click()" type="submit" style="margin: 0px; border-radius: 4px; background: #444; border: 2px solid #484848; color: #9a969a;">Load</button>
+            <button class="button" value="Submit" onclick="romSelector.click()" type="submit">Load</button>
         </div>
         <div style="clear: both"></div>
     </div>
-    <div style="clear: both;"></div>
 
-    <button onclick="romSelector.reset();" class="close-button" data-close aria-label="Close modal" type="button" style="background: #424242; padding: 2px; border-radius: 4px; ">
+    <button onclick="romSelector.reset();" class="close-button" data-close aria-label="Close modal" type="button">
         <span aria-hidden="true">&times;</span>
     </button>
-    <div style="clear: both"></div>
 </div>
-
 <script type="text/javascript">
-
     var romSelector = {
         showDropDown : function () {
             document.getElementById("romOptionDiv").style.display = 'initial';
