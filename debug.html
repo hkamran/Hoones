@@ -1,0 +1,204 @@
+
+
+
+<div class="row">
+    <div class="small-6 large-6 columns">
+        <fieldset>
+            <legend>Console</legend>
+            <div style="color: #bebebe; display: inline-block">
+                <ul style="list-style: none;">
+                    <li>
+                        <div>CPU Cycles:</div>
+                        <span id="cpucycles"></span></li>
+                    <li>
+                        <div>PPU Cycles:</div>
+                        <span id="ppucycles"></span></li>
+                    <li>
+                        <div>Scanline:</div>
+                        <span id="scanline"></span></li>
+                    <li>
+                        <div>Ticks:</div>
+                        <span id="ticks"></span></li>
+                </ul>
+            </div>
+        </fieldset>
+    </div>
+    <div class="small-6 large-6 columns">
+        <fieldset>
+            <legend>Operation</legend>
+            <div style="color: #bebebe; display: inline-block">
+                <ul style="list-style: none;">
+                    <li>
+                        <div>Opcode:</div>
+                        <span id="opcode"></span></li>
+                    <li>
+                        <div>Op:</div>
+                        <span id="opname"></span></li>
+                    <li>
+                        <div>Mode:</div>
+                        <span id="mode"></span></li>
+                    <li>
+                        <div>Address:</div>
+                        <span id="opaddr"></span></li>
+                </ul>
+            </div>
+        </fieldset>
+    </div>
+</div>
+
+<div class="small-6 large-6 columns">
+    <fieldset class="border">
+        <legend>CPU</legend>
+        <div style="color: #bebebe;">
+            <ul style="list-style: none;">
+                <li>
+                    <div>PC:</div>
+                    <span id="pc"></span></li>
+                <li>
+                    <div>Accumulator:</div>
+                    <span id="acc"></span></li>
+                <li>
+                    <div>X:</div>
+                    <span id="x"></span></li>
+                <li>
+                    <div>Y:</div>
+                    <span id="y"></span></li>
+                <li>
+                    <div>SP:</div>
+                    <span id="sp"></span></li>
+                <li>
+                    <div>P:</div>
+                    <span id="pflags"></span></li>
+                <ul style="list-style: none;margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
+                    <li>
+                        <div>carry flag:</div>
+                        <span id="carryFlag"></span></li>
+                    <li>
+                        <div>zero flag:</div>
+                        <span id="zeroFlag"></span></li>
+                    <li>
+                        <div>interrupt flag:</div>
+                        <span id="interruptFlag"></span></li>
+                    <li>
+                        <div>decimal</div>
+                        <span id="decimalFlag"></span></li>
+                    <li>
+                        <div>break flag:</div>
+                        <span id="breakFlag"></span></li>
+                    <li>
+                        <div>overflow flag:</div>
+                        <span id="overflowFlag"></span></li>
+                    <li>
+                        <div>negative flag:</div>
+                        <span id="negativeFlag"></span></li>
+                </ul>
+            </ul>
+        </div>
+    </fieldset>
+    <fieldset class="border">
+        <legend>Stack</legend>
+        <div style="color: #bebebe; min-height: 18px;">
+            <span id="stack"> </span>
+        </div>
+    </fieldset>
+</div>
+
+
+<div class="small-6 large-6 columns">
+    <fieldset>
+        <legend>PPU</legend>
+        <div style="color: #bebebe; display: inline-block">
+            <ul style="list-style: none;">
+                <li>
+                    <div>VRAM Address:</div>
+                    <span id="vram"></span>
+                </li>
+                <li>
+                    <div>Temp Address:</div>
+                    <span id="temp"></span>
+                </li>
+                <li>
+                    <div>Control:</div>
+                    <ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
+                        <li>
+                            <div>nametable:</div>
+                            <span id="nametable"></span></li>
+                        <li>
+                            <div>increment:</div>
+                            <span id="increment"></span></li>
+                        <li>
+                            <div>sprite table:</div>
+                            <span id="spritetable"></span></li>
+                        <li>
+                            <div>background table:</div>
+                            <span id="backgroundtable"></span></li>
+                        <li>
+                            <div>sprite size:</div>
+                            <span id="spritesize"></span></li>
+                        <li>
+                            <div>masterslave:</div>
+                            <span id="masterslave"></span></li>
+                        <li>
+                            <div>nmi:</div>
+                            <span id="nmi"></span></li>
+                    </ul>
+                </li>
+
+
+                <li>
+                    <div>Mask:</div>
+                    <ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
+                        <li>
+                            <div>greyscale:</div>
+                            <span id="grayscale"></span></li>
+                        <li>
+                            <div>showbgleft:</div>
+                            <span id="showbgleft"></span></li>
+                        <li>
+                            <div>showspleft:</div>
+                            <span id="showspleft"></span></li>
+                        <li>
+                            <div>showbg:</div>
+                            <span id="showbg"></span></li>
+                        <li>
+                            <div>showsprites:</div>
+                            <span id="showsprites"></span></li>
+                        <li>
+                            <div>increds:</div>
+                            <span id="increds"></span></li>
+                        <li>
+                            <div>incgreens:</div>
+                            <span id="incgreens"></span></li>
+                        <li>
+                            <div>incblues:</div>
+                            <span id="incblues"></span></li>
+                    </ul>
+                </li>
+                <li>
+                    <div>Status:</div>
+                    <ul style="list-style: none;  margin-left: 20px; margin-top: 10px; margin-bottom: 10px">
+                        <li>
+                            <div>spriteoverflow:</div>
+                            <span id="spriteoverflow"></span></li>
+                        <li>
+                            <div>spritehit:</div>
+                            <span id="spritehit"></span></li>
+                        <li>
+                            <div>vblank:</div>
+                            <span id="vblank"></span></li>
+                        <li>
+                            <div>nmiOccurred:</div>
+                            <span id="nmiOccurred"></span></li>
+                        <li>
+                            <div>writable:</div>
+                            <span id="writable"></span></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </fieldset>
+</div>
+
+<div style="background: #333; color: #fff" id="log" rows="500" cols="50">
+
+</div>

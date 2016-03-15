@@ -72,3 +72,38 @@
 .modal .close-button:hover {
     color: #e3e7e2;
 }
+
+.modal table thead {
+    background: #505050;
+    color: #d2d2d2;
+    border: 1px solid #3a3a3a;
+    border-bottom: 2px solid #3d3d3d;
+    border-left: 2px solid #545454;
+    border-top: 2px solid #5e5e5e;
+    border-right: 2px solid #2b2b2b;
+}
+
+.modal table tbody tr {
+    border-left: 2px solid #545454;
+    border-right: 2px solid #2b2b2b;
+    color: #9a969a;
+    background: #464646;
+}
+
+.modal table tbody {
+    background: #3a3a3a;
+    border: 1px solid #3a3a3a;
+    border-bottom: 3px solid #393939;
+}
+
+.modal table tbody tr:nth-child(2n) {
+    background: #404040;
+    border-left: 2px solid #545454;
+    border-right: 2px solid #2b2b2b;
+    color: #9a969a;
+
+}
+.modal table {
+    margin: 0px;
+    border-left: 1px solid #7b7b7b;
+}

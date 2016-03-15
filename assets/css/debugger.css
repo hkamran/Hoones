@@ -1,0 +1,101 @@
+.debug fieldset {
+    border: 2px solid #dddddd;
+    margin: 1rem 0;
+    padding: 0.5rem;
+}
+
+.debug fieldset legend {
+    font-weight: bold;
+    margin: 0 0 0 -0.16667rem;
+    padding: 0 0.16667rem;
+}
+
+#debug .content span, div {
+    color: #fff;
+    font-size: 12px;
+}
+
+#debug {
+    -webkit-box-shadow: -14px 0px 28px -13px rgba(0, 0, 0, 0.75);
+    -moz-box-shadow: -14px 0px 28px -13px rgba(0, 0, 0, 0.75);
+    box-shadow: -14px 0px 28px -13px rgba(0, 0, 0, 0.75);
+    border: 2px solid #434343;
+    background: #4a4a4a;
+}
+
+#Tabs {
+    position: absolute;
+    white-space: nowrap;
+    top: 0;
+    right: 100%;
+    text-align: right;
+    -webkit-transform-origin: 100% 100%;
+    -webkit-transform: rotate(-90deg);
+    transform-origin: 100% 100%;
+    transform: rotate(-90deg);
+    list-style: none;
+    background: #4b4b4b;
+    color: #fff;
+    font-size: 1rem;
+    padding: 10px;
+
+    border-color: #5b5b5b;
+    border-style: solid;
+    border-width: 2px 2px 0px 2px;
+
+    -webkit-border-top-left-radius: 5px;
+    -webkit-border-top-right-radius: 5px;
+    -moz-border-radius-topleft: 5px;
+    -moz-border-radius-topright: 5px;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+
+    -webkit-box-shadow: -18px 0px 16px -13px rgba(0, 0, 0, 0.85);
+    -moz-box-shadow: -18px 0px 16px -13px rgba(0, 0, 0, 0.85);
+    box-shadow: -18px 0px 16px -13px rgba(0, 0, 0, 0.85);
+
+}
+
+#Tabs .menu-link:active {
+    color: #fff;  !important
+}
+
+#Tabs .menu-link:link {
+    color: #fff;
+}
+
+#Tabs .menu-link:visited {
+    color: #fff;
+}
+
+.debug li div, label {
+    min-width: 120px;  !important;
+    font-weight: bold;
+    color: #ffffff;
+    display: inline-block;
+    margin: 0px;
+}
+
+.debug ul {
+    margin: 0px;
+    padding: 0px;
+}
+
+.debug fieldset {
+    color: #fff;
+    padding: 10px;
+    margin: 10px;
+
+}
+
+.debug .content span, div {
+    color: #fff;
+    font-size: 12px;
+}
+
+.debug {
+    border-left: 2px solid #555555;
+    background: #434343;
+    box-shadow: -14px 0px 28px -13px rgba(0, 0, 0, 0.75);
+    width: 35.625em;
+}
