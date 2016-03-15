@@ -1211,7 +1211,29 @@ var ppu = {
 
 			/**
 			 * Save the tile data (Contains the pixels to be displayed).
-			 * We combine the low tile, high tile and the attribute byte.
+			 *
+			 * Source:
+			 * 		/docs/NESDoc.pdf
+			 *
+			 * Summary:
+			 * 		We combine the low tile, high tile and the attribute byte. The combination of both the low
+			 * 		and high tile represents the color selection in the palette. The attribute byte determines the
+			 * 		palette to be selected.
+			 *
+			 * 		Note: A 1 in either tile represents a single pixel. If a byte has 0's in the last 2 bits,
+			 * 		then we don't draw that selection.
+			 *
+			 *		------------------------------------------------------------------------------------------
+			 * 		pppp pppp 											- Low Tile	(8 bit)
+			 * 		bbbb bbbb 											- High Tile (8 bit)
+			 * 		AA 													- Attribute (2 bit)
+			 * 		AApb AApb AApb AApb AApb AApb AApb AApb AApb AApb	- Result 8x1 drawing (16 bit)
+			 *		------------------------------------------------------------------------------------------
+			 * 		AApb
+			 * 		----
+			 * 		||||
+			 * 		||++-- Color Selection (Combining both the low/high tile)
+			 * 		++---- Palette Selection (Attribute Byte)
 			 *
 			 */
 			storeTileData : function() {
