@@ -1440,14 +1440,20 @@ var ppu = {
 				if (ppu.registers.mask.showsprites == 0) {
 					return [0,0];
 				}
-				for (var i = 0; i < this.count; i++) {
-					var offset = (ppu.cycle - 1) - this.positions[i];
-					if (offset < 0 || offset > 7) {
+
+
+				var i = 0;
+				var cycle = ppu.cycle;
+				while (i < this.count) {
+					var xpos = (cycle - 1) - this.positions[i];
+					if (xpos < 0 || xpos > 7) {
+						i++;
 						continue;
 					}
-					offset = 7 - offset;
-					var color = (this.patterns[i] >>> (offset * 4)) & 0xFF;
-					if ((color % 4) == 0) {
+					var shift = (7 - xpos) * 4;
+					var color = (this.patterns[i] >>> shift) & 0xFF;
+					if ((color & 3) == 0) {
+						i++;
 						continue;
 					}
 
