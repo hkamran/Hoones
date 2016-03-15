@@ -174,13 +174,17 @@ canvas {
 
 table thead {
     background: #505050;
-    color: #fdfdfd;
+    color: #d2d2d2;
     border: 1px solid #3a3a3a;
-    border-bottom: 2px solid #313131;
+    border-bottom: 2px solid #3d3d3d;
+    border-left: 2px solid #545454;
+    border-top: 2px solid #5e5e5e;
+    border-right: 2px solid #2b2b2b;
 }
 
-table tr {
-
+table tbody tr {
+    border-left: 2px solid #545454;
+    border-right: 2px solid #2b2b2b;
     color: #9a969a;
     background: #464646;
 }
@@ -188,10 +192,13 @@ table tr {
 table tbody {
     background: #3a3a3a;
     border: 1px solid #3a3a3a;
+    border-bottom: 4px solid #3d3d3d;
 }
 
 table tbody tr:nth-child(2n) {
     background: #404040;
+    border-left: 2px solid #545454;
+    border-right: 2px solid #2b2b2b;
     color: #9a969a;
 
 }
