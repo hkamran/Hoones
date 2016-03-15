@@ -1368,7 +1368,8 @@ var ppu = {
 				var flagged = (attr & 0x40) == 0x40;
 
 				var data = 0;
-				for (var i = 0; i < 8; i++) {
+				var i = 0;
+				while (i < 8) {
 					var p1;
 					var p2;
 					if (flagged) {
@@ -1386,6 +1387,7 @@ var ppu = {
 					data <<= 4;
 					data |= (a | p1 | p2) & 0xf;
 
+					i++;
 				}
 				return data;
 			},
@@ -1554,8 +1556,8 @@ var ppu = {
 				}
 			}
 
-			var b = background % 4 != 0;
-			var s = sprite % 4 != 0;
+			var b = (background & 3) != 0;
+			var s = (sprite & 3) != 0;
 
 			var color = 0;
 			if (b && s) {
