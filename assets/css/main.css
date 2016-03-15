@@ -192,7 +192,7 @@ table tbody tr {
 table tbody {
     background: #3a3a3a;
     border: 1px solid #3a3a3a;
-    border-bottom: 4px solid #3d3d3d;
+    border-bottom: 3px solid #393939;
 }
 
 table tbody tr:nth-child(2n) {
