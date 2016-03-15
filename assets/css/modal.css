@@ -8,6 +8,10 @@
 
 }
 
+.modal:focus {
+    outline: 0;
+}
+
 .modal .title {
     min-height: 55px;
     padding: 10px;
@@ -29,6 +33,7 @@
     background: #444;
     border: 2px solid #484848;
     color: #9a969a;
+    outline:0;
 }
 
 .modal select, .modal input {
@@ -39,6 +44,7 @@
     border: 2px solid #484848;
     color: #9a969a;
     border-radius: 4px;
+    outline:0;
 
 }
 

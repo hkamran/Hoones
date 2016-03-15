@@ -24,7 +24,7 @@
             <a style="float: left;" class="fi-minus large" title="Zoom out" onclick="doSmallerRes()"></a>
         </div>
         <div class="menu-item">
-            <a class="fi-widget large" title="Settings"></a>
+            <a class="fi-widget large" data-open="settings" onclick="loadSettings()" title="Settings"></a>
         </div>
         <div class="menu-item">
             <a class="fi-download large" data-open="romModal" title="Load Game" ></a>
@@ -41,7 +41,7 @@
 <!-- ------------------------ -->
 <div class="reveal modal" id="romModal" data-reveal>
     <div class="title">
-        <div class="logo">ROM</div>
+        <div class="logo">roms</div>
     </div>
     <div class="content" style="">
         <div style="width: 80%; float: left; padding: 5px;">
@@ -110,6 +110,93 @@
             this.reset();
         }
 
+    }
+</script>
+
+<!-- ------------------------ -->
+<!-- Settings Modal Start -->
+<!-- ------------------------ -->
+<div class="reveal modal" id="settings" data-reveal>
+    <div class="title">
+        <div class="logo">settings</div>
+    </div>
+    <div class="content" style="">
+        <div style="width: 50%; float: left; padding: 5px;">
+            <table>
+                <thead>
+                <tr>
+                    <th width="200">Movement</th>
+                    <th>Key</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>Up</td>
+                    <td id="upkey">
+
+                    </td>
+                </tr>
+                <tr>
+                    <td>Down</td>
+                    <td id="downkey"></td>
+                </tr>
+                <tr>
+                    <td>Left</td>
+                    <td id="leftkey"></td>
+                </tr>
+                <tr>
+                    <td>Right</td>
+                    <td id="rightkey"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div style="width: 50%; float: left; padding: 5px">
+            <table>
+                <thead>
+                <tr>
+                    <th width="200">Input</th>
+                    <th>Key</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>A</td>
+                    <td id="akey"></td>
+                </tr>
+                <tr>
+                    <td>B</td>
+                    <td id="bkey"></td>
+                </tr>
+                <tr>
+                    <td>Select</td>
+                    <td id="selectkey"></td>
+                </tr>
+                <tr>
+                    <td>Start</td>
+                    <td id="startkey"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div style="clear: both"></div>
+    </div>
+
+    <button onclick="" class="close-button" data-close aria-label="Close modal" type="button">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+<script type="text/javascript">
+    var loadSettings = function() {
+        $("#upkey").html(String.fromCharCode(keyboard.keymap.up));
+        $("#downkey").html(String.fromCharCode(keyboard.keymap.down));
+        $("#leftkey").html(String.fromCharCode(keyboard.keymap.left));
+        $("#rightkey").html(String.fromCharCode(keyboard.keymap.right));
+
+        $("#akey").html(String.fromCharCode(keyboard.keymap.a));
+        $("#bkey").html(String.fromCharCode(keyboard.keymap.b));
+        $("#selectkey").html(String.fromCharCode(keyboard.keymap.select));
+        $("#startkey").html(String.fromCharCode(keyboard.keymap.start));
     }
 </script>
 

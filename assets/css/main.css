@@ -172,5 +172,32 @@ canvas {
     box-shadow: -14px 0px 28px -13px rgba(0, 0, 0, 0.75);
 }
 
+table thead {
+    background: #505050;
+    color: #fdfdfd;
+    border: 1px solid #3a3a3a;
+    border-bottom: 2px solid #313131;
+}
+
+table tr {
+
+    color: #9a969a;
+    background: #464646;
+}
+
+table tbody {
+    background: #3a3a3a;
+    border: 1px solid #3a3a3a;
+}
+
+table tbody tr:nth-child(2n) {
+    background: #404040;
+    color: #9a969a;
+
+}
+table {
+    margin: 0px;
+    border-left: 1px solid #7b7b7b;
+}
 
 
