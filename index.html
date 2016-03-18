@@ -15,8 +15,18 @@
 </head>
 <body>
 
+<!-- ------------------------ -->
+<!-- Not Supported Error      -->
+<!-- ------------------------ -->
+<div id="notsupported" class="middle" style="display:none;">
+    <div class="logo" style="font-size: 4em;">bad browser</div>
+    <h4>Please update your browser</h4>
+</div>
 
-<div class="middle">
+<!-- ------------------------ -->
+<!-- Main                     -->
+<!-- ------------------------ -->
+<div id="main" class="middle">
     <div class="menu">
         <div class="logo">HOONES</div>
         <div class="menu-item">
@@ -110,7 +120,6 @@
             $('#romModal').foundation('close');
             this.reset();
         }
-
     }
 </script>
 
@@ -236,7 +245,7 @@
                 {
                     side: "right",
                     push: '.drawer-push',
-                    menuWidth: '35.625em',
+                    menuWidth: '47.9em',
                     push: '.pushy'
                 });
     });
@@ -257,7 +266,6 @@
 <script type="text/javascript">
     $(document).foundation();
 </script>
-
 
 <script>
     var log = function (val) {

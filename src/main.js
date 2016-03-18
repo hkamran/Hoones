@@ -25,8 +25,17 @@
         };
 }());
 
+function isCanvasSupported(){
+    var elem = document.createElement('canvas');
+    return !!(elem.getContext && elem.getContext('2d'));
+}
 
-var player1 = new Controller();
-keyboard.init();
-nes.load("./roms/SuperMarioBros.nes");
-nes.start();
+if (!isCanvasSupported()) {
+    $('#notsupported').show();
+    $('#main').hide();
+} else {
+    var player1 = new Controller();
+    keyboard.init();
+    nes.load("./roms/SuperMarioBros.nes");
+    nes.start();
+}

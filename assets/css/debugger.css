@@ -99,3 +99,7 @@
     box-shadow: -14px 0px 28px -13px rgba(0, 0, 0, 0.75);
     width: 35.625em;
 }
+
+.debug #content {
+    width: 47.9em;
+}

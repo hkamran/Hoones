@@ -67,6 +67,3 @@ var Controller = function() {
         keys : keys,
     }
 };
-
-
-

@@ -13,7 +13,8 @@ var keyboard = {
         a: 71,           //g
         b: 72,           //h
         start: 84,       //t
-        select: 89       //y
+        select: 89,      //y
+        space: 32        //space
     },
 
     init : function() {
@@ -64,6 +65,8 @@ var keyboard = {
                 player1.pressKey(keys.start);
             } else if (code == keymap.select) {
                 player1.pressKey(keys.select);
+            } else if (code == keymap.space) {
+                debug.tick();
             }
         };
     }
