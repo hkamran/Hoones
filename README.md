@@ -7,7 +7,7 @@ A Javascript implementation of Nintendo Entertainment Systems (NES).
 </div>
 
 ## Demo
-<a href="http://104.236.89.192/Hoones">Demo Page</a>
+<a href="http://hkamran.info/projects/hoones">Demo Page</a>
 
 | Input  | Key |
 | ----   |:---:|
