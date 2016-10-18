@@ -241,8 +241,9 @@
 </div>
 <script type="text/javascript">
     var loadDebugMenu = function() {
-        $('#content').load('debug.html');
+        debug.tick();
         $('#Event').toggle();
+
     }
 
     $(document).ready(function () {
@@ -270,6 +271,7 @@
 
 <script type="text/javascript">
     $(document).foundation();
+    $('#content').load('debug.html');
 </script>
 
 <script>
