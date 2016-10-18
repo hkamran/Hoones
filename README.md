@@ -7,7 +7,7 @@ A Javascript implementation of Nintendo Entertainment Systems (NES).
 </div>
 
 ## Demo
-<a href="http://104.236.89.192/Hoones">Demo Page</a>
+<a href="http://hkamran.info/projects/hoones">Demo Page</a>
 
 | Input  | Key |
 | ----   |:---:|
@@ -22,11 +22,12 @@ A Javascript implementation of Nintendo Entertainment Systems (NES).
 
 ## Requirements
 	
-- Plays NROM, and some UxROM cartidges.
 - Modern Browsers ONLY (Preference to Firefox)
-- There is no speed limit on the emulation so games can appear to run really really fast. Be careful!
 
 ## Notes
+
+- Plays NROM, and some UxROM cartidges.
+- There is no speed limit on the emulation so games can appear to run really really fast. Be careful!
 
 Always wanted to try emulation, so I began my journey by implementing what I thought was a simple console.
 After about a month and some odd days, I have come to realize the ridiculousness of what needs to be done to emulate consoles. 
