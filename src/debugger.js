@@ -122,8 +122,17 @@ var debug = {
         document.getElementById("scanline").innerHTML = ppu.scanline;
         document.getElementById("ticks").innerHTML = cpu.ticks;
 
+        var eventStr = "PC:" + cpu.registers.pc.get().toString(16).toUpperCase() + " A:" + cpu.registers.a.get().toString(16).toUpperCase()
+        + " X:" + cpu.registers.x.get().toString(16).toUpperCase()
+        + " Y:" + cpu.registers.y.get().toString(16).toUpperCase()
+        + " P:" + cpu.registers.p.get().toString(16).toUpperCase()
+        + " SP:" + cpu.registers.sp.get().toString(16).toUpperCase()
+        + " CYC:" + ppu.cycle
+        + " SL:" + ppu.scanline;
 
-
+        var eventElement = $("#Event");
+        eventElement.append("<div style='float:left; clear:left; margin: 0px auto;'>"+eventStr+"</div>");
+        eventElement.scrollTop(eventElement.prop("scrollHeight"));
         nes.tick();
     },
 

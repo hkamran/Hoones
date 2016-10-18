@@ -223,7 +223,7 @@
 <!--background-size: cover;-->
 
 <!--">-->
-<div id="menu" class="debug panel" role="navigation" style="width: 300px">
+<div id="menu" class="debug panel" role="navigation" style="width: 300px;z-index: 2;">
     <ul id="Tabs">
         <li><a class="menu-link" onclick="loadDebugMenu()" href="#">Debugger</a></li>
     </ul>
@@ -231,6 +231,10 @@
 
 
     </div>
+
+</div>
+<div id="Event" style="overflow-y: scroll; padding-left: 5px; padding-top: 5px; position: fixed; display: none; opacity: 0.7; height: 100%; width: 100%; background: #000; left: 0; top: 0; z-index: 1; ">
+
 </div>
 <div style="background: #333; color: #fff" id="log" rows="500" cols="50">
 
@@ -238,6 +242,7 @@
 <script type="text/javascript">
     var loadDebugMenu = function() {
         $('#content').load('debug.html');
+        $('#Event').toggle();
     }
 
     $(document).ready(function () {
