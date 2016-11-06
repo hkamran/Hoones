@@ -178,7 +178,7 @@ var cpu = {
 
 			readByte : function(addr) {
 				if (addr > 0x0100) {
-					asdasdasdasd;
+					throw "zero page error " + addr.toString(16);
 				}
 
 				var result = this.data[addr];
@@ -192,7 +192,7 @@ var cpu = {
 
 			writeByte: function(addr, val) {
 				if (addr >= 0x0100) {
-					asdasdasdasd;
+					throw "zero page error " + addr.toString(16);
 				}
 
 				this.data[addr] = val;
@@ -262,7 +262,7 @@ var cpu = {
 			writeByte: function(addr, val) {
 				addr -= 0x100;
 				if (addr > 0x100) {
-					asdasdasdasdasd;
+					throw "stack error " + addr.toString(16);
 				}
 				this.data[addr] = val;
 			},
@@ -274,19 +274,18 @@ var cpu = {
 
 			readByte : function(addr) {
 				if (addr > 0x0800) {
-					asdasdasdasd;
+					throw "ram read error " + addr.toString(16);
 				}
 
 				addr -= 0x200;
 
 				if (addr > 0x5FF) {
-					asdasdasasd;
+					throw "ram read error " + addr.toString(16);
 				}
 
 				var result = this.data[addr];
 
 				if (typeof result === 'undefined') {
-					//console.log("ERROR READING " + addr.toString(16));
 					return 0;
 				}
 
@@ -295,13 +294,13 @@ var cpu = {
 
 			writeByte: function(addr, val) {
 				if (addr > 0x0800) {
-					asdasdasdasd;
+					throw "ram write error " + addr.toString(16);
 				}
 
 				addr -= 0x200;
 
 				if (addr > 0x5FF) {
-					asdasdasasd;
+					throw "ram write error " + addr.toString(16);
 				}
 
 				this.data[addr] = val;
@@ -340,7 +339,7 @@ var cpu = {
 
 			readByte : function(addr) {
 				if (addr < 0x6000 || addr >= 0x8000) {
-					asdasdasdaasd;
+					throw "sram read error " + addr.toString(16);
 				}
 
 				addr -= 0x6000;
@@ -352,7 +351,7 @@ var cpu = {
 
 			writeByte : function(addr, val) {
 				if (addr < 0x6000 || addr >= 0x8000) {
-					asdasdasdaasd;
+					throw "sram write error " + addr.toString(16);
 				}
 
 				addr -= 0x6000;
@@ -368,7 +367,7 @@ var cpu = {
 
 			readByte : function(addr) {
 				if (addr < 0x8000 || addr >= 0x10000) {
-					asdasdasda
+					throw "prgrom write error " + addr.toString(16);
 				}
 
 				return this.mapper.readByte(addr);
@@ -376,7 +375,7 @@ var cpu = {
 
 			writeByte : function(addr, val) {
 				if (addr < 0x8000 || addr > 0x10000) {
-					asdasdasda
+					throw "prgrom write error " + addr.toString(16);
 				}
 
 				return this.mapper.writeByte(addr, val);
