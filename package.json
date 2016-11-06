@@ -1,0 +1,36 @@
+{
+  "name": "hoones",
+  "version": "1.0.0",
+  "description": "NES Emulator made on javascript.",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "http-server ./src",
+    "build": "gulp build",
+    "clean": "gulp clean",
+    "watch": "gulp watch",
+	"package": "gulp"
+  },
+  "devDependencies": {
+    "del": "^2.2.1",
+    "gulp": "^3.9.1",
+    "gulp-tar": "^1.9.0",
+    "http-server": "^0.9.0",
+    "run-sequence": "^1.2.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hkamran/Hoones.git"
+  },
+  "keywords": [
+    "NES",
+    "Emulator",
+    "Javascript"
+  ],
+  "author": "hkamran490@gmail.com",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hkamran/Hoones/issues"
+  },
+  "homepage": "https://github.com/hkamran/Hoones#readme"
+}
