@@ -101,9 +101,7 @@
             <span id="stack"> </span>
         </div>
     </fieldset>
-    <div style="position: absolute; line-height: 30px; text-align: center; bottom: 10px; color:#e1e5e0; width: 240px; height: 30px; margin: 10px; box-sizing: inherit; background: #696969">
-        <a style="color: #fff; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; -o-user-select: none;" onclick="debug.tick()">DEBUG (SPACE)</a>
-    </div>
+
 </div>
 
 
@@ -201,7 +199,17 @@
         </div>
     </fieldset>
 </div>
-
+<div class="small-12 large-12 columns">
+    <div class="clickable" onclick="debug.tick()" 
+		 style="line-height: 30px; 
+				text-align: center; 
+				height: 30px; 
+				margin-right: 10px; 
+				background: #696969;
+				padding: 0px;">
+        <a class="unselectable " style="color: #fff; user-select: none;">DEBUG (SPACE)</a>
+    </div>
+</div>
 <div style="background: #333; color: #fff" id="log" rows="500" cols="50">
 
 </div>

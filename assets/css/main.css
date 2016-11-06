@@ -90,3 +90,14 @@ canvas {
     width: 30.625em;
 
 }
+
+.unselectable {
+	-moz-user-select: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+}
+
+.clickable {
+	cursor: pointer; 
+	cursor: hand; 
+}
