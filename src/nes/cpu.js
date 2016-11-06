@@ -395,13 +395,10 @@ var cpu = {
 				} else if (addr < 0x800) {
 					return this.ram.readByte(addr);
 				} else {
-					asdasdasdasdasd;
+					throw "Not allowed";
 				}
-
 			} else if (addr < 0x4000) {
-
 				return ppu.registers.readByte(addr);
-
 			} else if (addr < 0x4021) {
 
 				if (addr < 0x4014) {
@@ -413,37 +410,27 @@ var cpu = {
 					//TODO APU
 					return 0x0;
 				} else if (addr == 0x4016) {
-					return player1.readByte();
+					return controller1.readByte();
 				} else if (addr == 0x4017) {
-					//TODO Controller 2
-					return 0x0;
+					return controller2.readByte();
 				} else if (addr < 0x4020) {
 					//TODO APU
 					return 0x0;
 				} else {
 					return 0x0;
 				}
-
 			} else if (addr < 0x8000) {
-
-
 				if (addr < 0x6000) {
 					return this.erom.readByte(addr);
 				} else if (addr < 0x8000) {
 					return this.sram.readByte(addr);
 				} else {
-					asdasdasdasd;
+					throw "Not allowed";
 				}
-
 			} else if (addr < 0x10000) {
-
-
 				return this.prgrom.readByte(addr);
-
 			} else {
-
-				console.log(addr.toString(16));
-				asdasdasasdasd;
+				throw "Not allowed";
 			}
 		},
 
@@ -464,7 +451,7 @@ var cpu = {
 					this.ram.writeByte(addr, val);
 					return;
 				} else {
-					asdasdasdasdasd;
+					throw "Not allowed";
 				}
 
 			} else if (addr < 0x4000) {
@@ -482,10 +469,11 @@ var cpu = {
 					//TODO APU
 					return 0x0;
 				} else if (addr == 0x4016) {
-					//TODO Controller
-					return player1.writeByte(val);
+					controller1.writeByte(val);
+					controller2.writeByte(val);
+					return 0x0;
 				} else if (addr == 0x4017) {
-					//TODO Controller
+					//TODO APU
 					return 0x0;
 				} else if (addr < 0x4020) {
 					//TODO APU
@@ -505,10 +493,8 @@ var cpu = {
 				this.prgrom.writeByte(addr, val);
 				return;
 			} else {
-				console.log("ERROR: " + addr.toString(16) + ":" + val.toString(16));
-				asdasdasdasd;
+				throw "Not allowed";
 			}
-			asdasdassaasd
 		},
 
 		readWord : function(addr) {
@@ -539,21 +525,21 @@ var cpu = {
 	
 	interrupts : {
 		val : "NONE",
-		
+
 		types : {
 			none : 0,
 			nmi  : 1,
 			irq  : 2,
 		},
-		
+
 		set : function(type) {
 			this.val = type;
 		},
-		
+
 		get : function() {
 			return this.val;
 		},
-		
+
 		tick : function() {
 			if (this.val == this.types.nmi) {
 				this.doNMI();
@@ -588,6 +574,10 @@ var cpu = {
 		var opcode = this.mmu.readByte(this.registers.pc.get());
 		var op = this.instructions.get(opcode);
 		var cycles = this.cycles;
+
+		if (typeof op === 'undefined') {
+			throw "Operation is empty!";
+		}
 
 		//Increment PC
 		var opaddr = this.registers.pc.get();
@@ -854,8 +844,7 @@ var cpu = {
 				id : 13,
 
 				getResult : function(opaddr) {
-					asdasdasdasdasd;
-					console.log("error");
+					throw "Not Implemented Operation";
 				},
 			},
 
@@ -1328,7 +1317,7 @@ var cpu = {
 
 			//Set i flag
 			sei: function(info) {
-				cpu.registers.i = 1;
+				cpu.registers.p.i = 1;
 			},
 
 			//Store accumulator
@@ -1788,6 +1777,68 @@ var cpu = {
 			return this.map[id];
 		},
 	},
+
+
+	getState : function() {
+		var cpu = {};
+		cpu.registers = {};
+		cpu.registers.a = this.registers.a.val;
+
+		cpu.registers.p = {};
+		cpu.registers.p.b = this.registers.p.b;
+		cpu.registers.p.c = this.registers.p.c;
+		cpu.registers.p.d = this.registers.p.d;
+		cpu.registers.p.i = this.registers.p.i;
+		cpu.registers.p.n = this.registers.p.n;
+		cpu.registers.p.v = this.registers.p.v;
+		cpu.registers.p.z = this.registers.p.z;
+
+		cpu.registers.pc = this.registers.pc.val;
+		cpu.registers.sp = this.registers.sp.val;
+		cpu.registers.x = this.registers.x.val;
+		cpu.registers.y = this.registers.y.val;
+
+		cpu.cycles = this.cycles;
+		cpu.ticks = this.ticks;
+
+		cpu.mmu = {};
+		cpu.mmu.ram = this.mmu.ram.data;
+		cpu.mmu.zeropage = this.mmu.zeropage.data.slice(0);
+		cpu.mmu.stack = this.mmu.stack.data.slice(0);
+		cpu.mmu.ram = this.mmu.ram.data.slice(0);
+
+		cpu.interrupts = this.interrupts.val;
+
+		return cpu;
+	},
+
+	loadState : function(state) {
+		this.registers.a.val = state.registers.a;
+
+		this.registers.p.b = state.registers.p.b;
+		this.registers.p.c = state.registers.p.c;
+		this.registers.p.d = state.registers.p.d;
+		this.registers.p.i = state.registers.p.i;
+		this.registers.p.n = state.registers.p.n;
+		this.registers.p.v = state.registers.p.v;
+		this.registers.p.z = state.registers.p.z;
+
+		this.registers.pc.val = state.registers.pc;
+		this.registers.sp.val = state.registers.sp;
+		this.registers.x.val = state.registers.x;
+		this.registers.y.val = state.registers.y;
+
+		this.cycles = state.cycles;
+		this.ticks = state.ticks;
+
+
+		this.mmu.ram.data = state.mmu.ram.slice(0);
+		this.mmu.zeropage.data = state.mmu.zeropage.slice(0);
+		this.mmu.stack.data = state.mmu.stack.slice(0);
+		this.mmu.ram.data = state.mmu.ram.slice(0);
+
+		this.interrupts.val = state.interrupts.val;
+	}
 	
 	
 };

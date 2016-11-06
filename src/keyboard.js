@@ -17,57 +17,59 @@ var keyboard = {
         space: 32        //space
     },
 
-    init : function() {
-        console.log("Interfacing keyboard..");
+    init : function(controller) {
+        console.info("Interfacing keyboard to controller " + controller.id + " ...");
 
         var keymap = this.keymap;
 
         document.onkeyup = function (e) {
             var code = e.keyCode;
-            var keys = player1.keys;
+            var keys = controller.keys;
 
             if (code == keymap.up) {
-                player1.releaseKey(keys.up);
+                controller.releaseKey(keys.up);
             } else if (code == keymap.down) {
-                player1.releaseKey(keys.down);
+                controller.releaseKey(keys.down);
             } else if (code == keymap.left) {
-                player1.releaseKey(keys.left);
+                controller.releaseKey(keys.left);
             } else if (code == keymap.right) {
-                player1.releaseKey(keys.right);
+                controller.releaseKey(keys.right);
             } else if (code == keymap.a) {
-                player1.releaseKey(keys.a);
+                controller.releaseKey(keys.a);
             } else if (code == keymap.b) {
-                player1.releaseKey(keys.b);
+                controller.releaseKey(keys.b);
             } else if (code == keymap.start) {
-                player1.releaseKey(keys.start);
+                controller.releaseKey(keys.start);
             } else if (code == keymap.select) {
-                player1.releaseKey(keys.select);
+                controller.releaseKey(keys.select);
             }
+
         };
 
         document.onkeydown = function (e) {
             var code = e.keyCode;
-            var keys = player1.keys;
+            var keys = controller.keys;
 
             if (code == keymap.up) {
-                player1.pressKey(keys.up);
+                controller.pressKey(keys.up);
             } else if (code == keymap.down) {
-                player1.pressKey(keys.down);
+                controller.pressKey(keys.down);
             } else if (code == keymap.left) {
-                player1.pressKey(keys.left);
+                controller.pressKey(keys.left);
             } else if (code == keymap.right) {
-                player1.pressKey(keys.right);
+                controller.pressKey(keys.right);
             } else if (code == keymap.a) {
-                player1.pressKey(keys.a);
+                controller.pressKey(keys.a);
             } else if (code == keymap.b) {
-                player1.pressKey(keys.b);
+                controller.pressKey(keys.b);
             } else if (code == keymap.start) {
-                player1.pressKey(keys.start);
+                controller.pressKey(keys.start);
             } else if (code == keymap.select) {
-                player1.pressKey(keys.select);
+                controller.pressKey(keys.select);
             } else if (code == keymap.space) {
                 debug.tick();
             }
+
         };
     }
 }

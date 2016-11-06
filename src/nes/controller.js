@@ -4,11 +4,13 @@
  *
  * Created by Hooman Kamran on 1/01/2016.
  */
-var Controller = function() {
+var Controller = function(id) {
+
 
     var index = 0;
     var data = [0, 0, 0, 0, 0, 0, 0, 0];
-    var reset = false;
+    var strobe = 0;
+
 
     var keys = {
         up : 4,
@@ -22,12 +24,31 @@ var Controller = function() {
     };
 
     return {
+
+        id: id,
+
+        getData : function() {
+            return data;
+        },
+
+        setData : function(keys) {
+          data = keys;
+        },
+
         readByte : function() {
-            var result = data[index];
+            var result = 0;
+            if (index < 8) {
+                result = data[index];
+            }
+
             index++;
 
-            if (index >= 7) {
-                index = 7;
+            if ((strobe & 1) == 1) {
+                index = 0;
+            }
+
+            if (index > 7) {
+                index = 8;
             }
             return result;
         },
@@ -57,11 +78,10 @@ var Controller = function() {
         },
 
         writeByte : function(val) {
-            var even = (val & 1) == 0;
-            if (reset && even) {
+            strobe = val;
+            if ((strobe & 1) == 1) {
                 index = 0;
             }
-            reset = (val & 1) == 1;
         },
 
         keys : keys,

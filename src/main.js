@@ -34,8 +34,14 @@ if (!isCanvasSupported()) {
     $('#notsupported').show();
     $('#main').hide();
 } else {
-    var player1 = new Controller();
-    keyboard.init();
+
+    var controller1 = new Controller(1);
+    var controller2 = new Controller(2);
+
+    nes.init(cpu, ppu, controller1, controller2);
+    keyboard.init(controller1);
     nes.load("./roms/SuperMarioBros.nes");
     nes.start();
+    
+
 }

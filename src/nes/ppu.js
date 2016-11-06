@@ -163,13 +163,12 @@ var ppu = {
 		 */
 		getColorRBG : function(val) {
 			if (val > 0x40) {
-				console.log("ERROR COLOR " + val.toString(16));
-				asdasdasd.asdasdasd;
+				throw "ERROR COLOR " + val.toString(16);
 			}
 
 			var result = this.rbgs[val];
 			if (typeof result == 'undefined') {
-				console.log("ERROR " + val.toString(16));
+				throw "ERROR COLOR " + val.toString(16);
 			}
 			return result;
 		},
@@ -179,13 +178,12 @@ var ppu = {
 		 */
 		getColorHex : function(val) {
 			if (val > 0x40) {
-				console.log("ERROR COLOR " + val.toString(16));
-				asdasdasd.asdasdasd;
+				throw "ERROR COLOR " + val.toString(16);
 			}
 
 			var result = this.colors[val];
 			if (typeof result == 'undefined') {
-				console.log("ERROR " + val.toString(16));
+				throw "ERROR COLOR " + val.toString(16);
 			}
 			return result;
 		},
@@ -394,8 +392,7 @@ var ppu = {
 
 			readByte : function(addr) {
 				if (addr >= 0x2000) {
-					asdadasdsad.asdasdsa;
-					return 0x0;
+					throw "Not allowed!";
 				}
 
 				return this.mapper.readByte(addr);
@@ -403,8 +400,7 @@ var ppu = {
 
 			writeByte : function(addr, val) {
 				if (addr >= 0x2000) {
-					asdadsasdsad.asdasdsad;
-					return;
+					throw "Not allowed!";
 				}
 
 				this.mapper.writeByte(addr, val);
@@ -474,8 +470,7 @@ var ppu = {
 				//TODO Implement Mirrors
 
 				if (addr > 0x3f00 || addr < 0x2000) {
-					console.log("error " + addr.toString(16));
-					asdasdasd.asdasdasdasd;
+					throw "Not allowed!";
 				}
 
 				addr = ((addr - 0x2000) % 0x1000); //Mimic mirrors from 0x3000 to 0x3f00
@@ -502,8 +497,7 @@ var ppu = {
 			writeByte: function(addr, val) {
 
 				if (addr > 0x3f00 || addr < 0x2000) {
-					console.log("error " + addr.toString(16));
-					asdasdasd.asdasdasdasd;
+					throw "Not allowed!";
 				}
 
 				var addr = ((addr - 0x2000) % 0x1000); //Mimic mirrors from 0x3000 to 0x3f00
@@ -1742,4 +1736,179 @@ var ppu = {
 			i--;
 		}
 	},
+
+
+	getState : function() {
+		var ppu = {
+			cycle : this.cycle,
+			scanline : this.scanline,
+			frame : this.frame,
+
+			mmu : {
+				palette : {
+					image : {
+						data : this.mmu.palette.image.data.slice(0)
+					},
+
+					sprite : {
+						data : this.mmu.palette.sprite.data.slice(0)
+					}
+				},
+
+				nametables : {
+					table : this.mmu.nametables.table.slice(0),
+					attribute : this.mmu.nametables.attribute.slice(0)
+				},
+
+				oam : {
+					addr : this.mmu.oam.addr,
+					data : this.mmu.oam.data.slice(0)
+				}
+			},
+
+			nmi : {
+				occurred : this.nmi.occurred,
+				previous : this.nmi.previous,
+				output :   this.nmi.output,
+				delay :    this.nmi.delay
+			},
+
+			vars : {
+				v : this.vars.v,
+				t : this.vars.t,
+				w : this.vars.w,
+				x : this.vars.x,
+				l : this.vars.l,
+				f : this.vars.f
+			},
+
+			renderer : {
+				background : {
+					attributeTableByte : this.renderer.background.attributeTableByte,
+					nameTableByte : this.renderer.background.nameTableByte,
+					tileAddr : this.renderer.background.tileAddr,
+					lowTileByte : this.renderer.background.lowTileByte,
+					highTileByte : this.renderer.background.highTileByte
+				},
+
+				sprites : {
+					count : this.renderer.sprites.count,
+					patterns : this.renderer.sprites.patterns.slice(0),
+					positions : this.renderer.sprites.positions.slice(0),
+					priorities : this.renderer.sprites.priorities.slice(0),
+					indexes : this.renderer.sprites.indexes.slice(0)
+				}
+			},
+
+			registers : {
+				cntrl : {
+					nametable : this.registers.cntrl.nametable,
+					increment : this.registers.cntrl.increment,
+					spritetable : this.registers.cntrl.spritetable,
+					backgroundtable : this.registers.cntrl.backgroundtable,
+					spritesize : this.registers.cntrl.spritesize,
+					masterslave : this.registers.cntrl.masterslave,
+					nmi : this.registers.cntrl.nmi
+				},
+
+				mask : {
+					greyscale : this.registers.mask.greyscale,
+					showbgleft : this.registers.mask.showbgleft,
+					showspleft : this.registers.mask.showspleft,
+					showbg : this.registers.mask.showbg,
+					showsprites : this.registers.mask.showsprites,
+					increds : this.registers.mask.increds,
+					incgreens : this.registers.mask.incgreens,
+					incblues : this.registers.mask.incblues
+				},
+
+				status : {
+					unimplemented : this.registers.status.unimplemented,
+					spriteoverflow : this.registers.status.spriteoverflow,
+					spritehit : this.registers.status.spritehit,
+					vblank : this.registers.status.vblank
+				},
+
+				scroll : {
+					data : this.registers.scroll.data
+				},
+
+				data : {
+					buffer : this.registers.data.buffer
+				}
+
+			}
+
+		};
+
+		return ppu;
+
+	},
+
+
+	loadState : function(state) {
+
+		this.cycle = state.cycle;
+		this.scanline = state.scanline;
+		this.frame = state.frame;
+
+		this.mmu.palette.image.data = state.mmu.palette.image.data.slice(0);
+		this.mmu.palette.sprite.data = state.mmu.palette.sprite.data.slice(0);
+
+		this.mmu.nametables.table = state.mmu.nametables.table.slice(0);
+		this.mmu.nametables.attribute = state.mmu.nametables.attribute.slice(0);
+
+		this.mmu.oam.addr = state.mmu.oam.addr;
+		this.mmu.oam.data = state.mmu.oam.data.slice(0);
+
+		this.nmi.occurred = state.nmi.occurred;
+		this.nmi.previous = state.nmi.previous;
+		this.nmi.output = state.nmi.output;
+		this.nmi.delay = state.nmi.delay;
+
+		this.vars.v = state.vars.v;
+		this.vars.t = state.vars.t;
+		this.vars.w = state.vars.w;
+		this.vars.x = state.vars.x;
+		this.vars.l = state.vars.l;
+		this.vars.f = state.vars.f;
+
+		this.renderer.background.attributeTableByte = state.renderer.background.attributeTableByte;
+		this.renderer.background.nameTableByte = state.renderer.background.nameTableByte;
+		this.renderer.background.tileAddr = state.renderer.background.tileAddr;
+		this.renderer.background.lowTileByte = state.renderer.background.lowTileByte;
+		this.renderer.background.highTileByte = state.renderer.background.highTileByte;
+
+		this.renderer.sprites.count = state.renderer.sprites.count;
+		this.renderer.sprites.patterns = state.renderer.sprites.patterns.slice(0);
+		this.renderer.sprites.positions = state.renderer.sprites.positions.slice(0);
+		this.renderer.sprites.priorities = state.renderer.sprites.priorities.slice(0);
+		this.renderer.sprites.indexes = state.renderer.sprites.indexes.slice(0);
+
+		this.registers.cntrl.nametable = state.registers.cntrl.nametable;
+		this.registers.cntrl.increment = state.registers.cntrl.increment;
+		this.registers.cntrl.spritetable = state.registers.cntrl.spritetable;
+		this.registers.cntrl.backgroundtable = state.registers.cntrl.backgroundtable;
+		this.registers.cntrl.spritesize = state.registers.cntrl.spritesize;
+		this.registers.cntrl.masterslave = state.registers.cntrl.masterslave;
+		this.registers.cntrl.nmi = state.registers.cntrl.nmi;
+
+		this.registers.mask.greyscale = state.registers.mask.greyscale;
+		this.registers.mask.showbgleft = state.registers.mask.showbgleft;
+		this.registers.mask.showspleft = state.registers.mask.showspleft;
+		this.registers.mask.showbg = state.registers.mask.showbg;
+		this.registers.mask.showsprites = state.registers.mask.showsprites;
+		this.registers.mask.increds = state.registers.mask.increds;
+		this.registers.mask.incgreens = state.registers.mask.incgreens;
+		this.registers.mask.incblues = state.registers.mask.incblues;
+
+		this.registers.status.unimplemented = state.registers.status.unimplemented;
+		this.registers.status.spriteoverflow = state.registers.status.spriteoverflow;
+		this.registers.status.spritehit = state.registers.status.spritehit;
+		this.registers.status.vblank = state.registers.status.vblank;
+
+		this.registers.scroll.data = state.registers.status.data;
+		this.registers.data.buffer = state.registers.status.buffer;
+
+	}
 }
