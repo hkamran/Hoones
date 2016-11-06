@@ -23,6 +23,13 @@ var Controller = function(id) {
         start : 3,
     };
 
+
+    /**
+     * We iterate on each read, returning the next input until we hit the last. We
+     * can only return to the first button if we write 1 into the controller. The controller
+     * will then maintain the first input until we write 0.
+     */
+
     return {
 
         id: id,
