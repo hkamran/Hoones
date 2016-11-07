@@ -40,7 +40,7 @@ gulp.task('package', function() {
 gulp.task('build', ['assets', 'src', 'roms']);
 
 gulp.task('watch', function() {
-  gulp.watch(dir.src, ['clean', 'build']);
+  gulp.watch(dir.src, ['build']);
 });
 
 gulp.task('default', function(callback) {

@@ -2,7 +2,7 @@
 body {
     background-color: #252525;
     -webkit-font-smoothing: none;
-
+    overflow-y: hidden;
 }
 
 @font-face {
