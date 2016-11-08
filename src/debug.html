@@ -201,7 +201,7 @@
 </div>
 
 <div class="row">
-    <div class="small-12 large-12 columns">
+    <div class="small-12 medium-12 large-12 columns">
         <div class="clickable" onclick="debug.tick()"
              style="line-height: 30px;
                     text-align: center;
@@ -212,6 +212,27 @@
             <a class="unselectable " style="color: #fff; user-select: none;">DEBUG (SPACE)</a>
         </div>
     </div>
+    <div class="small-12 medium-12 large-12 columns">
+        <div class="clickable" onclick="(function() {
+			var text = 'START';
+			if (nes.rate == 0) {
+				text = 'STOP';
+				nes.start();
+			} else {
+				nes.stop();
+			}
+			$('#control').html(text);
+		})()"
+             style="line-height: 30px;
+                    text-align: center;
+                    height: 30px;
+                    margin-right: 10px;
+                    background: #696969;
+                    padding: 0px; margin-bottom: 15px;">
+            <a class="unselectable " id="control" style="color: #fff; user-select: none;">STOP</a>
+        </div>
+    </div>	
+
 </div>
 
 

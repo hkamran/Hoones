@@ -7,7 +7,7 @@
 
 var nes = {
 
-    interval : 0,    //lower means faster emulation (default is 20)
+    interval : 1,    //lower means faster emulation (default is 20)
     rate : 29829,    //Tick Rate per frame
     url : "",
     timeout : null,  //timeout function to run nes
