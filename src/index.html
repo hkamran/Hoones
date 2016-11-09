@@ -225,7 +225,7 @@
 <!--">-->
 <div id="menu" class="debug panel" role="navigation" style="width: 300px;z-index: 2;">
     <ul id="Tabs">
-        <li><a class="menu-link" onclick="loadDebugMenu()" href="#">Debugger</a></li>
+        <li><a class="menu-link" href="#">Debugger</a></li>
     </ul>
     <div id="content" style="bottom: 0; position: absolute;  top: 0; overflow-y: auto; ">
 
@@ -240,11 +240,7 @@
 
 </div>
 <script type="text/javascript">
-    var loadDebugMenu = function() {
-        debug.tick();
-        $('#Event').toggle();
 
-    }
 
     $(document).ready(function () {
         $('.menu-link').bigSlide(
@@ -252,7 +248,15 @@
                     side: "right",
                     push: '.drawer-push',
                     menuWidth: '47.8em',
-                    push: '.pushy'
+                    push: '.pushy',
+					beforeOpen : function() {
+						debug.tick();
+						
+						$('#Event').show();
+					},
+					beforeClose : function() {
+						$('#Event').hide();
+					}
                 });
     });
 </script>
