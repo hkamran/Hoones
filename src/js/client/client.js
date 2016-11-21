@@ -4,14 +4,17 @@
 var Client = function(nes) {
 
     var socket;
-    var controller1 = nes.controller1;
-    var controller2 = nes.controller2;
-    var nes = nes;
-    var cpu = nes.cpu;
-    var ppu = nes.ppu;
     var id;
-    var keyPressQueue = [];
-    var pastKeys = [0, 0, 0, 0, 0, 0, 0, 0];
+
+    var controller;
+
+    var keyCounter = 0;
+    var keyReady = [true, true];
+    var player1 = [];
+    var player2 = [];
+
+    var nes = nes;
+
 
     var onmessage = function(event) {
         var json = JSON.parse(event.data);
@@ -19,7 +22,7 @@ var Client = function(nes) {
 
         if (payload.type == Payload.types.KEYS) {
             var keys = payload.data;
-            handleControllerUpdate(keys);
+            handleKeyUpdate(keys);
         } else if ((payload.type == Payload.types.GET)) {
             handleGetUpdate();
         } else if ((payload.type == Payload.types.PUT)) {
@@ -38,20 +41,92 @@ var Client = function(nes) {
         }
     };
 
+    /**
+     * Server sends player id (onconnect)
+     */
+    var handlePlayerUpdate = function(player) {
+        console.info("YOU ARE PLAYER " + player.id);
+        id = player.id;
+        controller = new Controller(id);
+        keyboard.init(controller);
+    };
+
+    /**
+     * Servers sends a GET request which means it wants the users nes state (synching first phase)
+     */
+    var handleGetUpdate = function(state) {
+        console.log("Sending State");
+        var state = State.toJSON(nes, id);
+        var payload = new Payload(Payload.types.GET, state);
+        send(payload);
+    }
+
+    /**
+     * Save the nes state given from the server (syching last phase)
+     */
     var handlePutUpdate = function(state) {
         console.log("Got PUT");
-        keyPressQueue = [];
+        keyReady = [true, true];
+        keyCounter = 0;
         nes.loadState(state.data);
         var payload = new Payload(Payload.types.WAITING, {});
         send(payload);
     }
 
-    var handleGetUpdate = function(state) {
-        console.log("Sending GET");
-        var state = State.toJSON(nes, id);
-        var payload = new Payload(Payload.types.GET, state);
+
+    var handleKeyUpdate = function(keys) {
+        var playerId = keys.playerId;
+        if (playerId == 1 && keys.cycle == keyCounter) {
+            keyReady[0] = true;
+            player1 = keys.data;
+        } else if (playerId == 2 && keys.cycle == keyCounter) {
+            keyReady[1] = true;
+            player2 = keys.data;
+        } else {
+        }
+
+        var ready = true;
+        for (var i = 0; i < keyReady.length; i++) {
+            ready &= keyReady[i];
+        }
+
+        if (ready) {
+            postFrame();
+        }
+    };
+
+    var postFrame = function() {
+        if (controller == null) {
+            return;
+        }
+
+        //Send our Keys
+        var payload = new Payload(Payload.types.KEYS, Keys.toJSON(controller, id, keyCounter));
         send(payload);
-    }
+
+        //Wait until we receive all the keys
+        var ready = true;
+        for (var i = 0; i < keyReady.length; i++) {
+            ready &= keyReady[i];
+        }
+
+        if (!ready) {
+            nes.stop();
+            return;
+        }
+
+        //Once we received all the keys send controller data
+        nes.controller1.setData(player1);
+        nes.controller2.setData(player2);
+
+        keyCounter++;
+        keyReady[0] = false;
+        keyReady[1] = false;
+
+        nes.start();
+    }.bind(this);
+
+    nes.ppu.renderer.postFrame = postFrame;
 
     var handleStopUpdate = function() {
         console.info("Stopping emulation");
@@ -63,17 +138,7 @@ var Client = function(nes) {
         nes.start();
     };
 
-    var handleControllerUpdate = function(keys) {
-        console.log("Key Update");
-        keyPressQueue.push(keys);
-    }.bind(this);
-
-
-    var handlePlayerUpdate = function(player) {
-        id = player.id;
-        var controller = getController(id);
-        keyboard.init(controller);
-    };
+    //---------------------
 
     var send = function(event) {
         socket.send(JSON.stringify(event));
@@ -84,66 +149,14 @@ var Client = function(nes) {
     };
 
     var onclose = function(event) {
-        console.info("Closing connection to " + url);
+        console.info("Closing connection to " + event.target.url);
     };
 
     var onerror = function(event) {
         console.error("Error from WS", event);
     };
 
-    var getController = function(id) {
-        var controller = controller2;
-        if (id == 1) {
-            controller = controller1;
-        }
-        return controller;
-    };
 
-    var sendControllerUpdate = function() {
-        var controller = getController(id);
-        var currentKeys = controller.getData();
-
-        for (var i = 0; i < pastKeys.length; i++) {
-            if (currentKeys[i] != pastKeys[i]) {
-                pastKeys = currentKeys.slice(0);
-
-                var json = Keys.toJSON(controller, id, this.cpu.cycles);
-                var payload = new Payload(Payload.types.KEYS, json);
-                send(payload);
-                break;
-            }
-        }
-    };
-
-    var processKeyPresses = function() {
-        while (keyPressQueue.length != 0) {
-            var keys = keyPressQueue[0];
-            if (keys.playerId == id) {
-                console.error("STOP");
-                return;
-            }
-
-            if (keys.cycle > cpu.cycles) {
-                return;
-            } else if (keys.cycle < cpu.cycles - 100000) {
-                console.info("DESYNCED " + keys.cycle + " " + cpu.cycles);
-                var payload = new Payload(Payload.types.PUT, {});
-                send(payload);
-                keyPressQueue = [];
-                return;
-            }
-
-            keyPressQueue.shift();
-            var controller = getController(keys.playerId);
-            controller.setData(keys.data.slice(0));
-        }
-    }
-
-    nes.tickCallback = function() {
-        sendControllerUpdate();
-        processKeyPresses();
-
-    }
     return {
         connect : function(url) {
             socket = new WebSocket(url);
@@ -151,7 +164,12 @@ var Client = function(nes) {
             socket.onopen = onopen;
             socket.onclose = onclose;
             socket.onerror = onerror;
+        },
+
+        keyReady : function() {
+            return keyReady;
         }
+
     }
 };
 

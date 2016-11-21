@@ -1048,6 +1048,14 @@ var ppu = {
 	 */
 	renderer : {
 
+		callback : function() {
+
+		},
+
+		postFrame : function() {
+
+		},
+
 		/**
 		 * Frame buffer.
 		 *
@@ -1696,6 +1704,7 @@ var ppu = {
 			this.frame++;
 
 			this.renderer.buffer.print();
+			this.renderer.postFrame();
 			this.vars.f ^= 1;
 
 		} else {
@@ -1706,6 +1715,7 @@ var ppu = {
 				if (scanline > 261) {
 					this.scanline = 0;
 					this.renderer.buffer.print();
+                    this.renderer.postFrame();
 					this.frame++;
 					this.vars.f ^= 1;
 				}

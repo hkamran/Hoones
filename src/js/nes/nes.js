@@ -17,8 +17,6 @@ var nes = {
     controller2 : null,
     controller1 : null,
 
-    tickCallback : function() {},
-
     init : function(cpu, ppu, controller1, controller2) {
         this.cpu = cpu;
         this.ppu = ppu;
@@ -44,7 +42,6 @@ var nes = {
     },
 
     tick : function() {
-        this.tickCallback();
         var cpuCycles = this.cpu.tick();
         var ppuCycles = cpuCycles * 3;
         for (var i = 0; i < ppuCycles; i++) {
@@ -69,6 +66,8 @@ var nes = {
 
         this.cpu.loadState(state.cpu);
         this.ppu.loadState(state.ppu);
+        this.controller1.loadState(state.controller1);
+        this.controller2.loadState(state.controller2);
     },
 
 
@@ -80,7 +79,9 @@ var nes = {
                 url : nes.url
             },
             cpu : this.cpu.getState(),
-            ppu : this.ppu.getState()
+            ppu : this.ppu.getState(),
+            controller1: this.controller1.getState(),
+            controller2: this.controller2.getState()
         };
 
         return json;

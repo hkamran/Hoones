@@ -91,6 +91,20 @@ var Controller = function(id) {
             }
         },
 
+        getState : function() {
+            return {
+                data : data,
+                strobe : strobe,
+                index : index
+            }
+        },
+
+        loadState : function(state) {
+            data = state.data;
+            strobe = state.strobe;
+            index = state.index;
+        },
+
         keys : keys,
     }
 };
