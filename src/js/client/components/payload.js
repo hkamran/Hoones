@@ -25,6 +25,10 @@ Payload.parseJSON = function(json) {
     } else if (Payload.types.cmp(Payload.types.WAITING, type)) {
     } else if (Payload.types.cmp(Payload.types.PLAYER, type)) {
         data = Player.parseJSON(json.data);
+    }  else if (Payload.types.cmp(Payload.types.CONNECTED, type)) {
+        data = Player.parseJSON(json.data);
+    }  else if (Payload.types.cmp(Payload.types.DISCONNECTED, type)) {
+        data = Player.parseJSON(json.data);
     } else {
         console.error("Unknown payload type.");
     }
@@ -49,6 +53,10 @@ Payload.types = {
             return Payload.types.PLAY;
         } else if (source.localeCompare(Payload.types.WAITING) == 0) {
             return Payload.types.WAITING;
+        }  else if (source.localeCompare(Payload.types.CONNECTED) == 0) {
+            return Payload.types.CONNECTED;
+        }  else if (source.localeCompare(Payload.types.DISCONNECTED) == 0) {
+            return Payload.types.DISCONNECTED;
         } else {
             return Payload.types.NONE;
         }
@@ -66,3 +74,5 @@ Payload.types.PLAYER = "PLAYER";
 Payload.types.STOP = "STOP";
 Payload.types.PLAY = "PLAY";
 Payload.types.WAITING = "WAITING";
+Payload.types.CONNECTED = "CONNECTED";
+Payload.types.DISCONNECTED = "DISCONNECTED";

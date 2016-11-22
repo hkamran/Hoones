@@ -30,22 +30,35 @@ var Client = function(nes) {
             handlePutUpdate(state);
         } else if ((payload.type == Payload.types.STOP)) {
             handleStopUpdate();
-        }  else if ((payload.type == Payload.types.PLAY)) {
+        } else if ((payload.type == Payload.types.PLAY)) {
             handlePlayUpdate();
-        }  else if ((payload.type == Payload.types.PLAYER)) {
+        } else if ((payload.type == Payload.types.PLAYER)) {
             var player = payload.data;
             console.info("User is player " + player.id);
             handlePlayerUpdate(player);
+        }  else if ((payload.type == Payload.types.CONNECTED)) {
+            var player = payload.data;
+            handleConnected(player);
+        }  else if ((payload.type == Payload.types.DISCONNECTED)) {
+            var player = payload.data;
+            handleDisconnected(player);
         } else {
             console.error("Unknown payload type.");
         }
     };
 
+    var handleConnected = function(player) {
+        playerConnected(player.id, id);
+    }
+
+    var handleDisconnected = function(player) {
+        playerDisconnected(player.id);
+    }
+
     /**
      * Server sends player id (onconnect)
      */
     var handlePlayerUpdate = function(player) {
-        console.info("YOU ARE PLAYER " + player.id);
         id = player.id;
         controller = new Controller(id);
         keyboard.init(controller);
