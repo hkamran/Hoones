@@ -42,6 +42,6 @@ if (!isCanvasSupported()) {
     keyboard.init(controller1);
     nes.load("./roms/SuperMarioBros.nes");
     nes.start();
-    
 
+    var client = null;
 }

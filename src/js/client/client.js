@@ -179,10 +179,12 @@ var Client = function(nes) {
             socket.onerror = onerror;
         },
 
-        keyReady : function() {
-            return keyReady;
+        disconnect : function() {
+            if (socket) {
+                socket.close();
+                nes.ppu.renderer.postFrame = function() {};
+            }
         }
-
     }
 };
 
