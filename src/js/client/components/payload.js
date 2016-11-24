@@ -25,6 +25,8 @@ Payload.parseJSON = function(json) {
     } else if (type == Payload.types.SERVER_STOP) {
     } else if (type == Payload.types.SERVER_PLAY) {
     } else if (type == Payload.types.SERVER_WAIT) {
+    } else if (type == Payload.types.SERVER_DESTROYED) {
+    } else if (type == Payload.types.SERVER_FULL) {
     } else if (type == Payload.types.SERVER_PLAYERCONNECTED) {
         data = Player.parseJSON(json.data);
     } else if (type == Payload.types.SERVER_PLAYERDISCONNECTED) {
@@ -47,6 +49,8 @@ Payload.types.SERVER_PUTSTATE = 1;
 Payload.types.SERVER_STOP = 2;
 Payload.types.SERVER_PLAY = 3;
 Payload.types.SERVER_WAIT = 4;
+Payload.types.SERVER_DESTROYED = 13;
+Payload.types.SERVER_FULL = 14;
 
 Payload.types.SERVER_PLAYERINFO = 5;
 Payload.types.SERVER_PLAYERKEYS = 6;

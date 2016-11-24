@@ -40,6 +40,10 @@ var Client = function(nes) {
             handlePlayPayload();
         } else if (payload.type == Payload.types.SERVER_WAIT) {
             handleWaitPayload();
+        } else if (payload.type == Payload.types.SERVER_DESTROYED) {
+
+        } else if (payload.type == Payload.types.SERVER_FULL) {
+
         } else if ((payload.type == Payload.types.SERVER_PLAYERINFO)) {
             handlePlayerPayload(payload.data);
         }  else if ((payload.type == Payload.types.SERVER_PLAYERCONNECTED)) {
