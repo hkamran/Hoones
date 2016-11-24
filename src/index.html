@@ -75,9 +75,11 @@
 <!-- Netplay Handlers         -->
 <!-- ------------------------ -->
 <script type="text/javascript">
+    var hostname = "hkamran.info";
+    var dir = "/projects/hultines/index.html";
 
     function showNetplayGUI(host, id, port) {
-        var part = "/index.html?id=" + id + "&port=" + port;
+        var part = dir + "?id=" + id + "&port=" + port;
         window.history.pushState("index", "", part);
 
         $('#roomId').val("http://" + host + part);
@@ -90,7 +92,7 @@
     function hideNetPlayGUI() {
         $('#netplay').addClass('none');
         $('#netplay').removeClass('inline-block');
-        window.history.pushState("index", "", "/index.html");
+        window.history.pushState("index", "", dir);
     }
 
     function playerDisconnected(id) {
@@ -124,12 +126,12 @@
         }
 
         nes.stop();
-        client.connect(location.hostname, port, id);
-        showNetplayGUI(location.host, id, port);
+        client.connect(hostname, port, id);
+        showNetplayGUI(hostname, id, port);
     }
 
     function createRoom() {
-        var rest = "http://" + location.hostname + ":8090/rest/createRoom";
+        var rest = "http://" + hostname + ":8090/rest/createRoom";
         $.ajax({
             url: rest
         }).then(function(data) {
@@ -141,7 +143,7 @@
             var id = data.id;
 
             nes.stop();
-            showNetplayGUI(location.host, id, port);
+            showNetplayGUI(hostname, id, port);
             openRoom();
         });
     }
@@ -154,8 +156,7 @@
     }
 
     function toggleNetPlay() {
-        var result = client.isAlive();
-        console.log("CLICKING " + result);
+        var result = client.isAlive();x
         if (result) {
             exitRoom();
         } else {

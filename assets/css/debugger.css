@@ -104,3 +104,8 @@
     width: 47.9em;
 }
 
+#stack {
+    display: inline-block;
+    word-break: break-all;
+}
+
