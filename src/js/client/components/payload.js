@@ -15,48 +15,51 @@ Payload.parseJSON = function(json) {
     var type = Payload.types.valueOf(json.type);
     var data = null;
 
-    if (type == Payload.types.KEYS) {
+    if (type == Payload.types.SERVER_PLAYERKEYS) {
         data = Keys.parseJSON(json.data);
-    } else if (type == Payload.types.GET) {
-    } else if (type == Payload.types.PUT) {
+    } else if (type == Payload.types.SERVER_GETSTATE) {
+    } else if (type == Payload.types.SERVER_PUTSTATE) {
         data = State.parseJSON(json.data);
-    } else if (Payload.types.cmp(Payload.types.STOP, type)) {
-    } else if (Payload.types.cmp(Payload.types.PLAY, type)) {
-    } else if (Payload.types.cmp(Payload.types.WAITING, type)) {
-    } else if (Payload.types.cmp(Payload.types.PLAYER, type)) {
+    } else if (type == Payload.types.SERVER_PLAYERINFO) {
         data = Player.parseJSON(json.data);
-    }  else if (Payload.types.cmp(Payload.types.CONNECTED, type)) {
+    } else if (type == Payload.types.SERVER_STOP) {
+    } else if (type == Payload.types.SERVER_PLAY) {
+    } else if (type == Payload.types.SERVER_WAIT) {
+    } else if (type == Payload.types.SERVER_PLAYERCONNECTED) {
         data = Player.parseJSON(json.data);
-    }  else if (Payload.types.cmp(Payload.types.DISCONNECTED, type)) {
+    } else if (type == Payload.types.SERVER_PLAYERDISCONNECTED) {
         data = Player.parseJSON(json.data);
     } else {
-        console.error("Unknown payload type.");
+        console.error("Unknown payload type ");
+        console.error(json);
     }
 
     var payload = new Payload(type, data);
     return payload;
 }
 
+
+
 Payload.types = {
     valueOf : function(source) {
-        if (source.localeCompare(Payload.types.GET) == 0) {
-            return Payload.types.GET;
-        } else if (source.localeCompare(Payload.types.PUT) == 0) {
-            return Payload.types.PUT;
-        } else if (source.localeCompare(Payload.types.KEYS) == 0) {
-            return Payload.types.KEYS;
-        } else if (source.localeCompare(Payload.types.PLAYER) == 0) {
-            return Payload.types.PLAYER;
-        } else if (source.localeCompare(Payload.types.STOP) == 0) {
-            return Payload.types.STOP;
-        } else if (source.localeCompare(Payload.types.PLAY) == 0) {
-            return Payload.types.PLAY;
-        } else if (source.localeCompare(Payload.types.WAITING) == 0) {
-            return Payload.types.WAITING;
-        }  else if (source.localeCompare(Payload.types.CONNECTED) == 0) {
-            return Payload.types.CONNECTED;
-        }  else if (source.localeCompare(Payload.types.DISCONNECTED) == 0) {
-            return Payload.types.DISCONNECTED;
+        if (source.localeCompare(Payload.types.SERVER_GETSTATE) == 0) {
+            return Payload.types.SERVER_GETSTATE;
+        } else if (source.localeCompare(Payload.types.SERVER_PUTSTATE) == 0) {
+            return Payload.types.SERVER_PUTSTATE;
+        } else if (source.localeCompare(Payload.types.SERVER_PLAYERKEYS) == 0) {
+            return Payload.types.SERVER_PLAYERKEYS;
+        } else if (source.localeCompare(Payload.types.SERVER_PLAYERINFO) == 0) {
+            return Payload.types.SERVER_PLAYERINFO;
+        } else if (source.localeCompare(Payload.types.SERVER_STOP) == 0) {
+            return Payload.types.SERVER_STOP;
+        } else if (source.localeCompare(Payload.types.SERVER_PLAY) == 0) {
+            return Payload.types.SERVER_PLAY;
+        } else if (source.localeCompare(Payload.types.SERVER_WAIT) == 0) {
+            return Payload.types.SERVER_WAIT;
+        }  else if (source.localeCompare(Payload.types.SERVER_PLAYERCONNECTED) == 0) {
+            return Payload.types.SERVER_PLAYERCONNECTED;
+        }  else if (source.localeCompare(Payload.types.SERVER_PLAYERDISCONNECTED) == 0) {
+            return Payload.types.SERVER_PLAYERDISCONNECTED;
         } else {
             return Payload.types.NONE;
         }
@@ -67,12 +70,19 @@ Payload.types = {
     }
 };
 
-Payload.types.GET = "GET";
-Payload.types.PUT = "PUT";
-Payload.types.KEYS = "KEYS";
-Payload.types.PLAYER = "PLAYER";
-Payload.types.STOP = "STOP";
-Payload.types.PLAY = "PLAY";
-Payload.types.WAITING = "WAITING";
-Payload.types.CONNECTED = "CONNECTED";
-Payload.types.DISCONNECTED = "DISCONNECTED";
+
+Payload.types.SERVER_GETSTATE = "SERVER_GETSTATE";
+Payload.types.SERVER_PUTSTATE = "SERVER_PUTSTATE";
+Payload.types.SERVER_STOP = "SERVER_STOP";
+Payload.types.SERVER_PLAY = "SERVER_PLAY";
+Payload.types.SERVER_WAIT = "SERVER_WAIT";
+
+Payload.types.SERVER_PLAYERINFO = "SERVER_PLAYERINFO";
+Payload.types.SERVER_PLAYERKEYS = "SERVER_PLAYERKEYS";
+Payload.types.SERVER_PLAYERCONNECTED = "SERVER_PLAYERCONNECTED";
+Payload.types.SERVER_PLAYERDISCONNECTED = "SERVER_PLAYERDISCONNECTED";
+
+Payload.types.PLAYER_KEYS = "PLAYER_KEYS";
+Payload.types.PLAYER_WAITING = "PLAYER_WAITING";
+Payload.types.PLAYER_SYNC = "PLAYER_SYNC";
+Payload.types.PLAYER_SENDSTATE = "PLAYER_SENDSTATE";

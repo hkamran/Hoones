@@ -75,14 +75,15 @@
 <!-- Netplay Handlers         -->
 <!-- ------------------------ -->
 <script type="text/javascript">
-    var hostname = "hkamran.info";
-    var dir = "/projects/hultines/index.html";
+    var hostname = "localhost";
+    var hostport = ":8080";
+    var dir = "/index.html";
 
     function showNetplayGUI(host, id, port) {
         var part = dir + "?id=" + id + "&port=" + port;
         window.history.pushState("index", "", part);
 
-        $('#roomId').val("http://" + host + part);
+        $('#roomId').val("http://" + host + hostport + part);
         $('#roomId').attr('readonly', true);
 
         $('#netplay').removeClass('none');
@@ -156,7 +157,7 @@
     }
 
     function toggleNetPlay() {
-        var result = client.isAlive();x
+        var result = client.isAlive();
         if (result) {
             exitRoom();
         } else {

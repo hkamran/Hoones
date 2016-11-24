@@ -22,31 +22,30 @@ var Client = function(nes) {
 
     var nes = nes;
 
-
     var onmessage = function(event) {
         var json = JSON.parse(event.data);
         var payload = Payload.parseJSON(json);
 
-        if (payload.type == Payload.types.KEYS) {
+        if (payload.type == Payload.types.SERVER_PLAYERKEYS) {
             var keys = payload.data;
             handleKeyUpdate(keys);
-        } else if ((payload.type == Payload.types.GET)) {
+        } else if (payload.type == Payload.types.SERVER_GETSTATE) {
             handleGetUpdate();
-        } else if ((payload.type == Payload.types.PUT)) {
+        } else if (payload.type == Payload.types.SERVER_PUTSTATE) {
             var state = payload.data;
             handlePutUpdate(state);
-        } else if ((payload.type == Payload.types.STOP)) {
+        } else if (payload.type == Payload.types.SERVER_STOP) {
             handleStopUpdate();
-        } else if ((payload.type == Payload.types.PLAY)) {
+        } else if ((payload.type == Payload.types.SERVER_PLAY)) {
             handlePlayUpdate();
-        } else if ((payload.type == Payload.types.PLAYER)) {
-            var player = payload.data;
-            console.info("User is player " + player.id);
-            handlePlayerUpdate(player);
-        }  else if ((payload.type == Payload.types.CONNECTED)) {
+        } else if (payload.type == Payload.types.SERVER_WAIT) {
+            //TODO
+        } else if ((payload.type == Payload.types.SERVER_PLAYERINFO)) {
+            handlePlayerUpdate(payload.data);
+        }  else if ((payload.type == Payload.types.SERVER_PLAYERCONNECTED)) {
             var player = payload.data;
             handleConnected(player);
-        }  else if ((payload.type == Payload.types.DISCONNECTED)) {
+        }  else if ((payload.type == Payload.types.SERVER_PLAYERDISCONNECTED)) {
             var player = payload.data;
             handleDisconnected(player);
         } else {
@@ -67,6 +66,7 @@ var Client = function(nes) {
      */
     var handlePlayerUpdate = function(player) {
         id = player.id;
+        console.info("Connected as player " + id);
         controller = new Controller(id);
         keyboard.init(controller);
     };
@@ -74,11 +74,11 @@ var Client = function(nes) {
     /**
      * Servers sends a GET request which means it wants the users nes state (synching first phase)
      */
-    var handleGetUpdate = function(state) {
+    var handleGetUpdate = function() {
         console.log("Sending State");
         nes.stop();
         var state = State.toJSON(nes, id);
-        var payload = new Payload(Payload.types.GET, state);
+        var payload = new Payload(Payload.types.PLAYER_SENDSTATE, state);
         send(payload);
     }
 
@@ -90,7 +90,7 @@ var Client = function(nes) {
         keyReady = [true, true];
         keyCounter = 0;
         nes.loadState(state.data);
-        var payload = new Payload(Payload.types.WAITING, {});
+        var payload = new Payload(Payload.types.PLAYER_WAITING, {});
         send(payload);
     }
 
@@ -122,7 +122,7 @@ var Client = function(nes) {
         }
 
         //Send our Keys
-        var payload = new Payload(Payload.types.KEYS, Keys.toJSON(controller, id, keyCounter));
+        var payload = new Payload(Payload.types.PLAYER_KEYS, Keys.toJSON(controller, id, keyCounter));
         send(payload);
 
         //Wait until we receive all the keys
