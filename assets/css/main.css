@@ -102,13 +102,13 @@ canvas {
 	cursor: hand; 
 }
 
-#netplayInfo {
+#netplay {
     width: 100%;
     margin-top: 5px;
     margin-bottom: 15px;
 }
 
-#netplayInfo #connections {
+#netplay #connections {
     float: right;
     box-shadow: 0px 1px 8px 0px rgba(0,0,0,0.65);
     border: 2px solid #5c5d59;
@@ -117,11 +117,15 @@ canvas {
     box-sizing: border-box;
 }
 
-#netplayInfo #connections .inner {
+#netplay #connections .inner {
     line-height: 25px;
 }
 
-#netplayInfo #room {
+#netplay #connections .inner i {
+    cursor: default;
+}
+
+#netplay #room {
     float:left;
     height: 32px;
     width: calc(100% - 60px);
@@ -131,7 +135,7 @@ canvas {
     background: #1a1a1a none repeat scroll 0 0;
 }
 
-#netplayInfo #room .label {
+#netplay #room .label {
     float: left;
     height: 100%;
     width: 55px;
@@ -145,7 +149,7 @@ canvas {
 }
 
 
-#netplayInfo #room .inner {
+#netplay #room .inner {
     width: calc(100% - 55px);
     float: left;
     padding-left: 0px;
@@ -154,7 +158,7 @@ canvas {
     border: 0px solid #222222;
 }
 
-#netplayInfo #room .inner input {
+#netplay #room .inner input {
     color: #a6a6a6;
     font-size: 12px;
     background: none;
@@ -163,7 +167,7 @@ canvas {
 }
 
 
-#netplayInfo .inner {
+#netplay .inner {
     border: 2px solid #000;
     border-radius: 4px;
     padding-bottom: 0px;
@@ -182,4 +186,16 @@ canvas {
 
 .inline-block {
     display: inline-block; !important;
+}
+
+.tiptop {
+    position: absolute;
+    z-index: 9999;
+    max-width: 150px;
+    padding: 5px;
+    font: 12px "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: #fff;
+    background: #373737;
+    border-radius: 3px;
+    border: 1px solid #262626;
 }

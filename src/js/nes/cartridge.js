@@ -129,7 +129,7 @@ var cartridge = {
             var mapper = this.mappers[mapperNum]
 
             if (typeof mapper === 'undefined') {
-                asdasdasdad.asdasdasd;
+                throw "unknown mapper " +  mapperNum;
             }
 
             console.log(mapper);

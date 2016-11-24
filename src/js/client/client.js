@@ -1,6 +1,13 @@
 /**
  * Created by HK on 10/23/2016.
  */
+var getQueryString = function ( field, url ) {
+    var href = url ? url : window.location.href;
+    var reg = new RegExp( '[?&]' + field + '=([^&#]*)', 'i' );
+    var string = reg.exec(href);
+    return string ? string[1] : null;
+};
+
 var Client = function(nes) {
 
     var socket;
@@ -69,6 +76,7 @@ var Client = function(nes) {
      */
     var handleGetUpdate = function(state) {
         console.log("Sending State");
+        nes.stop();
         var state = State.toJSON(nes, id);
         var payload = new Payload(Payload.types.GET, state);
         send(payload);
@@ -139,8 +147,6 @@ var Client = function(nes) {
         nes.start();
     }.bind(this);
 
-    nes.ppu.renderer.postFrame = postFrame;
-
     var handleStopUpdate = function() {
         console.info("Stopping emulation");
         nes.stop();
@@ -171,20 +177,36 @@ var Client = function(nes) {
 
 
     return {
-        connect : function(url) {
+        connect : function(hostname, port, id) {
+            var url = "ws://" + hostname + ":" + port + "/ws/" + id;
+            console.info("Connecting to " + url);
             socket = new WebSocket(url);
             socket.onmessage = onmessage;
             socket.onopen = onopen;
             socket.onclose = onclose;
             socket.onerror = onerror;
+            nes.ppu.renderer.postFrame = postFrame;
         },
 
         disconnect : function() {
+            nes.stop();
             if (socket) {
                 socket.close();
                 nes.ppu.renderer.postFrame = function() {};
+                socket = null;
             }
+            nes.start();
+            keyboard.init(nes.controller1);
+        },
+
+        isAlive : function() {
+            if (socket) {
+                return true;
+            }
+            return false;
         }
+
+
     }
 };
 

@@ -104,7 +104,7 @@ var nes = {
     },
 
     stop : function() {
-      this.rate = 0;
+        this.rate = 0;
     }
 
 };

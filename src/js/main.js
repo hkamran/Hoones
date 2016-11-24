@@ -43,5 +43,6 @@ if (!isCanvasSupported()) {
     nes.load("./roms/SuperMarioBros.nes");
     nes.start();
 
-    var client = null;
+    var client = new Client(nes);
 }
+
