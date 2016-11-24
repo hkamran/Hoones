@@ -119,6 +119,7 @@ canvas {
 
 #netplay #connections .inner {
     line-height: 25px;
+    border: 0px solid #222222;
 }
 
 #netplay #connections .inner i {
@@ -156,6 +157,7 @@ canvas {
     padding-right: 0px;
     box-shadow: inset 0px 0px 5px 0px rgba(0,0,0,0.75);
     border: 0px solid #222222;
+
 }
 
 #netplay #room .inner input {

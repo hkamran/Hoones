@@ -28,43 +28,58 @@ var Client = function(nes) {
 
         if (payload.type == Payload.types.SERVER_PLAYERKEYS) {
             var keys = payload.data;
-            handleKeyUpdate(keys);
+            handleKeyPayload(keys);
         } else if (payload.type == Payload.types.SERVER_GETSTATE) {
-            handleGetUpdate();
+            handleGetPayload();
         } else if (payload.type == Payload.types.SERVER_PUTSTATE) {
             var state = payload.data;
-            handlePutUpdate(state);
+            handlePutPayload(state);
         } else if (payload.type == Payload.types.SERVER_STOP) {
-            handleStopUpdate();
+            handleStopPayload();
         } else if ((payload.type == Payload.types.SERVER_PLAY)) {
-            handlePlayUpdate();
+            handlePlayPayload();
         } else if (payload.type == Payload.types.SERVER_WAIT) {
-            //TODO
+            handleWaitPayload();
         } else if ((payload.type == Payload.types.SERVER_PLAYERINFO)) {
-            handlePlayerUpdate(payload.data);
+            handlePlayerPayload(payload.data);
         }  else if ((payload.type == Payload.types.SERVER_PLAYERCONNECTED)) {
             var player = payload.data;
-            handleConnected(player);
+            handleConnectedPayload(player);
         }  else if ((payload.type == Payload.types.SERVER_PLAYERDISCONNECTED)) {
             var player = payload.data;
-            handleDisconnected(player);
+            handleDisconnectedPayload(player);
         } else {
             console.error("Unknown payload type.");
         }
     };
 
-    var handleConnected = function(player) {
+    var handleStopPayload = function() {
+        console.info("Stopping emulation");
+        nes.stop();
+    };
+
+    var handlePlayPayload = function() {
+        console.info("Continuing emulation");
+        nes.start();
+    };
+
+    var handleWaitPayload = function() {
+        console.info("Waiting to continue emulation");
+        nes.stop();
+    }
+
+    var handleConnectedPayload = function(player) {
         playerConnected(player.id, id);
     }
 
-    var handleDisconnected = function(player) {
+    var handleDisconnectedPayload = function(player) {
         playerDisconnected(player.id);
     }
 
     /**
      * Server sends player id (onconnect)
      */
-    var handlePlayerUpdate = function(player) {
+    var handlePlayerPayload = function(player) {
         id = player.id;
         console.info("Connected as player " + id);
         controller = new Controller(id);
@@ -74,7 +89,7 @@ var Client = function(nes) {
     /**
      * Servers sends a GET request which means it wants the users nes state (synching first phase)
      */
-    var handleGetUpdate = function() {
+    var handleGetPayload = function() {
         console.log("Sending State");
         nes.stop();
         var state = State.toJSON(nes, id);
@@ -85,7 +100,7 @@ var Client = function(nes) {
     /**
      * Save the nes state given from the server (syching last phase)
      */
-    var handlePutUpdate = function(state) {
+    var handlePutPayload = function(state) {
         console.log("Got PUT");
         keyReady = [true, true];
         keyCounter = 0;
@@ -95,7 +110,7 @@ var Client = function(nes) {
     }
 
 
-    var handleKeyUpdate = function(keys) {
+    var handleKeyPayload = function(keys) {
         var playerId = keys.playerId;
         if (playerId == 1 && keys.cycle == keyCounter) {
             keyReady[0] = true;
@@ -147,16 +162,9 @@ var Client = function(nes) {
         nes.start();
     }.bind(this);
 
-    var handleStopUpdate = function() {
-        console.info("Stopping emulation");
-        nes.stop();
-    };
 
-    var handlePlayUpdate = function() {
-        console.info("Continuing emulation");
-        nes.start();
-    };
-
+    //---------------------
+    // BASIC
     //---------------------
 
     var send = function(event) {
