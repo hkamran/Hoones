@@ -25,14 +25,14 @@ a:hover, a:focus {
     border-radius: 4px 4px 4px 4px;
     border: 2px solid #5c5d59;
     background: #000;
-    box-shadow: 0px 0px 25px 5px rgba(0,0,0,0.75);
+    box-shadow: 0px 0px 25px 5px rgba(0, 0, 0, 0.75);
 }
 
 #footer {
-    width : 150px;
+    width: 150px;
     padding: 5px;
     background: #1c1c1c;
-    margin:0 auto;
+    margin: 0 auto;
     margin-top: 30px;
     border-radius: 2px;
     color: #5e5e5e;
@@ -50,7 +50,7 @@ a:hover, a:focus {
     font-size: 2em;
 }
 
-.logo  a{
+.logo a {
     color: #f6382b;
 }
 
@@ -69,8 +69,6 @@ a:hover, a:focus {
     color: #e1e5e0;
 }
 
-
-
 .middle {
     width: auto;
     left: 50%;
@@ -79,15 +77,13 @@ a:hover, a:focus {
     transform: translate(-50%, -50%);
 }
 
-
-
 canvas {
-    image-rendering: optimizeSpeed;             /* Older versions of FF          */
-    image-rendering: -moz-crisp-edges;          /* FF 6.0+                       */
+    image-rendering: optimizeSpeed; /* Older versions of FF          */
+    image-rendering: -moz-crisp-edges; /* FF 6.0+                       */
     image-rendering: -webkit-optimize-contrast; /* Safari                        */
-    image-rendering: -o-crisp-edges;            /* OS X & Windows Opera (12.02+) */
-    image-rendering: pixelated;                 /* Awesome future-browsers       */
-    -ms-interpolation-mode: nearest-neighbor;   /* IE                            */
+    image-rendering: -o-crisp-edges; /* OS X & Windows Opera (12.02+) */
+    image-rendering: pixelated; /* Awesome future-browsers       */
+    -ms-interpolation-mode: nearest-neighbor; /* IE                            */
 }
 
 .panel {
@@ -98,14 +94,14 @@ canvas {
 }
 
 .unselectable {
-	-moz-user-select: none;
-	-webkit-user-select: none;
-	-ms-user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
 }
 
 .clickable {
-	cursor: pointer; 
-	cursor: hand; 
+    cursor: pointer;
+    cursor: hand;
 }
 
 #netplay {
@@ -116,7 +112,7 @@ canvas {
 
 #netplay #connections {
     float: right;
-    box-shadow: 0px 1px 8px 0px rgba(0,0,0,0.65);
+    box-shadow: 0px 1px 8px 0px rgba(0, 0, 0, 0.65);
     border: 2px solid #5c5d59;
     border-radius: 4px;
     height: 32px;
@@ -133,10 +129,10 @@ canvas {
 }
 
 #netplay #room {
-    float:left;
+    float: left;
     height: 32px;
     width: calc(100% - 60px);
-    box-shadow: 0px 1px 8px 0px rgba(0,0,0,0.65);
+    box-shadow: 0px 1px 8px 0px rgba(0, 0, 0, 0.65);
     border: 2px solid #5c5d59;
     border-radius: 4px;
     background: #1a1a1a none repeat scroll 0 0;
@@ -155,13 +151,12 @@ canvas {
     border-right: 2px solid #565656;
 }
 
-
 #netplay #room .inner {
     width: calc(100% - 55px);
     float: left;
     padding-left: 0px;
     padding-right: 0px;
-    box-shadow: inset 0px 0px 5px 0px rgba(0,0,0,0.75);
+    box-shadow: inset 0px 0px 5px 0px rgba(0, 0, 0, 0.75);
     border: 0px solid #222222;
 
 }
@@ -174,7 +169,6 @@ canvas {
     height: 28px;
 }
 
-
 #netplay .inner {
     border: 2px solid #000;
     border-radius: 4px;
@@ -185,7 +179,7 @@ canvas {
     width: 100%;
     height: 100%;
     background: #1f1f1f none repeat scroll 0 0;
-    box-shadow: inset 0px 0px 5px 0px rgba(0,0,0,0.75);
+    box-shadow: inset 0px 0px 5px 0px rgba(0, 0, 0, 0.75);
 }
 
 .none {
@@ -193,7 +187,8 @@ canvas {
 }
 
 .inline-block {
-    display: inline-block; !important;
+    display: inline-block;
+!important;
 }
 
 .tiptop {
@@ -208,7 +203,6 @@ canvas {
     border: 1px solid #262626;
 }
 
-
 #pausedScreen {
     position: absolute;
     top: 0px;
@@ -218,7 +212,7 @@ canvas {
     background: #000;
     opacity: 0.65;
     z-index: 10;
-    display:flex;
+    display: flex;
     align-items: center;
     justify-content: center;
 }

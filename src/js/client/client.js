@@ -190,7 +190,7 @@ var Client = function(nes) {
 
     var onerror = function(event) {
         console.error("Error from WS", event);
-        openError("You have been disconnect!");
+        openError("You have been disconnected!");
     };
 
 
