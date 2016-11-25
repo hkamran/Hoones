@@ -29,7 +29,7 @@
 <!-- ------------------------ -->
 <div id="main" class="middle">
     <div class="menu">
-        <div class="logo">HOONES</div>
+        <div class="logo"><a href="index.html">HOONES</a></div>
         <div class="menu-item">
             <a style="float: left;" class="fi-plus large" title="Zoom in" onclick="doHigherRes()"></a>
             <div style="float: left; width: 8px; height: 1px"></div>
@@ -63,6 +63,9 @@
     </div>
 
     <div id="screen-container">
+        <div id="pausedScreen" style="display: none">
+            <span>Invite Players...</span>
+        </div>
         <canvas id="screen" height="100"></canvas>
     </div>
 
@@ -101,6 +104,15 @@
         $(selector).css("color", "#000");
         $(selector).prop('title', "Player " + id + " Slot (Empty)");
     }
+
+    function showInviteScreen() {
+        $("#pausedScreen").show();
+    }
+
+    function hideInviteScreen() {
+        $("#pausedScreen").hide();
+    }
+
 
     function playerConnected(id, main) {
         var selector = "#player" + id + "Icon";
@@ -154,6 +166,7 @@
         client.disconnect();
         playerDisconnected(1);
         playerDisconnected(2);
+        hideInviteScreen();
     }
 
     function toggleNetPlay() {
@@ -169,7 +182,17 @@
         openRoom();
     });
 </script>
+<div class="reveal modal" id="errorModal" data-reveal>
+    <div class="title">
+        <div class="logo">error</div>
+    </div>
+    <div class="content" id="errorContent">
+    </div>
 
+    <button class="close-button" data-close aria-label="Close modal" type="button">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
 
 <!-- ------------------------ -->
 <!-- Rom Selector Modal Start -->

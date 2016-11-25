@@ -38,12 +38,10 @@ var Client = function(nes) {
             handleStopPayload();
         } else if ((payload.type == Payload.types.SERVER_PLAY)) {
             handlePlayPayload();
-        } else if (payload.type == Payload.types.SERVER_WAIT) {
-            handleWaitPayload();
         } else if (payload.type == Payload.types.SERVER_DESTROYED) {
-
+            handleDestroyedPayload();
         } else if (payload.type == Payload.types.SERVER_FULL) {
-
+            handleFullPayload();
         } else if ((payload.type == Payload.types.SERVER_PLAYERINFO)) {
             handlePlayerPayload(payload.data);
         }  else if ((payload.type == Payload.types.SERVER_PLAYERCONNECTED)) {
@@ -57,26 +55,33 @@ var Client = function(nes) {
         }
     };
 
+
+    var handleDestroyedPayload = function() {
+        openError("Room no longer exists!");
+    };
+
+    var handleFullPayload = function() {
+        openError("Room is full!");
+    };
+
     var handleStopPayload = function() {
         console.info("Stopping emulation");
+        showInviteScreen();
         nes.stop();
     };
 
     var handlePlayPayload = function() {
         console.info("Continuing emulation");
+        hideInviteScreen();
         nes.start();
     };
-
-    var handleWaitPayload = function() {
-        console.info("Waiting to continue emulation");
-        nes.stop();
-    }
 
     var handleConnectedPayload = function(player) {
         playerConnected(player.id, id);
     }
 
     var handleDisconnectedPayload = function(player) {
+        showInviteScreen();
         playerDisconnected(player.id);
     }
 
@@ -185,7 +190,15 @@ var Client = function(nes) {
 
     var onerror = function(event) {
         console.error("Error from WS", event);
+        openError("You have been disconnect!");
     };
+
+
+    var openError = function(msg) {
+        $("#errorContent").text(msg);
+        $("#errorModal").foundation("open");
+        exitRoom();
+    }
 
 
     return {
