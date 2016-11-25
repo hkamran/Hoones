@@ -263,7 +263,8 @@
             this.reset();
         },
         click : function() {
-            nes.load(document.getElementById("romInput").style.value);
+            var rom = $('#romOption :selected').val();
+            nes.load(rom);
             $('#romModal').foundation('close');
             this.reset();
 
