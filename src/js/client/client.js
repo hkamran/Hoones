@@ -229,6 +229,11 @@ var Client = function(nes) {
                 return true;
             }
             return false;
+        },
+
+        syncUp : function() {
+            var payload = new Payload(Payload.types.PLAYER_SYNC, {});
+            send(payload);
         }
 
 

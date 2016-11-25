@@ -266,6 +266,10 @@
             nes.load(document.getElementById("romInput").style.value);
             $('#romModal').foundation('close');
             this.reset();
+
+            if (client != null && client.isAlive()) {
+                client.syncUp();
+            }
         }
     }
 </script>
