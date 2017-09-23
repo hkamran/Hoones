@@ -9,6 +9,7 @@ A Javascript implementation of Nintendo Entertainment Systems (NES).
 	<img src="https://raw.githubusercontent.com/hkamran/Hoones/master/demo/demo.png"></img>
 </div>
 
+## Controls
 | Input  | Key |
 | ----   |:---:|
 | Up     | W   |
