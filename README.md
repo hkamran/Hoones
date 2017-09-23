@@ -1,13 +1,13 @@
 # HOONES
 A Javascript implementation of Nintendo Entertainment Systems (NES).
 
+## Demo
+<a href="http://hkamran.info/projects/hoones">Demo Page</a>
+
 ## Screenshots
 <div align="center">
 	<img src="https://raw.githubusercontent.com/hkamran/Hoones/master/demo/demo.png"></img>
 </div>
-
-## Demo
-<a href="http://hkamran.info/projects/hoones">Demo Page</a>
 
 | Input  | Key |
 | ----   |:---:|
